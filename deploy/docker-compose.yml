@@ -1,0 +1,29 @@
+# Этот файл оставлен для обратной совместимости
+# Используйте:
+# - docker-compose.dev.yml для разработки
+# - docker-compose.prod.yml для продакшена
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: ../../deploy/docker/frontend/Dockerfile
+    container_name: 911_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_YM_ID=${NEXT_PUBLIC_YM_ID}
+      - NEXT_PUBLIC_APP_NAME=911
+      - NEXT_PUBLIC_APP_DOMAIN=${NEXT_PUBLIC_APP_DOMAIN}
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+

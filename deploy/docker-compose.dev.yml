@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  frontend-dev:
+    build:
+      context: ../apps/frontend
+      dockerfile: ../../deploy/docker/frontend/Dockerfile
+      target: builder
+    container_name: 911_frontend_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8000
+      - NEXT_PUBLIC_YM_ID=${NEXT_PUBLIC_YM_ID:-}
+      - NEXT_PUBLIC_APP_NAME=911
+      - NEXT_PUBLIC_APP_DOMAIN=http://localhost:3000
+    volumes:
+      # Mount source code for hot reload
+      - ../apps/frontend/src:/app/src
+      - ../apps/frontend/public:/app/public
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    networks:
+      - 911_backend_website_default
+    extra_hosts:
+      # Позволяет контейнеру обращаться к localhost хоста
+      - "host.docker.internal:host-gateway"
+
+networks:
+  911_backend_website_default:
+    external: true
+

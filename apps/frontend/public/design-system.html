@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>911 Design System - 4pt Grid</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F8F9FA;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 40px;
+      font-weight: 700;
+      color: #2C3E50;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #6C757D;
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #2C3E50;
+      margin: 48px 0 24px 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #FF5722;
+    }
+
+    .spacing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .spacing-item {
+      background: #F8F9FA;
+      border-radius: 8px;
+      padding: 16px;
+      border: 2px solid #E0E0E0;
+      transition: all 0.2s;
+    }
+
+    .spacing-item:hover {
+      border-color: #FF5722;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 87, 34, 0.15);
+    }
+
+    .spacing-label {
+      font-size: 14px;
+      color: #6C757D;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .spacing-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #FF5722;
+      margin-bottom: 4px;
+    }
+
+    .spacing-class {
+      font-size: 12px;
+      color: #2C3E50;
+      font-family: 'Courier New', monospace;
+      background: #E8F5E9;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .visual-example {
+      background: white;
+      border: 2px solid #E0E0E0;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .box {
+      background: #FF5722;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+
+    .grid-example {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .grid-item {
+      background: #FFE0B2;
+      border: 2px dashed #FF9800;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      font-weight: 600;
+      color: #2C3E50;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .color-card {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #E0E0E0;
+    }
+
+    .color-swatch {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .color-info {
+      padding: 16px;
+      background: white;
+    }
+
+    .color-name {
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 4px;
+    }
+
+    .color-code {
+      font-size: 12px;
+      color: #6C757D;
+      font-family: 'Courier New', monospace;
+    }
+
+    .button-example {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #FF5722;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 8px;
+    }
+
+    .button-example:hover {
+      background: #E64A19;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+    }
+
+    .btn-sm { height: 32px; padding: 0 16px; font-size: 14px; }
+    .btn-md { height: 40px; padding: 0 24px; font-size: 16px; }
+    .btn-lg { height: 48px; padding: 0 32px; font-size: 18px; }
+
+    .code-block {
+      background: #2C3E50;
+      color: #E0E0E0;
+      padding: 24px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    .highlight {
+      color: #FFC107;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 4px;
+    }
+
+    .badge-success {
+      background: #E8F5E9;
+      color: #4CAF50;
+    }
+
+    .badge-info {
+      background: #E3F2FD;
+      color: #2196F3;
+    }
+
+    .badge-warning {
+      background: #FFF3E0;
+      color: #FF9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 911 Design System</h1>
+    <p class="subtitle">Профессиональная система дизайна на основе 4pt Grid</p>
+
+    <div class="badge badge-success">✓ 4pt Grid System</div>
+    <div class="badge badge-info">Кратно 4px</div>
+    <div class="badge badge-warning">Emergency Concept</div>
+
+    <!-- Spacing Scale -->
+    <h2>📏 Spacing Scale (4pt Grid)</h2>
+    <p style="color: #6C757D; margin-bottom: 24px;">
+      Все отступы кратны 4px. Используйте эти значения для padding, margin, gap.
+    </p>
+
+    <div class="spacing-grid">
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 1</div>
+        <div class="spacing-value">4px</div>
+        <div class="spacing-class">p-1 / gap-1</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 2</div>
+        <div class="spacing-value">8px</div>
+        <div class="spacing-class">p-2 / gap-2</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 3</div>
+        <div class="spacing-value">12px</div>
+        <div class="spacing-class">p-3 / gap-3</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 4</div>
+        <div class="spacing-value">16px</div>
+        <div class="spacing-class">p-4 / gap-4</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 5</div>
+        <div class="spacing-value">20px</div>
+        <div class="spacing-class">p-5 / gap-5</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 6</div>
+        <div class="spacing-value">24px</div>
+        <div class="spacing-class">p-6 / gap-6</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 8</div>
+        <div class="spacing-value">32px</div>
+        <div class="spacing-class">p-8 / gap-8</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 10</div>
+        <div class="spacing-value">40px</div>
+        <div class="spacing-class">p-10 / gap-10</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 12</div>
+        <div class="spacing-value">48px</div>
+        <div class="spacing-class">p-12 / gap-12</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 16</div>
+        <div class="spacing-value">64px</div>
+        <div class="spacing-class">p-16 / gap-16</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 20</div>
+        <div class="spacing-value">80px</div>
+        <div class="spacing-class">p-20 / gap-20</div>
+      </div>
+      <div class="spacing-item">
+        <div class="spacing-label">Spacing 24</div>
+        <div class="spacing-value">96px</div>
+        <div class="spacing-class">p-24 / gap-24</div>
+      </div>
+    </div>
+
+    <!-- Visual Examples -->
+    <h2>👁️ Визуальные примеры</h2>
+
+    <div class="visual-example">
+      <h3 style="margin-bottom: 16px; color: #2C3E50;">Grid с gap-6 (24px)</h3>
+      <div class="grid-example" style="gap: 24px;">
+        <div class="grid-item">Item 1</div>
+        <div class="grid-item">Item 2</div>
+        <div class="grid-item">Item 3</div>
+        <div class="grid-item">Item 4</div>
+      </div>
+    </div>
+
+    <div class="visual-example">
+      <h3 style="margin-bottom: 16px; color: #2C3E50;">Размеры элементов</h3>
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div class="box" style="width: 32px; height: 32px;">32px</div>
+        <div class="box" style="width: 40px; height: 40px;">40px</div>
+        <div class="box" style="width: 48px; height: 48px;">48px</div>
+        <div class="box" style="width: 64px; height: 64px;">64px</div>
+        <div class="box" style="width: 80px; height: 80px;">80px</div>
+      </div>
+    </div>
+
+    <!-- Colors -->
+    <h2>🎨 Цветовая палитра</h2>
+
+    <div class="color-grid">
+      <div class="color-card">
+        <div class="color-swatch" style="background: #FF5722;">Primary</div>
+        <div class="color-info">
+          <div class="color-name">Primary</div>
+          <div class="color-code">#FF5722</div>
+        </div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background: #2C3E50;">Secondary</div>
+        <div class="color-info">
+          <div class="color-name">Secondary</div>
+          <div class="color-code">#2C3E50</div>
+        </div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background: #FFC107;">Accent</div>
+        <div class="color-info">
+          <div class="color-name">Accent</div>
+          <div class="color-code">#FFC107</div>
+        </div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background: #4CAF50;">Success</div>
+        <div class="color-info">
+          <div class="color-name">Success</div>
+          <div class="color-code">#4CAF50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <h2>🔘 Размеры кнопок</h2>
+    <div class="visual-example">
+      <button class="button-example btn-sm">Small (32px)</button>
+      <button class="button-example btn-md">Medium (40px)</button>
+      <button class="button-example btn-lg">Large (48px)</button>
+    </div>
+
+    <!-- Code Example -->
+    <h2>💻 Пример кода</h2>
+    <div class="code-block">
+<span class="highlight">// ✅ Правильно - все кратно 4px</span><br/>
+&lt;section className="<span class="highlight">py-16 md:py-20 lg:py-24</span>"&gt;<br/>
+&nbsp;&nbsp;&lt;div className="container mx-auto <span class="highlight">px-6</span>"&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className="<span class="highlight">grid gap-6 md:gap-8</span>"&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Card className="<span class="highlight">p-6 rounded-xl</span>"&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h3 className="<span class="highlight">mb-4</span>"&gt;Заголовок&lt;/h3&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className="<span class="highlight">mb-6</span>"&gt;Текст&lt;/p&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Button className="<span class="highlight">h-12 px-6</span>"&gt;CTA&lt;/Button&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/Card&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br/>
+&nbsp;&nbsp;&lt;/div&gt;<br/>
+&lt;/section&gt;
+    </div>
+
+    <!-- Rules -->
+    <h2>📖 Основные правила</h2>
+    <div class="visual-example">
+      <ul style="list-style: none; padding: 0;">
+        <li style="padding: 12px 0; border-bottom: 1px solid #E0E0E0;">
+          <strong style="color: #4CAF50;">✓</strong> Все отступы кратны 4px
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #E0E0E0;">
+          <strong style="color: #4CAF50;">✓</strong> Используйте spacing: 4, 8, 12, 16, 24, 32, 48, 64, 80, 96px
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #E0E0E0;">
+          <strong style="color: #4CAF50;">✓</strong> Border radius: 4, 8, 12, 16, 20, 24px
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #E0E0E0;">
+          <strong style="color: #4CAF50;">✓</strong> Размеры кнопок: 32, 40, 48, 56px
+        </li>
+        <li style="padding: 12px 0; border-bottom: 1px solid #E0E0E0;">
+          <strong style="color: #FF3B3F;">✗</strong> Избегайте произвольных значений (13px, 27px, 19px)
+        </li>
+        <li style="padding: 12px 0;">
+          <strong style="color: #FF3B3F;">✗</strong> Не используйте нечетные числа
+        </li>
+      </ul>
+    </div>
+
+    <div style="margin-top: 48px; padding: 24px; background: #E8F5E9; border-radius: 12px; border-left: 4px solid #4CAF50;">
+      <strong style="color: #2C3E50;">💡 Совет:</strong>
+      <p style="color: #6C757D; margin-top: 8px; line-height: 1.6;">
+        Консистентная система отступов создает визуальный ритм и делает интерфейс более гармоничным. 
+        Придерживайтесь этих правил во всех компонентах!
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
