@@ -147,14 +147,15 @@ export const citiesService = {
 
   /**
    * Get service detail in a specific city
-   * Loads all prices for each option from /api/website/options/{id}/
+   * Loads all options for the service and all prices for each option from /api/website/options/{id}/
+   * Shows options even if they don't have prices for this city (with "По запросу")
    */
   getServiceByCity: async (
     citySlug: string,
     serviceSlug: string
   ): Promise<CityServiceResponse> => {
     try {
-      // Step 1: Get base information with options (each has only one price)
+      // Step 1: Get base information (may not include options if they have no prices)
       const response = await Service.websiteCitiesServicesRetrieve(
         citySlug,
         serviceSlug
@@ -167,12 +168,24 @@ export const citiesService = {
         console.log('[getServiceByCity] Options length:', Array.isArray(response?.options) ? response.options.length : 'not an array')
       }
       
-      // Ensure options is always an array
-      const baseOptions = Array.isArray(response?.options) ? response.options : []
+      // Step 2: Load all options for this service (even if they don't have prices for this city)
+      let allServiceOptions: any[] = []
+      try {
+        const optionsResponse = await contentService.getOptions({ serviceSlug })
+        allServiceOptions = optionsResponse || []
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[getServiceByCity] All service options loaded:', allServiceOptions.length)
+        }
+      } catch (error) {
+        console.warn('[getServiceByCity] Failed to load all options, using base response options:', error)
+        // Fallback to options from base response
+        allServiceOptions = Array.isArray(response?.options) ? response.options : []
+      }
       
-      // Step 2: Load all prices for each option in parallel
+      // Step 3: Load all prices for each option in parallel
       const optionsWithAllPrices = await Promise.all(
-        baseOptions.map(async (option: any) => {
+        allServiceOptions.map(async (option: any) => {
           try {
             // Get all prices for this option
             const optionDetail = await contentService.getOptionById(option.id)
@@ -192,21 +205,14 @@ export const citiesService = {
             
             return {
               ...option,
-              prices: cityPrices, // All prices for this city
+              prices: cityPrices, // All prices for this city (may be empty)
             } as CityServiceOption
           } catch (error) {
-            // If we can't load option details, keep the base option with single price
+            // If we can't load option details, use option without prices
             console.warn(`[getServiceByCity] Failed to load prices for option ${option.id}:`, error)
             return {
               ...option,
-              prices: option.price ? [{
-                id: 0,
-                city_slug: citySlug,
-                city_title: response.city?.title || '',
-                technic_category_id: null,
-                technic_category_title: option.price.technic_category,
-                amount: option.price.amount,
-              }] : [],
+              prices: [], // No prices available
             } as CityServiceOption
           }
         })
@@ -220,6 +226,8 @@ export const citiesService = {
       if (process.env.NODE_ENV === 'development') {
         console.log('[getServiceByCity] Final response:', mappedResponse)
         console.log('[getServiceByCity] Options with prices:', optionsWithAllPrices)
+        console.log('[getServiceByCity] Options with prices count:', optionsWithAllPrices.filter(opt => opt.prices.length > 0).length)
+        console.log('[getServiceByCity] Options without prices count:', optionsWithAllPrices.filter(opt => opt.prices.length === 0).length)
       }
       
       return mappedResponse

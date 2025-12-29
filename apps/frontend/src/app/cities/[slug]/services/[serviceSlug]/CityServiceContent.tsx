@@ -62,7 +62,7 @@ function groupOptionsByCategory(options: CityServiceOption[]) {
           }
         })
       } else {
-        // Option has prices but no categories
+        // Option has prices but no categories (or prices without categories)
         uncategorized.push(option)
       }
     } else if (option.price?.technic_category) {
@@ -74,7 +74,7 @@ function groupOptionsByCategory(options: CityServiceOption[]) {
       grouped[category].push(option)
       categorySet.add(category)
     } else {
-      // Option has no prices or categories
+      // Option has no prices at all - show in "Прочие услуги" with "По запросу"
       uncategorized.push(option)
     }
   })
@@ -233,16 +233,26 @@ export function CityServiceContent({
                                   }] 
                                 : [])
                           
-                          // Show option with all prices for this category (usually one)
-                          if (pricesToShow.length === 0) return null
-                          
-                          return pricesToShow.map((price, priceIndex) => (
-                            <PriceRow 
-                              key={`${option.id}-${priceIndex}`}
-                              title={option.title}
-                              price={price.amount}
-                            />
-                          ))
+                          // Show option even if no prices (will show "По запросу")
+                          // If has prices, show all prices for this category
+                          if (pricesToShow.length > 0) {
+                            return pricesToShow.map((price, priceIndex) => (
+                              <PriceRow 
+                                key={`${option.id}-${priceIndex}`}
+                                title={option.title}
+                                price={price.amount}
+                              />
+                            ))
+                          } else {
+                            // Show option without price (will display "По запросу")
+                            return (
+                              <PriceRow 
+                                key={`${option.id}-no-price`}
+                                title={option.title}
+                                price={null}
+                              />
+                            )
+                          }
                         })}
                       </PriceAccordionCategory>
                     )
@@ -275,15 +285,25 @@ export function CityServiceContent({
                                 }]
                               : [])
                         
-                        if (pricesToShow.length === 0) return null
-                        
-                        return pricesToShow.map((price, priceIndex) => (
-                          <PriceRow 
-                            key={`${option.id}-uncategorized-${priceIndex}`}
-                            title={option.title}
-                            price={price.amount}
-                          />
-                        ))
+                        // Show option even if no prices (will show "По запросу")
+                        if (pricesToShow.length > 0) {
+                          return pricesToShow.map((price, priceIndex) => (
+                            <PriceRow 
+                              key={`${option.id}-uncategorized-${priceIndex}`}
+                              title={option.title}
+                              price={price.amount}
+                            />
+                          ))
+                        } else {
+                          // Show option without price (will display "По запросу")
+                          return (
+                            <PriceRow 
+                              key={`${option.id}-uncategorized-no-price`}
+                              title={option.title}
+                              price={null}
+                            />
+                          )
+                        }
                       })}
                     </PriceAccordionCategory>
                   )}
