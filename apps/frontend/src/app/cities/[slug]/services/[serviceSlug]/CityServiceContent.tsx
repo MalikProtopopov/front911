@@ -44,9 +44,14 @@ function groupOptionsByCategory(options: CityServiceOption[]) {
       const categoriesInOption = new Set<string>()
       
       option.prices.forEach(price => {
-        if (price.technic_category_title) {
+        // Check if price is OptionPrice type (has technic_category_title)
+        if ('technic_category_title' in price && price.technic_category_title) {
           categoriesInOption.add(price.technic_category_title)
           categorySet.add(price.technic_category_title)
+        } else if ('technic_category' in price && price.technic_category) {
+          // Legacy format with technic_category
+          categoriesInOption.add(price.technic_category)
+          categorySet.add(price.technic_category)
         }
       })
       
@@ -215,13 +220,35 @@ export function CityServiceContent({
                       >
                         {categoryOptions.map(option => {
                           // Filter prices for this specific category
-                          const categoryPrices = option.prices?.filter(
-                            price => price.technic_category_title === category
-                          ) || []
+                          const categoryPrices = option.prices?.filter(price => {
+                            // Check if price is OptionPrice type (has technic_category_title)
+                            if ('technic_category_title' in price) {
+                              return price.technic_category_title === category
+                            }
+                            // Legacy format with technic_category
+                            if ('technic_category' in price) {
+                              return price.technic_category === category
+                            }
+                            return false
+                          }) || []
                           
-                          // If no prices in prices array, fallback to legacy price
+                          // Convert prices to OptionPrice format
                           const pricesToShow: OptionPrice[] = categoryPrices.length > 0 
-                            ? categoryPrices 
+                            ? categoryPrices.map(price => {
+                                // If already OptionPrice format, return as is
+                                if ('technic_category_title' in price && 'id' in price) {
+                                  return price as OptionPrice
+                                }
+                                // Convert legacy format to OptionPrice
+                                return {
+                                  id: 0,
+                                  city_slug: '',
+                                  city_title: '',
+                                  technic_category_id: null,
+                                  technic_category_title: ('technic_category' in price ? price.technic_category : null),
+                                  amount: price.amount,
+                                } as OptionPrice
+                              })
                             : (option.price?.technic_category === category && option.price 
                                 ? [{
                                     id: 0,
@@ -268,12 +295,35 @@ export function CityServiceContent({
                     >
                       {uncategorized.map(option => {
                         // Get prices without category or fallback to legacy price
-                        const pricesWithoutCategory = option.prices?.filter(
-                          price => !price.technic_category_title
-                        ) || []
+                        const pricesWithoutCategory = option.prices?.filter(price => {
+                          // Check if price is OptionPrice type (has technic_category_title)
+                          if ('technic_category_title' in price) {
+                            return !price.technic_category_title
+                          }
+                          // Legacy format with technic_category
+                          if ('technic_category' in price) {
+                            return !price.technic_category
+                          }
+                          return true
+                        }) || []
                         
+                        // Convert prices to OptionPrice format
                         const pricesToShow: OptionPrice[] = pricesWithoutCategory.length > 0
-                          ? pricesWithoutCategory
+                          ? pricesWithoutCategory.map(price => {
+                              // If already OptionPrice format, return as is
+                              if ('technic_category_title' in price && 'id' in price) {
+                                return price as OptionPrice
+                              }
+                              // Convert legacy format to OptionPrice
+                              return {
+                                id: 0,
+                                city_slug: '',
+                                city_title: '',
+                                technic_category_id: null,
+                                technic_category_title: null,
+                                amount: price.amount,
+                              } as OptionPrice
+                            })
                           : (option.price && !option.price.technic_category
                               ? [{
                                   id: 0,
