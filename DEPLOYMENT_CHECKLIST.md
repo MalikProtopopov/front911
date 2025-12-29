@@ -109,11 +109,15 @@ git reset --hard origin/main
 ```bash
 cd deploy
 
-# Остановить текущие контейнеры
+# ОБЯЗАТЕЛЬНО: Остановить и удалить старые контейнеры
+# Это решает проблему KeyError: 'ContainerConfig' в docker-compose 1.29.2
 docker-compose -f docker-compose.prod.yml down
 
+# Удалить старые контейнеры (если они остались)
+docker rm -f 911_frontend_prod 911_nginx_prod 2>/dev/null || true
+
 # Удалить старый образ (чтобы гарантировать пересборку)
-docker rmi 911_frontend_prod 2>/dev/null || true
+docker rmi deploy_frontend:latest 2>/dev/null || true
 
 # Пересобрать образ с правильными переменными (--no-cache гарантирует свежую сборку)
 docker-compose -f docker-compose.prod.yml build --no-cache frontend
@@ -121,8 +125,11 @@ docker-compose -f docker-compose.prod.yml build --no-cache frontend
 # Запустить контейнеры
 docker-compose -f docker-compose.prod.yml up -d
 
-# Проверить что переменные правильно установлены
-docker-compose -f docker-compose.prod.yml exec frontend env | grep NEXT_PUBLIC
+# Проверить что контейнеры запущены
+docker-compose -f docker-compose.prod.yml ps
+
+# Проверить логи
+docker-compose -f docker-compose.prod.yml logs -f frontend
 ```
 
 **Проверка переменных в собранном образе:**
@@ -195,6 +202,24 @@ curl http://45.144.221.92/api/website/services/
 1. Проверить что URL API правильный: `http://45.144.221.92/api/website/...`
 2. Проверить что бекенд доступен: `curl http://45.144.221.92/api/website/services/`
 3. Проверить логи бекенда
+
+### Проблема: Ошибка `KeyError: 'ContainerConfig'` при `docker-compose up -d`
+
+**Причина:** Проблема с docker-compose версии 1.29.2 при пересоздании контейнеров.
+
+**Решение:**
+```bash
+cd deploy
+
+# Остановить и удалить все контейнеры
+docker-compose -f docker-compose.prod.yml down
+
+# Удалить контейнеры вручную (если нужно)
+docker rm -f 911_frontend_prod 911_nginx_prod 2>/dev/null || true
+
+# Запустить заново
+docker-compose -f docker-compose.prod.yml up -d
+```
 
 ### Проблема: Сайт не открывается
 
