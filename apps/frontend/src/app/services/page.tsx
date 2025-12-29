@@ -5,6 +5,7 @@ import { servicesService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import { ServicesList } from "./ServicesList"
 import { PageCTA, HeroSection } from '@/components/patterns'
+import type { ServiceList } from "@/lib/api/generated"
 
 // ISR: revalidate every hour
 export const revalidate = 3600
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ServicesPage() {
   // Fetch services on the server for SSR
-  let initialServices = []
+  let initialServices: ServiceList[] = []
   
   try {
     initialServices = await servicesService.getAll()

@@ -123,11 +123,18 @@ export function useCityService(
     } as SWRConfiguration<CityServiceResponse>
   )
 
+  // Ensure options is always an array
+  const optionsArray = Array.isArray(data?.options) 
+    ? data.options 
+    : (Array.isArray(options?.fallbackData?.options) 
+        ? options.fallbackData.options 
+        : [])
+
   return {
     cityService: data,
     city: data?.city,
     service: data?.service,
-    options: data?.options ?? [],
+    options: optionsArray,
     content: data?.content,
     seo: data?.seo,
     isLoading,

@@ -68,7 +68,7 @@ export function getOptionsLabel(count: number): string {
 interface PriceAccordionProps {
   children: React.ReactNode
   type?: 'single' | 'multiple'
-  defaultValue?: string[]
+  defaultValue?: string | string[]
   className?: string
 }
 
@@ -78,10 +78,24 @@ export function PriceAccordion({
   defaultValue,
   className 
 }: PriceAccordionProps) {
+  // Radix Accordion requires explicit type handling
+  if (type === 'single') {
+    return (
+      <Accordion
+        type="single"
+        collapsible
+        defaultValue={Array.isArray(defaultValue) ? defaultValue[0] : defaultValue}
+        className={cn('space-y-3', className)}
+      >
+        {children}
+      </Accordion>
+    )
+  }
+
   return (
     <Accordion
-      type={type}
-      defaultValue={defaultValue}
+      type="multiple"
+      defaultValue={Array.isArray(defaultValue) ? defaultValue : (defaultValue ? [defaultValue] : undefined)}
       className={cn('space-y-3', className)}
     >
       {children}

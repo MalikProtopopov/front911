@@ -40,7 +40,8 @@ export async function generateMetadata({ params }: CityDetailPageProps): Promise
     const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
     
     const title = `Автопомощь в ${city.title} — эвакуатор, шиномонтаж 24/7 | 911`
-    const description = `Срочная автопомощь в ${city.title}: эвакуатор, мобильный шиномонтаж, доставка топлива. Выезд за 15 минут.${city.partner_count ? ` ${city.partner_count} мастеров.` : ''}`
+    const partnerCount = city.content?.partner_count
+    const description = `Срочная автопомощь в ${city.title}: эвакуатор, мобильный шиномонтаж, доставка топлива. Выезд за 15 минут.${partnerCount ? ` ${partnerCount} мастеров.` : ''}`
     
     return {
       title,

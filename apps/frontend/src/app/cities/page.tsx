@@ -3,6 +3,7 @@ import { generatePageMetadata } from "@/lib/api/hooks"
 import { citiesService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import { CitiesList } from "./CitiesList"
+import type { CityList } from "@/lib/api/generated"
 
 // ISR: revalidate every hour
 export const revalidate = 3600
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CitiesPage() {
   // Fetch cities on the server for SSR
-  let initialCities = []
+  let initialCities: CityList[] = []
   
   try {
     initialCities = await citiesService.getAll({ limit: 1000, ordering: 'display_order,title' })

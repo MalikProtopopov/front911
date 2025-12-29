@@ -134,7 +134,7 @@ export class ApiError extends Error {
             message: error.message,
             stack: error.stack?.substring(0, 500),
           })
-          console.error('API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000 (default)')
+          console.error('API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001 (default)')
           console.error('Make sure the backend API is running and accessible at the configured URL')
         }
         return new ApiError('Network error', 0, {

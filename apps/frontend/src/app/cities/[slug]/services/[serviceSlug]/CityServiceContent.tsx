@@ -23,6 +23,7 @@ import { useCityService } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
 import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
 import type { CityServiceOption, CityServiceResponse } from '@/lib/api/services'
+import type { OptionPrice } from '@/lib/api/generated'
 
 interface CityServiceContentProps {
   citySlug: string
@@ -30,24 +31,55 @@ interface CityServiceContentProps {
   initialData?: CityServiceResponse | null
 }
 
-// Group options by category
+// Group options by category based on prices
 function groupOptionsByCategory(options: CityServiceOption[]) {
   const grouped: Record<string, CityServiceOption[]> = {}
   const uncategorized: CityServiceOption[] = []
+  const categorySet = new Set<string>()
 
   options.forEach(option => {
-    if (option.price?.technic_category) {
+    // Check if option has prices
+    if (option.prices && option.prices.length > 0) {
+      // Group by technic_category_title from prices
+      const categoriesInOption = new Set<string>()
+      
+      option.prices.forEach(price => {
+        if (price.technic_category_title) {
+          categoriesInOption.add(price.technic_category_title)
+          categorySet.add(price.technic_category_title)
+        }
+      })
+      
+      // If option has prices with categories, add to those categories
+      if (categoriesInOption.size > 0) {
+        categoriesInOption.forEach(category => {
+          if (!grouped[category]) {
+            grouped[category] = []
+          }
+          // Only add option once per category (avoid duplicates)
+          if (!grouped[category].find(opt => opt.id === option.id)) {
+            grouped[category].push(option)
+          }
+        })
+      } else {
+        // Option has prices but no categories
+        uncategorized.push(option)
+      }
+    } else if (option.price?.technic_category) {
+      // Fallback to legacy single price structure
       const category = option.price.technic_category
       if (!grouped[category]) {
         grouped[category] = []
       }
       grouped[category].push(option)
+      categorySet.add(category)
     } else {
+      // Option has no prices or categories
       uncategorized.push(option)
     }
   })
 
-  return { grouped, uncategorized }
+  return { grouped, uncategorized, categoryNames: Array.from(categorySet).sort() }
 }
 
 
@@ -71,11 +103,9 @@ export function CityServiceContent({
   })
 
   // Group options by category
-  const { grouped, uncategorized } = useMemo(() => {
-    return groupOptionsByCategory(options)
+  const { grouped, uncategorized, categoryNames } = useMemo(() => {
+    return groupOptionsByCategory(options ?? [])
   }, [options])
-
-  const categoryNames = Object.keys(grouped).sort()
 
   // If we have initial data, don't show loading state on first render
   const showLoading = isLoading && !initialData
@@ -158,10 +188,10 @@ export function CityServiceContent({
               {/* Заголовок секции */}
               <PriceSectionHeader 
                 title={`Цены на ${service.title}`}
-                totalCount={options.length}
+                totalCount={options?.length ?? 0}
               />
 
-              {options.length === 0 ? (
+              {!options || options.length === 0 || (categoryNames.length === 0 && uncategorized.length === 0) ? (
                 <PriceEmptyState message="Цены для данной услуги в этом городе пока не указаны.">
                   <Button asChild>
                     <Link href="/contacts">Узнать цены</Link>
@@ -170,26 +200,53 @@ export function CityServiceContent({
               ) : (
                 <PriceAccordion 
                   type="multiple" 
-                  defaultValue={categoryNames.length > 0 ? [`category-0`] : ['uncategorized']}
+                  defaultValue={categoryNames.length > 0 ? [`category-0`] : uncategorized.length > 0 ? ['uncategorized'] : []}
                 >
                   {/* Options grouped by category */}
-                  {categoryNames.map((category, index) => (
-                    <PriceAccordionCategory
-                      key={category}
-                      value={`category-${index}`}
-                      title={category}
-                      count={grouped[category]?.length}
-                      icon={<Truck />}
-                    >
-                      {grouped[category]?.map(option => (
-                        <PriceRow 
-                          key={option.id} 
-                          title={option.title}
-                          price={option.price?.amount}
-                        />
-                      ))}
-                    </PriceAccordionCategory>
-                  ))}
+                  {categoryNames.map((category, index) => {
+                    const categoryOptions = grouped[category] || []
+                    return (
+                      <PriceAccordionCategory
+                        key={category}
+                        value={`category-${index}`}
+                        title={category}
+                        count={categoryOptions.length}
+                        icon={<Truck />}
+                      >
+                        {categoryOptions.map(option => {
+                          // Filter prices for this specific category
+                          const categoryPrices = option.prices?.filter(
+                            price => price.technic_category_title === category
+                          ) || []
+                          
+                          // If no prices in prices array, fallback to legacy price
+                          const pricesToShow: OptionPrice[] = categoryPrices.length > 0 
+                            ? categoryPrices 
+                            : (option.price?.technic_category === category && option.price 
+                                ? [{
+                                    id: 0,
+                                    city_slug: '',
+                                    city_title: '',
+                                    technic_category_id: null,
+                                    technic_category_title: null,
+                                    amount: option.price.amount,
+                                  }] 
+                                : [])
+                          
+                          // Show option with all prices for this category (usually one)
+                          if (pricesToShow.length === 0) return null
+                          
+                          return pricesToShow.map((price, priceIndex) => (
+                            <PriceRow 
+                              key={`${option.id}-${priceIndex}`}
+                              title={option.title}
+                              price={price.amount}
+                            />
+                          ))
+                        })}
+                      </PriceAccordionCategory>
+                    )
+                  })}
 
                   {/* Uncategorized options */}
                   {uncategorized.length > 0 && (
@@ -199,13 +256,35 @@ export function CityServiceContent({
                       count={uncategorized.length}
                       icon={<Truck />}
                     >
-                      {uncategorized.map(option => (
-                        <PriceRow 
-                          key={option.id} 
-                          title={option.title}
-                          price={option.price?.amount}
-                        />
-                      ))}
+                      {uncategorized.map(option => {
+                        // Get prices without category or fallback to legacy price
+                        const pricesWithoutCategory = option.prices?.filter(
+                          price => !price.technic_category_title
+                        ) || []
+                        
+                        const pricesToShow: OptionPrice[] = pricesWithoutCategory.length > 0
+                          ? pricesWithoutCategory
+                          : (option.price && !option.price.technic_category
+                              ? [{
+                                  id: 0,
+                                  city_slug: '',
+                                  city_title: '',
+                                  technic_category_id: null,
+                                  technic_category_title: null,
+                                  amount: option.price.amount,
+                                }]
+                              : [])
+                        
+                        if (pricesToShow.length === 0) return null
+                        
+                        return pricesToShow.map((price, priceIndex) => (
+                          <PriceRow 
+                            key={`${option.id}-uncategorized-${priceIndex}`}
+                            title={option.title}
+                            price={price.amount}
+                          />
+                        ))
+                      })}
                     </PriceAccordionCategory>
                   )}
                 </PriceAccordion>
