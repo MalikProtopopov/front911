@@ -12,22 +12,12 @@ function getEnvVar(key: string, required = false): string {
   return value ?? ''
 }
 
-// Helper to normalize API URL - use 127.0.0.1 instead of localhost for better server-side compatibility
+// Helper to get API base URL
+// Default values are set in next.config.ts env section
 function getApiBaseUrl(): string {
-  const envUrl = getEnvVar('NEXT_PUBLIC_API_URL')
-  if (envUrl) {
-    return envUrl
-  }
-  // Fallback only for local development
-  // In production, this should never be used - NEXT_PUBLIC_API_URL must be set
-  if (process.env.NODE_ENV === 'production') {
-    console.error('ERROR: NEXT_PUBLIC_API_URL is not set in production! This is a configuration error.')
-    throw new Error('NEXT_PUBLIC_API_URL must be set in production environment')
-  }
-  // On server-side (SSR), use 127.0.0.1 instead of localhost for better compatibility
-  // On client-side, localhost works fine
-  const isServer = typeof window === 'undefined'
-  return isServer ? 'http://127.0.0.1:8000' : 'http://localhost:8000'
+  // NEXT_PUBLIC_API_URL is set via next.config.ts with default value
+  // This ensures it's always available on both server and client
+  return getEnvVar('NEXT_PUBLIC_API_URL') || 'http://45.144.221.92'
 }
 
 export const config = {
