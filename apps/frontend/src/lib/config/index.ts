@@ -18,6 +18,12 @@ function getApiBaseUrl(): string {
   if (envUrl) {
     return envUrl
   }
+  // Fallback only for local development
+  // In production, this should never be used - NEXT_PUBLIC_API_URL must be set
+  if (process.env.NODE_ENV === 'production') {
+    console.error('ERROR: NEXT_PUBLIC_API_URL is not set in production! This is a configuration error.')
+    throw new Error('NEXT_PUBLIC_API_URL must be set in production environment')
+  }
   // On server-side (SSR), use 127.0.0.1 instead of localhost for better compatibility
   // On client-side, localhost works fine
   const isServer = typeof window === 'undefined'
