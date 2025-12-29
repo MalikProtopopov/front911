@@ -4,6 +4,7 @@
  */
 
 import { Service } from '../client'
+import { OpenAPI } from '../generated'
 import type { CityList, CityDetail, PaginatedCityListList, ServiceList, OptionPrice } from '../client'
 import { ApiError } from '@/lib/errors'
 import { contentService } from './content.service'
@@ -32,8 +33,12 @@ export interface CityServiceOption {
     amount: string
     technic_category: string | null
   } | null
-  // All prices for this option in the current city (from /api/website/options/{id}/)
-  prices: OptionPrice[]
+  // All prices for this option in the current city
+  // From new endpoint: /api/website/cities/{city_slug}/services/{service_slug}/options/
+  prices: Array<{
+    amount: string
+    technic_category: string | null
+  }> | OptionPrice[]
 }
 
 export interface CityServiceResponse {
@@ -146,16 +151,80 @@ export const citiesService = {
   },
 
   /**
+   * Get options for service in city using new endpoint
+   * GET /api/website/cities/{city_slug}/services/{service_slug}/options/
+   */
+  getServiceOptionsByCity: async (
+    citySlug: string,
+    serviceSlug: string,
+    technicCategoryId?: number,
+    technicCategoryTitle?: string
+  ): Promise<CityServiceOption[]> => {
+    try {
+      const url = `${OpenAPI.BASE}/api/website/cities/${citySlug}/services/${serviceSlug}/options/`
+      const queryParams = new URLSearchParams()
+      
+      if (technicCategoryId) {
+        queryParams.append('technic_category', technicCategoryId.toString())
+      }
+      if (technicCategoryTitle) {
+        queryParams.append('technic_category__title', technicCategoryTitle)
+      }
+      
+      const fullUrl = queryParams.toString() ? `${url}?${queryParams.toString()}` : url
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch options: ${response.status} ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      
+      // Transform prices from new format to OptionPrice format
+      const transformedOptions: CityServiceOption[] = (Array.isArray(data) ? data : []).map((option: any) => {
+        // Transform prices array from new format to OptionPrice format
+        const transformedPrices: OptionPrice[] = (option.prices || []).map((price: any, index: number) => ({
+          id: index, // Temporary ID
+          city_slug: citySlug,
+          city_title: '', // Will be filled from city data
+          technic_category_id: null,
+          technic_category_title: price.technic_category || null,
+          amount: price.amount,
+        }))
+        
+        return {
+          ...option,
+          prices: transformedPrices,
+        } as CityServiceOption
+      })
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[getServiceOptionsByCity] Loaded ${transformedOptions.length} options for ${citySlug}/${serviceSlug}`)
+      }
+      
+      return transformedOptions
+    } catch (error) {
+      console.error('[getServiceOptionsByCity] Error:', error)
+      throw ApiError.fromUnknown(error)
+    }
+  },
+
+  /**
    * Get service detail in a specific city
-   * Loads all options for the service and all prices for each option from /api/website/options/{id}/
-   * Shows options even if they don't have prices for this city (with "По запросу")
+   * Uses new endpoint /api/website/cities/{city_slug}/services/{service_slug}/options/ for options
    */
   getServiceByCity: async (
     citySlug: string,
     serviceSlug: string
   ): Promise<CityServiceResponse> => {
     try {
-      // Step 1: Get base information (may not include options if they have no prices)
+      // Step 1: Get base information (city, service, content, seo)
       const response = await Service.websiteCitiesServicesRetrieve(
         citySlug,
         serviceSlug
@@ -164,70 +233,76 @@ export const citiesService = {
       // Debug logging in development
       if (process.env.NODE_ENV === 'development') {
         console.log('[getServiceByCity] Raw API response:', response)
-        console.log('[getServiceByCity] Options in response:', response?.options)
-        console.log('[getServiceByCity] Options length:', Array.isArray(response?.options) ? response.options.length : 'not an array')
       }
       
-      // Step 2: Load all options for this service (even if they don't have prices for this city)
-      let allServiceOptions: any[] = []
+      // Step 2: Load all options with prices using new endpoint
+      let optionsWithPrices: CityServiceOption[] = []
       try {
-        const optionsResponse = await contentService.getOptions({ serviceSlug })
-        allServiceOptions = optionsResponse || []
+        const url = `${OpenAPI.BASE}/api/website/cities/${citySlug}/services/${serviceSlug}/options/`
+        
+        const fetchResponse = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!fetchResponse.ok) {
+          throw new Error(`Failed to fetch options: ${fetchResponse.status} ${fetchResponse.statusText}`)
+        }
+        
+        const data = await fetchResponse.json()
+        
+        // Transform prices from new format to OptionPrice format
+        const cityTitle = response.city?.title || ''
+        optionsWithPrices = (Array.isArray(data) ? data : []).map((option: any) => {
+          // Transform prices array from new format to OptionPrice format
+          const transformedPrices: OptionPrice[] = (option.prices || []).map((price: any, index: number) => ({
+            id: index, // Temporary ID
+            city_slug: citySlug,
+            city_title: cityTitle,
+            technic_category_id: null,
+            technic_category_title: price.technic_category || null,
+            amount: price.amount,
+          }))
+          
+          return {
+            ...option,
+            prices: transformedPrices,
+          } as CityServiceOption
+        })
         
         if (process.env.NODE_ENV === 'development') {
-          console.log('[getServiceByCity] All service options loaded:', allServiceOptions.length)
+          console.log('[getServiceByCity] Options loaded from new endpoint:', optionsWithPrices.length)
+          console.log('[getServiceByCity] Options with prices:', optionsWithPrices)
         }
       } catch (error) {
-        console.warn('[getServiceByCity] Failed to load all options, using base response options:', error)
-        // Fallback to options from base response
-        allServiceOptions = Array.isArray(response?.options) ? response.options : []
+        console.warn('[getServiceByCity] Failed to load options from new endpoint, falling back to base response:', error)
+        // Fallback: use options from base response if available
+        const baseOptions = Array.isArray(response?.options) ? response.options : []
+        optionsWithPrices = baseOptions.map((option: any) => ({
+          ...option,
+          prices: option.price ? [{
+            id: 0,
+            city_slug: citySlug,
+            city_title: response.city?.title || '',
+            technic_category_id: null,
+            technic_category_title: option.price.technic_category,
+            amount: option.price.amount,
+          }] : [],
+        })) as CityServiceOption[]
       }
-      
-      // Step 3: Load all prices for each option in parallel
-      const optionsWithAllPrices = await Promise.all(
-        allServiceOptions.map(async (option: any) => {
-          try {
-            // Get all prices for this option
-            const optionDetail = await contentService.getOptionById(option.id)
-            
-            // Filter prices only for the current city
-            const cityPrices = optionDetail.prices.filter(
-              (price: OptionPrice) => price.city_slug === citySlug
-            )
-            
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`[getServiceByCity] Option ${option.id} (${option.title}):`, {
-                allPrices: optionDetail.prices.length,
-                cityPrices: cityPrices.length,
-                prices: cityPrices
-              })
-            }
-            
-            return {
-              ...option,
-              prices: cityPrices, // All prices for this city (may be empty)
-            } as CityServiceOption
-          } catch (error) {
-            // If we can't load option details, use option without prices
-            console.warn(`[getServiceByCity] Failed to load prices for option ${option.id}:`, error)
-            return {
-              ...option,
-              prices: [], // No prices available
-            } as CityServiceOption
-          }
-        })
-      )
       
       const mappedResponse: CityServiceResponse = {
         ...response,
-        options: optionsWithAllPrices,
+        options: optionsWithPrices,
       } as CityServiceResponse
       
       if (process.env.NODE_ENV === 'development') {
         console.log('[getServiceByCity] Final response:', mappedResponse)
-        console.log('[getServiceByCity] Options with prices:', optionsWithAllPrices)
-        console.log('[getServiceByCity] Options with prices count:', optionsWithAllPrices.filter(opt => opt.prices.length > 0).length)
-        console.log('[getServiceByCity] Options without prices count:', optionsWithAllPrices.filter(opt => opt.prices.length === 0).length)
+        console.log('[getServiceByCity] Options count:', optionsWithPrices.length)
+        console.log('[getServiceByCity] Options with prices count:', optionsWithPrices.filter(opt => opt.prices && opt.prices.length > 0).length)
+        console.log('[getServiceByCity] Options without prices count:', optionsWithPrices.filter(opt => !opt.prices || opt.prices.length === 0).length)
       }
       
       return mappedResponse
