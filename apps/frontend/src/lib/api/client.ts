@@ -4,7 +4,8 @@ import { config } from '../config'
 // Configure the OpenAPI client with the base URL
 // This must be set before any API calls are made
 // The BASE URL is required for server-side requests in Next.js
-const baseUrl = config.api.baseUrl || 'http://localhost:8001'
+// Fallback to production URL if config is not set
+const baseUrl = config.api.baseUrl || 'http://45.144.221.92'
 OpenAPI.BASE = baseUrl
 
 // Export everything from generated client

@@ -13,9 +13,9 @@ function getEnvVar(key: string, required = false): string {
 }
 
 // Helper to normalize API URL
-// - In Docker container (server-side): use host.docker.internal to access host services
-// - In browser (client-side): use localhost
-// - Default port is 8001 for test backend
+// Priority:
+// 1. NEXT_PUBLIC_API_URL environment variable (set at build time)
+// 2. Production fallback (45.144.221.92)
 function getApiBaseUrl(): string {
   const envUrl = getEnvVar('NEXT_PUBLIC_API_URL')
   if (envUrl) {
@@ -26,10 +26,9 @@ function getApiBaseUrl(): string {
     }
     return envUrl
   }
-  // Fallback: On server-side (SSR), use 127.0.0.1 instead of localhost for better compatibility
-  // On client-side, localhost works fine
-  const isServer = typeof window === 'undefined'
-  return isServer ? 'http://127.0.0.1:8001' : 'http://localhost:8001'
+  // Fallback: Production backend URL
+  // This ensures production builds work even if env var is not set
+  return 'http://45.144.221.92'
 }
 
 export const config = {
