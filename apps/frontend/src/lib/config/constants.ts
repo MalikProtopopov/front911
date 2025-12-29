@@ -99,7 +99,11 @@ export const ROUTES = {
   FAQ: '/faq',
 } as const
 
-// External Links
+/**
+ * External Links (FALLBACK VALUES)
+ * These are used as fallbacks when API is unavailable.
+ * Primary source of contacts data is /api/website/contacts/
+ */
 export const EXTERNAL_LINKS = {
   APP_STORE: 'https://apps.apple.com/app/911',
   GOOGLE_PLAY: 'https://play.google.com/store/apps/details?id=ru.911',
@@ -108,9 +112,17 @@ export const EXTERNAL_LINKS = {
   WHATSAPP: '79991234567',
 } as const
 
-// Contact Information
+/**
+ * Contact Information (FALLBACK VALUES)
+ * These are used as fallbacks when API is unavailable.
+ * Primary source of contacts data is /api/website/contacts/
+ * @see lib/utils/contacts.ts for fallback utilities
+ */
 export const CONTACT_INFO = {
+  /** Formatted phone for display */
   PHONE: '+7 (999) 123-45-67',
+  /** Raw phone for tel: links */
+  PHONE_RAW: '+79991234567',
   EMAIL: 'info@911.ru',
   ADDRESS: 'Москва, ул. Примерная, д. 1',
   WHATSAPP: '79991234567',

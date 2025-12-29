@@ -55,7 +55,7 @@ export function HowItWorks() {
                 variant="primary" 
                 size="xl" 
                 shadow="md"
-                className="mb-8 transition-colors duration-300 group-hover:bg-[var(--foreground)] group-hover:text-white"
+                className="mb-8"
               />
               <h3 className="text-xl font-semibold mb-3 leading-tight">
                 {step.title}

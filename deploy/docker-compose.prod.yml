@@ -6,17 +6,24 @@ services:
       context: ../apps/frontend
       dockerfile: ../../deploy/docker/frontend/Dockerfile
       target: runner
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://45.144.221.92/api/website}
+        - NEXT_PUBLIC_APP_DOMAIN=${NEXT_PUBLIC_APP_DOMAIN:-http://89.169.1.53}
+        - NEXT_PUBLIC_APP_NAME=911
+        - NEXT_PUBLIC_APP_ENV=production
     container_name: 911_frontend_prod
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      # Для продакшена укажите реальный URL API
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.911.ru}
+      # URL бекенда API (45.144.221.92)
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://45.144.221.92/api/website}
       - NEXT_PUBLIC_YM_ID=${NEXT_PUBLIC_YM_ID}
       - NEXT_PUBLIC_APP_NAME=911
-      - NEXT_PUBLIC_APP_DOMAIN=${NEXT_PUBLIC_APP_DOMAIN:-https://911.ru}
+      # Домен фронтенда (89.169.1.53)
+      - NEXT_PUBLIC_APP_DOMAIN=${NEXT_PUBLIC_APP_DOMAIN:-http://89.169.1.53}
+      - NEXT_PUBLIC_APP_ENV=production
     networks:
       - prod-network
     healthcheck:

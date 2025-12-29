@@ -1,10 +1,40 @@
 import { MetadataRoute } from 'next'
+import { citiesService, servicesService } from '@/lib/api/services'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
 
+  // Fetch all cities and services from API in parallel
+  let cities: { slug: string }[] = []
+  let services: { slug: string }[] = []
+  
+  try {
+    const [citiesData, servicesData] = await Promise.all([
+      citiesService.getAll(),
+      servicesService.getAll()
+    ])
+    cities = citiesData
+    services = servicesData
+  } catch (error) {
+    console.error('Failed to fetch data for sitemap:', error)
+    // Fallback to hardcoded values if API fails
+    cities = [
+      { slug: 'moskva' },
+      { slug: 'sankt-peterburg' },
+      { slug: 'ekaterinburg' },
+      { slug: 'kazan' },
+      { slug: 'novosibirsk' },
+    ]
+    services = [
+      { slug: 'shinomontazh' },
+      { slug: 'fuel-delivery' },
+      { slug: 'evacuator' },
+      { slug: 'auto-lift' },
+    ]
+  }
+
   // Static pages
-  const staticPages = [
+  const staticPages: MetadataRoute.Sitemap = [
     '',
     '/services',
     '/cities',
@@ -12,8 +42,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/about',
     '/contacts',
     '/faq',
-    '/privacy',
-    '/terms',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
@@ -21,24 +49,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '' ? 1 : 0.8,
   }))
 
-  // Services pages
-  const services = ['shinomontazh', 'fuel-delivery', 'evacuator', 'auto-lift']
-  const servicePages = services.map((slug) => ({
-    url: `${baseUrl}/services/${slug}`,
+  // Service pages
+  const servicePages: MetadataRoute.Sitemap = services.map((service) => ({
+    url: `${baseUrl}/services/${service.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }))
 
-  // Cities pages (top 10 for example)
-  const cities = ['moskva', 'sankt-peterburg', 'ekaterinburg', 'kazan', 'novosibirsk']
-  const cityPages = cities.map((slug) => ({
-    url: `${baseUrl}/cities/${slug}`,
+  // City pages
+  const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({
+    url: `${baseUrl}/cities/${city.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }))
 
-  return [...staticPages, ...servicePages, ...cityPages]
+  // City-service combination pages (all cities × all services)
+  const cityServicePages: MetadataRoute.Sitemap = cities.flatMap((city) =>
+    services.map((service) => ({
+      url: `${baseUrl}/cities/${city.slug}/services/${service.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
+  )
+
+  return [...staticPages, ...servicePages, ...cityPages, ...cityServicePages]
 }
-

@@ -6,7 +6,14 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Phone, Download, ChevronDown, ChevronRight, Wrench, Fuel, Truck, Construction, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useServices } from "@/lib/api/hooks"
+import { useServices, useContacts } from "@/lib/api/hooks"
+import { getPrimaryPhone, getContactLink, getFallbackPhoneLink } from "@/lib/utils/contacts"
+import type { ServiceList, Contact } from "@/lib/api/generated"
+
+interface HeaderProps {
+  initialServices?: ServiceList[]
+  initialContacts?: Contact[]
+}
 
 // Icon mapping for services (consistent stroke-width 2)
 const serviceIcons: Record<string, React.ElementType> = {
@@ -44,10 +51,10 @@ function DropdownSkeleton() {
   return (
     <div className="space-y-1">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="flex items-center gap-4 h-[52px] pl-4 pr-5 rounded-lg">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 animate-pulse flex-shrink-0" />
+        <div key={i} className="flex items-center gap-4 p-4 rounded-lg min-h-[52px]">
+          <div className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] animate-pulse flex-shrink-0" />
           <div className="flex-1">
-            <div className="h-4 bg-slate-100 rounded animate-pulse" style={{ width: `${60 + i * 10}%` }} />
+            <div className="h-4 bg-[var(--background-secondary)] rounded animate-pulse" style={{ width: `${60 + i * 10}%` }} />
           </div>
         </div>
       ))}
@@ -55,7 +62,7 @@ function DropdownSkeleton() {
   )
 }
 
-export function Header() {
+export function Header({ initialServices = [], initialContacts = [] }: HeaderProps) {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isScrolled, setIsScrolled] = React.useState(false)
@@ -67,8 +74,32 @@ export function Header() {
   const closeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   
-  // Fetch services from API with caching (SWR caches by default)
-  const { services, isLoading, isError, mutate } = useServices()
+  // Use SWR with server-provided initial data for hydration
+  const { services, isLoading, isError, mutate } = useServices(
+    undefined,
+    { fallbackData: initialServices.length > 0 ? initialServices : undefined }
+  )
+
+  // Fetch phone contacts from API with server-provided initial data
+  const phoneInitialData = initialContacts.filter(c => c.contact_type === 'phone')
+  const { contacts: phoneContacts, isError: isContactsError } = useContacts(
+    { contactType: 'phone' },
+    { fallbackData: phoneInitialData.length > 0 ? phoneInitialData : undefined }
+  )
+  
+  // Get primary phone from API or use fallback
+  const primaryPhone = getPrimaryPhone(phoneContacts)
+  const phoneLink = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
+  
+  // Log warning if using fallback
+  React.useEffect(() => {
+    if (isContactsError || (phoneContacts.length === 0 && !primaryPhone)) {
+      console.warn('[Header] Contacts API unavailable, using fallback phone number')
+    }
+  }, [isContactsError, phoneContacts.length, primaryPhone])
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialServices.length === 0
 
   // Process services: sort by title, limit to MAX_DROPDOWN_ITEMS
   const processedServices = React.useMemo(() => {
@@ -159,10 +190,10 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-3xl font-bold leading-none" style={{ color: "var(--color-primary)" }}>
+            <div className="text-3xl font-bold leading-none text-[var(--color-primary)]">
               911
             </div>
-            <span className="hidden sm:block text-sm font-medium leading-none" style={{ color: "var(--color-secondary)" }}>
+            <span className="hidden sm:block text-sm font-medium leading-none text-[var(--color-secondary)]">
               Автопомощь
             </span>
           </Link>
@@ -183,7 +214,7 @@ export function Header() {
                   className={cn(
                     "flex items-center gap-1.5 text-base font-medium transition-all duration-150 leading-none py-2 px-3 -mx-3 rounded-lg",
                     item.hasDropdown && isServicesOpen 
-                      ? "text-[var(--color-primary)] bg-slate-50" 
+                      ? "text-[var(--color-primary)] bg-[var(--background-secondary)]" 
                       : "hover:text-[var(--color-primary)]"
                   )}
                   onClick={(e) => {
@@ -215,15 +246,15 @@ export function Header() {
                     )}
                   >
                     {/* Dropdown Container */}
-                    <div className="services-dropdown-menu bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-slate-200/70 overflow-hidden min-w-[300px]">
+                    <div className="services-dropdown-menu bg-white rounded-2xl shadow-lg border border-[var(--border)] overflow-hidden min-w-[300px]">
                       
                       {/* Services List */}
-                      <div className="px-3 py-2 max-h-[400px] overflow-y-auto">
-                        {isLoading ? (
+                      <div className="px-2 py-2 max-h-[400px] overflow-y-auto">
+                        {showLoading ? (
                           <DropdownSkeleton />
                         ) : isError ? (
                           <div className="py-8 px-4 text-center">
-                            <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                            <AlertCircle className="w-8 h-8 text-[var(--color-error)] mx-auto mb-3" />
                             <p className="text-sm text-[var(--foreground-secondary)] mb-4">
                               Не удалось загрузить
                             </p>
@@ -232,7 +263,7 @@ export function Header() {
                             </Button>
                           </div>
                         ) : processedServices.length > 0 ? (
-                          <div className="space-y-0.5">
+                          <div className="space-y-1">
                             {processedServices.map((service) => {
                               const Icon = getServiceIcon(service.slug)
                               const isActive = isServiceActive(service.slug)
@@ -241,10 +272,10 @@ export function Header() {
                                   key={service.id}
                                   href={`/services/${service.slug}`}
                                   className={cn(
-                                    "flex items-center gap-4 h-[52px] pl-4 pr-5 rounded-lg transition-all duration-150 group/item",
+                                    "flex items-center gap-4 p-4 rounded-lg transition-all duration-150 group/item min-h-[52px]",
                                     isActive 
                                       ? "bg-[var(--color-primary)]/5 border-l-2 border-[var(--color-primary)]"
-                                      : "hover:bg-slate-50"
+                                      : "hover:bg-[var(--background-secondary)]"
                                   )}
                                   onClick={() => setIsServicesOpen(false)}
                                 >
@@ -253,7 +284,7 @@ export function Header() {
                                     "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-150",
                                     isActive 
                                       ? "bg-[var(--color-primary)] text-white"
-                                      : "bg-slate-100 text-slate-500 group-hover/item:bg-[var(--color-primary)]/10 group-hover/item:text-[var(--color-primary)]"
+                                      : "bg-[var(--background-secondary)] text-[var(--foreground-secondary)] group-hover/item:bg-[var(--color-primary)]/10 group-hover/item:text-[var(--color-primary)]"
                                   )}>
                                     <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
                                   </div>
@@ -281,11 +312,11 @@ export function Header() {
                       </div>
                       
                       {/* Footer - All Services Link */}
-                      {!isLoading && !isError && processedServices.length > 0 && (
-                        <div className="border-t border-slate-100 mx-3 pt-2 pb-2">
+                      {!showLoading && !isError && processedServices.length > 0 && (
+                        <div className="border-t border-[var(--border)] mx-2 pt-2 pb-2">
                           <Link 
                             href="/services" 
-                            className="flex items-center justify-between h-[44px] px-4 rounded-lg text-sm font-medium text-slate-500 hover:text-[var(--color-primary)] hover:bg-slate-50 transition-colors duration-150"
+                            className="flex items-center justify-between h-[44px] px-4 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--background-secondary)] transition-colors duration-150"
                             onClick={() => setIsServicesOpen(false)}
                           >
                             <span>Все услуги</span>
@@ -303,24 +334,24 @@ export function Header() {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
             <Button variant="outline" size="sm" asChild>
-              <a href="tel:+79991234567">
-                <Phone className="w-4 h-4" />
-                Позвонить
+              <a href={phoneLink}>
+                <Phone className="w-5 h-5 flex-shrink-0" />
+                <span className="leading-none">Позвонить</span>
               </a>
             </Button>
             <Button size="sm" asChild>
               <Link href="#download">
-                <Download className="w-4 h-4" />
-                Скачать
+                <Download className="w-5 h-5 flex-shrink-0" />
+                <span className="leading-none">Скачать</span>
               </Link>
             </Button>
           </div>
 
           {/* Mobile Actions */}
           <div className="flex lg:hidden items-center gap-3 flex-shrink-0">
-            <Button variant="outline" size="icon" asChild className="h-10 w-10">
-              <a href="tel:+79991234567">
-                <Phone className="w-4 h-4" />
+            <Button variant="outline" size="icon" asChild>
+              <a href={phoneLink}>
+                <Phone className="w-5 h-5 flex-shrink-0" />
               </a>
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="h-10 w-10">
@@ -349,14 +380,14 @@ export function Header() {
                       </button>
                       {isMobileServicesOpen && (
                         <div className="space-y-1 pb-2">
-                          {isLoading ? (
+                          {showLoading ? (
                             <div className="flex items-center gap-2 py-3 px-4 text-sm text-[var(--foreground-secondary)]">
                               <Loader2 className="w-4 h-4 animate-spin" />
                               Загрузка...
                             </div>
                           ) : isError ? (
                             <div className="py-3 px-4">
-                              <p className="text-sm text-red-500 mb-2">Ошибка загрузки</p>
+                              <p className="text-sm text-[var(--color-error)] mb-2">Ошибка загрузки</p>
                               <Button variant="outline" size="sm" onClick={handleRetry}>Повторить</Button>
                             </div>
                           ) : processedServices.length > 0 ? (
@@ -371,7 +402,7 @@ export function Header() {
                                     "flex items-center gap-3 py-3 px-4 rounded-xl transition-colors",
                                     isActive 
                                       ? "bg-[var(--color-primary)]/5 text-[var(--color-primary)]"
-                                      : "text-[var(--foreground-secondary)] hover:text-[var(--color-primary)] hover:bg-slate-50"
+                                      : "text-[var(--foreground-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--background-secondary)]"
                                   )}
                                   onClick={() => setIsMenuOpen(false)}
                                 >

@@ -4,8 +4,9 @@ import {
   AccordionTriggerCard, 
   AccordionContentCard 
 } from "@/components/ui/accordion"
-import { Breadcrumbs, PageHeader, Badge } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
+import { HeroSection } from '@/components/patterns'
 import { HelpCircle } from 'lucide-react'
 
 const faqs = [
@@ -43,20 +44,13 @@ export default function FAQPage() {
   return (
     <PageLayout>
       {/* Hero */}
-      <section id="faq-hero-section" className="pt-20 md:pt-24 lg:pt-16 bg-gradient-to-b from-white to-[var(--background-secondary)]">
-        <div className="container mx-auto px-4 text-center">
-          <Breadcrumbs 
-            items={[{ label: 'Частые вопросы' }]} 
-            className="justify-center"
-          />
-          <PageHeader
-            id="faq-heading"
-            title="Частые вопросы"
-            subtitle="Ответы на популярные вопросы о нашем сервисе"
-            className="mx-auto"
-          />
-        </div>
-      </section>
+      <HeroSection
+        id="faq-hero-section"
+        title="Частые вопросы"
+        subtitle="Ответы на популярные вопросы о нашем сервисе"
+        breadcrumbs={[{ label: 'Частые вопросы' }]}
+        centered
+      />
 
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4 max-w-3xl">

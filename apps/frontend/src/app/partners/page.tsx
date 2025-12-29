@@ -1,12 +1,13 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
 import { IconCircle, NumberedCircle, SectionHeader, Grid } from '@/components/ui'
 import { Button } from '@/components/ui/button'
 import { Breadcrumbs } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
-import { Briefcase, Users, TrendingUp, DollarSign, CheckCircle, Phone } from 'lucide-react'
+import { Briefcase, Users, TrendingUp, DollarSign, CheckCircle } from 'lucide-react'
 import { generatePageMetadata } from '@/lib/api/hooks'
 import { PartnerCTASection } from '@/components/sections/PartnerCTASection'
+import { PageCTA } from '@/components/patterns'
+import { PhoneButton } from '@/components/common'
 
 // Generate metadata
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,27 +58,27 @@ export default function PartnersPage() {
   return (
     <PageLayout>
       {/* Hero */}
-      <section id="partners-hero-section" className="pt-20 md:pt-24 lg:pt-16 bg-gradient-to-b from-white to-[var(--background-secondary)]">
+      <section id="partners-hero-section" className="pt-28 md:pt-30 lg:pt-32 pb-12 md:pb-16 lg:pb-20 bg-gradient-to-b from-white to-[var(--background-secondary)]">
         <div className="container mx-auto px-4 max-w-7xl">
           <Breadcrumbs 
             items={[{ label: 'Партнёрам' }]} 
           />
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 id="partners-heading" className="text-5xl md:text-6xl font-bold" style={{ scrollMarginTop: '120px' }}>
+              <h1 id="partners-heading" className="text-5xl md:text-6xl font-bold scroll-mt-30">
                 Станьте партнёром 911
               </h1>
               <p className="text-xl text-[var(--foreground-secondary)] leading-relaxed">
                 Присоединяйтесь к крупнейшей сети автопомощи в России. 
                 Получайте стабильный поток заказов и зарабатывайте больше.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild>
-                  <a href="#partner-download">Скачать приложение</a>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild className="sm:w-auto w-full">
+                  <a href="#partner-download">
+                    <span className="leading-none">Скачать приложение</span>
+                  </a>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <a href="tel:+79991234567">Позвонить</a>
-                </Button>
+                <PhoneButton variant="outline" className="sm:w-auto w-full" />
               </div>
             </div>
             
@@ -160,29 +161,14 @@ export default function PartnersPage() {
       <PartnerCTASection />
 
       {/* CTA */}
-      <section className="cta-section-padding bg-[var(--background-secondary)]">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex flex-col">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-[var(--foreground)] cta-heading-margin">
-              Остались вопросы?
-            </h2>
-            <p className="text-base md:text-lg lg:text-xl leading-relaxed text-[var(--foreground-secondary)] max-w-2xl cta-description-margin">
-              Свяжитесь с нами, и мы расскажем подробнее о сотрудничестве
-            </p>
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-              <Button size="lg" asChild className="w-full sm:w-auto min-w-[160px] md:min-w-[180px]">
-                <a href="tel:+79991234567">
-                  <Phone className="w-5 h-5 mr-2" />
-                  Позвонить
-                </a>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto min-w-[160px] md:min-w-[180px]">
-                <Link href="/contacts">Контакты</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PageCTA
+        title="Остались вопросы?"
+        description="Свяжитесь с нами, и мы расскажем подробнее о сотрудничестве"
+        actions={[
+          { label: 'Позвонить', showPhoneIcon: true },
+          { label: 'Контакты', href: '/contacts', variant: 'outline' },
+        ]}
+      />
     </PageLayout>
   )
 }

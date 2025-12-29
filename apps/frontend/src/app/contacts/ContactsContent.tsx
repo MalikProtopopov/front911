@@ -1,0 +1,203 @@
+'use client'
+
+import { MapPin, Clock } from 'lucide-react'
+import { IconCircle, Grid } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { useContacts } from '@/lib/api/hooks'
+import { 
+  getContactLink, 
+  isExternalContact,
+  getAnyContactIcon,
+  TelegramIcon,
+  VKIcon,
+  getFallbackSocialLinks,
+} from '@/lib/utils/contacts'
+import { CONTACT_INFO } from '@/lib/config/constants'
+import { LeadForm } from '@/components/forms/LeadForm'
+import type { Contact } from '@/lib/api/generated'
+
+/* =============================================================================
+   CONTACTS PAGE CONTENT
+   Client component for dynamic contacts display from API
+============================================================================= */
+
+interface ContactsContentProps {
+  initialContacts?: Contact[]
+}
+
+// Working hours (hardcoded as this data is not in API)
+const workingHours = [
+  { day: 'Понедельник — Пятница', hours: '09:00 — 18:00' },
+  { day: 'Суббота', hours: '10:00 — 16:00' },
+  { day: 'Воскресенье', hours: 'Выходной' },
+]
+
+// Contact type descriptions
+const contactDescriptions: Record<string, string> = {
+  phone: 'Круглосуточная линия',
+  email: 'Ответим в течение часа',
+  whatsapp: 'Быстрая связь',
+  telegram: 'Быстрая связь',
+  address: 'Пн-Пт 9:00-18:00',
+}
+
+// Contact card component
+function ContactCard({ contact }: { contact: Contact }) {
+  const href = getContactLink(contact)
+  const isExternal = isExternalContact(contact)
+  const IconComponent = getAnyContactIcon(contact.contact_type)
+
+  return (
+    <a 
+      href={href} 
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+      className="flex flex-col items-center text-center p-6 rounded-xl bg-white hover:shadow-lg transition-all h-full"
+    >
+      <IconCircle 
+        icon={IconComponent ? <IconComponent className="w-6 h-6" /> : <MapPin className="w-6 h-6" />} 
+        variant="primary-soft" 
+        size="lg" 
+        className="mb-4"
+      />
+      <h3 className="font-semibold text-lg mb-2 !mt-0">{contact.label}</h3>
+      <p className="text-[var(--color-primary)] font-medium mb-2 break-words">
+        {contact.value}
+      </p>
+      <p className="text-sm text-[var(--foreground-secondary)] mt-auto">
+        {contactDescriptions[contact.contact_type] || ''}
+      </p>
+    </a>
+  )
+}
+
+// Address card component (hardcoded as address is not in API)
+function AddressCard() {
+  return (
+    <div className="flex flex-col items-center text-center p-6 rounded-xl bg-white hover:shadow-lg transition-all h-full">
+      <IconCircle 
+        icon={<MapPin className="w-6 h-6" />} 
+        variant="primary-soft" 
+        size="lg" 
+        className="mb-4"
+      />
+      <h3 className="font-semibold text-lg mb-2 !mt-0">Офис</h3>
+      <p className="text-[var(--color-primary)] font-medium mb-2 break-words">
+        {CONTACT_INFO.ADDRESS}
+      </p>
+      <p className="text-sm text-[var(--foreground-secondary)] mt-auto">
+        Пн-Пт 9:00-18:00
+      </p>
+    </div>
+  )
+}
+
+export function ContactsContent({ initialContacts = [] }: ContactsContentProps) {
+  // Fetch all contacts from API with server-provided initial data
+  const { contacts, isError } = useContacts(
+    undefined,
+    { fallbackData: initialContacts.length > 0 ? initialContacts : undefined }
+  )
+  
+  // Filter contacts to show in the main grid (phone, email, whatsapp/telegram)
+  const mainContacts = contacts.filter(c => 
+    ['phone', 'email', 'whatsapp', 'telegram'].includes(c.contact_type)
+  ).slice(0, 3) // Show max 3 + address = 4 cards
+
+  // Get social contacts for sidebar
+  const telegramContact = contacts.find(c => c.contact_type === 'telegram')
+  const vkContact = contacts.find(c => c.contact_type === 'vk')
+  
+  // Fallback social links
+  const fallbackSocial = getFallbackSocialLinks()
+  const telegramHref = telegramContact ? getContactLink(telegramContact) : fallbackSocial.telegram
+  const vkHref = vkContact ? getContactLink(vkContact) : fallbackSocial.vk
+
+  // Log warning if using fallback
+  if (isError && typeof window !== 'undefined') {
+    console.warn('[ContactsContent] Contacts API unavailable, using fallback values')
+  }
+
+  return (
+    <>
+      {/* Contact Methods */}
+      <section className="section-spacing-lg">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <Grid cols={4} gap="md" className="mb-12 md:mb-16">
+            {mainContacts.map((contact) => (
+              <ContactCard key={contact.id} contact={contact} />
+            ))}
+            <AddressCard />
+          </Grid>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Form */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <h2 className="text-3xl font-bold mb-8">Напишите нам</h2>
+              <LeadForm showCard={false} title="" />
+            </div>
+
+            {/* Sidebar */}
+            <div className="order-1 lg:order-2 space-y-6">
+              {/* Working Hours */}
+              <div className="p-6 rounded-xl bg-white">
+                <div className="flex items-center gap-3 mb-6">
+                  <IconCircle 
+                    icon={<Clock className="w-6 h-6" />}
+                    variant="primary-soft"
+                    size="md"
+                  />
+                  <h3 className="font-semibold text-lg !mt-0 !mb-0">Часы работы офиса</h3>
+                </div>
+                <div className="space-y-3">
+                  {workingHours.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="text-[var(--foreground-secondary)]">{item.day}</span>
+                      <span className="font-medium">{item.hours}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 p-4 bg-[var(--color-success)]/10 rounded-lg">
+                  <p className="text-sm text-center">
+                    <strong>Служба помощи</strong> работает <strong>24/7</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="p-6 rounded-xl bg-white">
+                <h3 className="font-semibold text-lg mb-4 !mt-0">Мы в соцсетях</h3>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1"
+                    asChild
+                  >
+                    <a href={telegramHref} target="_blank" rel="noopener noreferrer">
+                      <TelegramIcon className="w-5 h-5 flex-shrink-0" />
+                      <span className="leading-none hidden sm:inline">Telegram</span>
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="flex-1"
+                    asChild
+                  >
+                    <a href={vkHref} target="_blank" rel="noopener noreferrer">
+                      <VKIcon className="w-5 h-5 flex-shrink-0" />
+                      <span className="leading-none hidden sm:inline">VK</span>
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
+

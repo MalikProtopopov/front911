@@ -1,10 +1,17 @@
 /**
  * Design System for 911 Corporate Website
  * Emergency Concept - Complete Design Tokens
+ * 
+ * This is the SINGLE SOURCE OF TRUTH for all design tokens.
+ * Do not create duplicate token files.
  */
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
+
+/* ========================================================================== */
+/* CSS VARIABLES (Design Tokens)                                              */
+/* ========================================================================== */
 
 :root {
   /* ========== COLORS ========== */
@@ -54,9 +61,9 @@
   
   /* Card & Form Styling */
   --radius-card: 16px;
-  --focus-ring: rgba(255, 87, 34, 0.3);  /* --color-primary with 30% opacity */
-  --focus-ring-light: rgba(255, 87, 34, 0.2);  /* --color-primary with 20% opacity */
-  --focus-border-light: rgba(255, 87, 34, 0.5);  /* --color-primary with 50% opacity */
+  --focus-ring: rgba(255, 87, 34, 0.3);
+  --focus-ring-light: rgba(255, 87, 34, 0.2);
+  --focus-border-light: rgba(255, 87, 34, 0.5);
   
   /* ========== TYPOGRAPHY ========== */
   
@@ -66,68 +73,46 @@
   /* ========== SPACING - 4pt Grid System ========== */
   
   --spacing-0: 0px;
-  --spacing-1: 4px;      /* 4 * 1 */
-  --spacing-2: 8px;      /* 4 * 2 */
-  --spacing-3: 12px;     /* 4 * 3 */
-  --spacing-4: 16px;     /* 4 * 4 */
-  --spacing-5: 20px;     /* 4 * 5 */
-  --spacing-6: 24px;     /* 4 * 6 */
-  --spacing-8: 32px;     /* 4 * 8 */
-  --spacing-10: 40px;    /* 4 * 10 */
-  --spacing-12: 48px;    /* 4 * 12 */
-  --spacing-14: 56px;    /* 4 * 14 */
-  --spacing-16: 64px;    /* 4 * 16 */
-  --spacing-20: 80px;    /* 4 * 20 */
-  --spacing-24: 96px;    /* 4 * 24 */
-  --spacing-28: 112px;   /* 4 * 28 */
-  --spacing-32: 128px;   /* 4 * 32 */
-  --spacing-40: 160px;   /* 4 * 40 */
-  --spacing-48: 192px;   /* 4 * 48 */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-14: 56px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+  --spacing-28: 112px;
+  --spacing-32: 128px;
   
   /* ========== CONTAINER SYSTEM ========== */
   
-  /* Container Max Widths */
   --container-sm: 640px;
   --container-md: 768px;
   --container-lg: 1024px;
   --container-xl: 1240px;
   --container-2xl: 1440px;
   
-  /* Container Padding (Horizontal) */
-  --container-padding-mobile: 20px;    /* 4 * 5 - Увеличено для мобильных */
-  --container-padding-tablet: 32px;    /* 4 * 8 - Увеличено для планшетов */
-  --container-padding-desktop: 40px;   /* 4 * 10 - Увеличено для десктопов */
-  --container-padding-wide: 48px;      /* 4 * 12 - Увеличено для широких экранов */
-  
   /* ========== SECTION SPACING (Vertical) ========== */
   
-  /* Mobile */
-  --section-spacing-mobile-sm: 48px;   /* 4 * 12 - Увеличено */
-  --section-spacing-mobile-md: 64px;   /* 4 * 16 - Увеличено */
-  --section-spacing-mobile-lg: 80px;   /* 4 * 20 - Увеличено */
-  --section-spacing-mobile-xl: 96px;   /* 4 * 24 - Увеличено */
+  --section-spacing-sm: 48px;
+  --section-spacing-md: 64px;
+  --section-spacing-lg: 80px;
+  --section-spacing-xl: 96px;
   
-  /* Tablet */
-  --section-spacing-tablet-sm: 64px;   /* 4 * 16 - Увеличено */
-  --section-spacing-tablet-md: 80px;   /* 4 * 20 - Увеличено */
-  --section-spacing-tablet-lg: 96px;   /* 4 * 24 - Увеличено */
-  --section-spacing-tablet-xl: 112px;  /* 4 * 28 - Увеличено */
+  /* ========== GAPS ========== */
   
-  /* Desktop */
-  --section-spacing-desktop-sm: 80px;  /* 4 * 20 - Увеличено */
-  --section-spacing-desktop-md: 96px;  /* 4 * 24 - Увеличено */
-  --section-spacing-desktop-lg: 112px; /* 4 * 28 - Увеличено */
-  --section-spacing-desktop-xl: 144px; /* 4 * 36 - Увеличено */
-  
-  /* ========== GAPS & INTERNAL SPACING ========== */
-  
-  --gap-xs: 8px;     /* 4 * 2 */
-  --gap-sm: 12px;    /* 4 * 3 */
-  --gap-md: 16px;    /* 4 * 4 */
-  --gap-lg: 24px;    /* 4 * 6 */
-  --gap-xl: 32px;    /* 4 * 8 */
-  --gap-2xl: 48px;   /* 4 * 12 */
-  --gap-3xl: 64px;   /* 4 * 16 */
+  --gap-xs: 8px;
+  --gap-sm: 12px;
+  --gap-md: 16px;
+  --gap-lg: 24px;
+  --gap-xl: 32px;
+  --gap-2xl: 48px;
+  --gap-3xl: 64px;
   
   /* ========== SHADOWS ========== */
   
@@ -174,8 +159,8 @@
   --z-tooltip: 1070;
 }
 
+/* Tailwind theme integration */
 @theme inline {
-  /* Colors */
   --color-primary: var(--color-primary);
   --color-secondary: var(--color-secondary);
   --color-accent: var(--color-accent);
@@ -183,15 +168,20 @@
   --color-error: var(--color-error);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
-  /* Fonts */
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
 }
 
-* {
-  margin: 0;
-  padding: 0;
+/* ========================================================================== */
+/* BASE STYLES                                                                 */
+/* ========================================================================== */
+
+/* 
+ * NOTE: Tailwind v4 includes its own preflight/reset automatically.
+ * Do NOT add * { margin: 0; padding: 0; } here - it will override Tailwind utilities!
+ */
+
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -209,6 +199,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ========== TYPOGRAPHY ========== */
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -216,57 +208,23 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-secondary);
 }
 
-h1 {
-  font-size: 56px;
-}
-
-h2 {
-  font-size: 40px;
-}
-
-h3 {
-  font-size: 28px;
-}
-
-h4 {
-  font-size: 24px;
-}
+h1 { font-size: 56px; }
+h2 { font-size: 40px; }
+h3 { font-size: 28px; }
+h4 { font-size: 24px; }
 
 @media (max-width: 768px) {
-  h1 {
-    font-size: 40px;
-  }
-  
-  h2 {
-    font-size: 32px;
-  }
-  
-  h3 {
-    font-size: 24px;
-  }
-  
-  body {
-    font-size: 16px;
-  }
+  h1 { font-size: 40px; }
+  h2 { font-size: 32px; }
+  h3 { font-size: 24px; }
+  body { font-size: 16px; }
 }
 
-/* City intro h2 should be regular text size, not heading size */
-.prose .city-intro > h2,
-.city-intro > h2 {
-  font-size: 1rem !important; /* 16px - same as body/base text */
-  font-weight: 400 !important; /* normal weight */
-  color: var(--foreground-secondary) !important;
-  margin-top: 0 !important;
-  margin-bottom: 1rem !important; /* mb-4 */
-  line-height: 1.5 !important;
-}
+/* ========================================================================== */
+/* LAYOUT UTILITIES                                                            */
+/* ========================================================================== */
 
-/* ========== CONTAINER SYSTEM ========== */
-
-/**
- * Main Container
- * Provides consistent max-width and responsive horizontal padding
- */
+/* Container */
 .container {
   width: 100%;
   max-width: var(--container-xl);
@@ -291,29 +249,12 @@ h4 {
 }
 
 /* Container Size Variants */
-.container-sm {
-  max-width: var(--container-sm);
-}
-
-.container-md {
-  max-width: var(--container-md);
-}
-
-.container-lg {
-  max-width: var(--container-lg);
-}
-
-.container-xl {
-  max-width: var(--container-xl);
-}
-
-.container-2xl {
-  max-width: var(--container-2xl);
-}
-
-.container-full {
-  max-width: 100%;
-}
+.container-sm { max-width: var(--container-sm); }
+.container-md { max-width: var(--container-md); }
+.container-lg { max-width: var(--container-lg); }
+.container-xl { max-width: var(--container-xl); }
+.container-2xl { max-width: var(--container-2xl); }
+.container-full { max-width: 100%; }
 
 /* 12 Column Grid */
 .grid-12 {
@@ -323,9 +264,7 @@ h4 {
 }
 
 @media (max-width: 768px) {
-  .grid-12 {
-    gap: 16px;
-  }
+  .grid-12 { gap: 16px; }
 }
 
 /* Column Spans */
@@ -342,12 +281,10 @@ h4 {
 .col-span-11 { grid-column: span 11; }
 .col-span-12 { grid-column: span 12; }
 
-/* Desktop breakpoint - 6 columns become full width on smaller screens */
 @media (max-width: 1024px) {
   .col-span-6 { grid-column: span 12; }
 }
 
-/* Mobile breakpoint - all columns full width */
 @media (max-width: 768px) {
   .col-span-1, .col-span-2, .col-span-3, .col-span-4,
   .col-span-5, .col-span-6, .col-span-7, .col-span-8,
@@ -356,130 +293,72 @@ h4 {
   }
 }
 
-/* ========== SECTION HEADER CENTERING ========== */
+/* ========================================================================== */
+/* SECTION SPACING UTILITIES                                                   */
+/* ========================================================================== */
 
-/**
- * Ensure SectionHeader is properly centered
- * Fixes visual centering issues with container padding
- * NOTE: Removed display: block to allow flex layout from Tailwind
- */
-section .container .max-w-3xl.mx-auto,
-.container .max-w-3xl.mx-auto {
-  width: 100%;
-  max-width: 48rem; /* 768px - max-w-3xl */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Ensure Grid components are properly centered and full width */
-section .container > .grid,
-.container > .grid {
-  width: 100%;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* ========== SECTION CONTENT SPACING ========== */
-
-/**
- * Proper spacing between SectionHeader and content blocks
- * NOTE: Spacing is now handled by Tailwind space-y-* utilities in components
- * These rules are kept for backward compatibility but should not interfere with space-y-*
- */
-
-/* ========== SECTION SPACING ========== */
-
-/**
- * Section Spacing - Vertical Padding (Top & Bottom)
- * Responsive padding based on screen size
- */
-
-/* Small Section Spacing */
 .section-spacing-sm {
-  padding-top: var(--section-spacing-mobile-sm);
-  padding-bottom: var(--section-spacing-mobile-sm);
+  padding-top: var(--section-spacing-sm);
+  padding-bottom: var(--section-spacing-sm);
 }
 
-@media (min-width: 768px) {
-  .section-spacing-sm {
-    padding-top: var(--section-spacing-tablet-sm);
-    padding-bottom: var(--section-spacing-tablet-sm);
-  }
-}
-
-@media (min-width: 1024px) {
-  .section-spacing-sm {
-    padding-top: var(--section-spacing-desktop-sm);
-    padding-bottom: var(--section-spacing-desktop-sm);
-  }
-}
-
-/* Medium Section Spacing (Default) */
 .section-spacing,
 .section-spacing-md {
-  padding-top: var(--section-spacing-mobile-md);
-  padding-bottom: var(--section-spacing-mobile-md);
+  padding-top: var(--section-spacing-md);
+  padding-bottom: var(--section-spacing-md);
 }
 
-@media (min-width: 768px) {
-  .section-spacing,
-  .section-spacing-md {
-    padding-top: var(--section-spacing-tablet-md);
-    padding-bottom: var(--section-spacing-tablet-md);
-  }
-}
-
-@media (min-width: 1024px) {
-  .section-spacing,
-  .section-spacing-md {
-    padding-top: var(--section-spacing-desktop-md);
-    padding-bottom: var(--section-spacing-desktop-md);
-  }
-}
-
-/* Large Section Spacing */
 .section-spacing-lg {
-  padding-top: 50px; /* Reduced from 80px */
-  padding-bottom: var(--section-spacing-mobile-lg);
+  padding-top: var(--section-spacing-lg);
+  padding-bottom: var(--section-spacing-lg);
 }
 
-@media (min-width: 768px) {
-  .section-spacing-lg {
-    padding-top: 60px; /* Reduced from 96px */
-    padding-bottom: var(--section-spacing-tablet-lg);
-  }
-}
-
-@media (min-width: 1024px) {
-  .section-spacing-lg {
-    padding-top: 70px; /* Reduced from 112px */
-    padding-bottom: var(--section-spacing-desktop-lg);
-  }
-}
-
-/* Extra Large Section Spacing */
 .section-spacing-xl {
-  padding-top: var(--section-spacing-mobile-xl);
-  padding-bottom: var(--section-spacing-mobile-xl);
+  padding-top: var(--section-spacing-xl);
+  padding-bottom: var(--section-spacing-xl);
 }
 
 @media (min-width: 768px) {
+  .section-spacing-sm {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+  .section-spacing,
+  .section-spacing-md {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+  .section-spacing-lg {
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
   .section-spacing-xl {
-    padding-top: var(--section-spacing-tablet-xl);
-    padding-bottom: var(--section-spacing-tablet-xl);
+    padding-top: 112px;
+    padding-bottom: 112px;
   }
 }
 
 @media (min-width: 1024px) {
+  .section-spacing-sm {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+  .section-spacing,
+  .section-spacing-md {
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
+  .section-spacing-lg {
+    padding-top: 112px;
+    padding-bottom: 112px;
+  }
   .section-spacing-xl {
-    padding-top: var(--section-spacing-desktop-xl);
-    padding-bottom: var(--section-spacing-desktop-xl);
+    padding-top: 144px;
+    padding-bottom: 144px;
   }
 }
 
-/* ========== GAPS & MARGINS ========== */
-
-/* Inner Section Gaps - Use for spacing between elements within sections */
+/* Gap utilities */
 .section-gap-xs { margin-bottom: var(--gap-xs); }
 .section-gap-sm { margin-bottom: var(--gap-sm); }
 .section-gap-md { margin-bottom: var(--gap-md); }
@@ -488,139 +367,10 @@ section .container > .grid,
 .section-gap-2xl { margin-bottom: var(--gap-2xl); }
 .section-gap-3xl { margin-bottom: var(--gap-3xl); }
 
-/* Section Actions - Container for buttons at the bottom of sections */
-/* Provides consistent spacing between content and action buttons */
-/* Section Actions - Container for buttons at the bottom of sections */
-/* NOTE: Spacing is now handled by Tailwind space-y-* utilities in components */
-/* This class is kept for backward compatibility but spacing should be controlled via space-y-* */
-.section-actions {
-  /* Spacing removed - use space-y-* on parent container instead */
-  text-align: center;
-}
+/* ========================================================================== */
+/* ANIMATIONS                                                                  */
+/* ========================================================================== */
 
-/* Hero Sections - All Pages */
-#home-hero-section {
-  padding-top: 144px !important; /* 36 * 4px = 144px для мобильных */
-}
-
-@media (min-width: 768px) {
-  #home-hero-section {
-    padding-top: 80px !important; /* 20 * 4px = 80px для планшетов */
-  }
-}
-
-@media (min-width: 1024px) {
-  #home-hero-section {
-    padding-top: 176px !important; /* 44 * 4px = 176px для десктопа */
-  }
-}
-
-#cities-hero-section,
-#services-hero-section,
-#service-detail-hero-section,
-#faq-hero-section,
-#about-hero-section,
-#contacts-hero-section,
-#city-detail-hero-section,
-#city-service-hero-section,
-#partners-hero-section {
-  padding-bottom: 60px !important;
-}
-
-/* Partners Hero Section - Internal Spacing */
-#partners-hero-section .grid > div:first-child {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2rem !important;
-}
-
-#partners-hero-section .grid > div:first-child h1 {
-  margin-bottom: 0 !important;
-  margin-top: 2rem !important;
-}
-
-#partners-hero-section .grid > div:first-child p {
-  margin-bottom: 0 !important;
-  margin-top: 0 !important;
-}
-
-#partners-hero-section .grid > div:first-child .flex {
-  gap: 1rem !important;
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* Partners Hero Section - Button Padding */
-#partners-hero-section .grid > div:first-child .flex a,
-#partners-hero-section .grid > div:first-child .flex button {
-  padding-left: 2.5rem !important;
-  padding-right: 2.5rem !important;
-  padding-top: 1rem !important;
-  padding-bottom: 1rem !important;
-}
-
-/* ========== PAGE LAYOUT - Header Offset ========== */
-/* Fixed header height is ~80-100px + some margin = 120px total */
-.page-content {
-  min-height: 100vh;
-  padding-top: 120px;
-}
-
-/* ========== GLOBAL BUTTON PADDING FIX ========== */
-/* Ensures all buttons have proper padding so text doesn't stick to edges */
-/* Covers both <button> and <a> elements (when using asChild prop) */
-
-/* Size SM - Small buttons (h-9 = 36px) - For Header, compact areas */
-button.h-9,
-a.h-9,
-button[class*="h-9"],
-a[class*="h-9"],
-.h-9 {
-  padding-left: 1.25rem !important;   /* 20px */
-  padding-right: 1.25rem !important;  /* 20px */
-  padding-top: 0.5rem !important;     /* 8px */
-  padding-bottom: 0.5rem !important;  /* 8px */
-}
-
-/* Size Default - Medium buttons (h-12 = 48px) - Standard use */
-button.h-12,
-a.h-12,
-button[class*="h-12"],
-a[class*="h-12"],
-.h-12 {
-  padding-left: 1.75rem !important;   /* 28px */
-  padding-right: 1.75rem !important;  /* 28px */
-  padding-top: 0.75rem !important;    /* 12px */
-  padding-bottom: 0.75rem !important; /* 12px */
-}
-
-/* Size LG - Large buttons (h-14 = 56px) - Hero, CTA sections */
-button.h-14,
-a.h-14,
-button[class*="h-14"],
-a[class*="h-14"],
-.h-14 {
-  padding-left: 2.5rem !important;    /* 40px */
-  padding-right: 2.5rem !important;   /* 40px */
-  padding-top: 1rem !important;       /* 16px */
-  padding-bottom: 1rem !important;    /* 16px */
-}
-
-@media (min-width: 768px) {
-  #cities-hero-section,
-  #services-hero-section,
-  #service-detail-hero-section,
-  #faq-hero-section,
-  #about-hero-section,
-  #contacts-hero-section,
-  #city-detail-hero-section,
-  #city-service-hero-section,
-  #partners-hero-section {
-    padding-bottom: 80px !important;
-  }
-}
-
-/* Animation Utilities */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -633,12 +383,8 @@ a[class*="h-14"],
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 @keyframes countUp {
@@ -660,325 +406,618 @@ a[class*="h-14"],
   animation: slideIn var(--duration-slow) var(--easing-default);
 }
 
-/* Smooth Transitions */
+/* ========================================================================== */
+/* INTERACTIVE ELEMENTS                                                        */
+/* ========================================================================== */
+
 a, button {
   transition: all var(--duration-fast) var(--easing-default);
 }
 
-/* Focus Styles for Accessibility */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Selection Style */
 ::selection {
   background-color: var(--color-primary);
   color: var(--foreground-inverse);
 }
 
-/* ========== CTA SECTION PADDING ========== */
-/* Custom padding for CTA section in city detail pages */
-/* Ensures proper spacing even if Tailwind classes don't apply */
-.cta-section-padding {
+/* ========================================================================== */
+/* PROSE STYLES (for rich text content)                                        */
+/* ========================================================================== */
+
+.prose ul,
+.prose ol {
+  list-style-position: outside;
+  padding-left: 1.25rem;
+  margin-left: 0;
+  margin-bottom: 1rem;
+}
+
+.prose li {
+  padding-left: 0.25rem;
+  margin: 0.25rem 0;
+  line-height: 1.625;
+}
+
+.prose ul ul,
+.prose ol ol,
+.prose ul ol,
+.prose ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+/* ========================================================================== */
+/* CTA BANNER COMPONENT                                                        */
+/* ========================================================================== */
+
+.cta-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-3xl);
+  color: white;
+  padding: clamp(24px, 4vw, 48px) clamp(24px, 4vw, 56px);
+  background: linear-gradient(135deg, #2C3E50 0%, #1A252F 50%, #0f1419 100%);
+}
+
+.cta-banner--loading {
+  min-height: 220px;
+}
+
+.cta-banner__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse at 30% 20%, rgba(255, 87, 34, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(255, 87, 34, 0.1) 0%, transparent 40%);
+}
+
+.cta-banner__content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.cta-banner__title {
+  font-weight: 700;
+  line-height: 1.2;
+  font-size: clamp(28px, 5vw, 48px);
+  margin: 0;
+  color: #ffffff;
+}
+
+.cta-banner__description {
+  font-size: clamp(16px, 2vw, 20px);
+  max-width: 500px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.625;
+}
+
+/* CTA Banner buttons - controlled by Button component, only add minimal overrides */
+.cta-banner__button {
+  min-width: 180px;
+}
+
+.cta-banner__button:hover {
+  transform: scale(1.02);
+}
+
+.cta-banner__button:active {
+  transform: scale(0.98);
+}
+
+/* ========================================================================== */
+/* HERO SECTION COMPONENT                                                      */
+/* ========================================================================== */
+
+/* 
+ * Hero Section Spacing
+ * Header height: 80px (h-20)
+ * Breathing room: 32-48px depending on screen size
+ */
+.hero-section {
+  padding-top: 112px;  /* 80px header + 32px space */
+  padding-bottom: 48px;
+  background: linear-gradient(to bottom, var(--background), var(--background-secondary));
+}
+
+@media (min-width: 768px) {
+  .hero-section {
+    padding-top: 120px;  /* 80px header + 40px space */
+    padding-bottom: 64px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding-top: 128px;  /* 80px header + 48px space */
+    padding-bottom: 80px;
+  }
+}
+
+/* Hero section additional content (quick stats, buttons, etc.) */
+.hero-section__content {
+  margin-top: 32px;
+}
+
+@media (min-width: 768px) {
+  .hero-section__content {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section__content {
+    margin-top: 48px;
+  }
+}
+
+/* ========================================================================== */
+/* PAGE CTA COMPONENT                                                          */
+/* ========================================================================== */
+
+.page-cta {
   padding-top: 48px;
   padding-bottom: 48px;
 }
 
 @media (min-width: 768px) {
-  .cta-section-padding {
+  .page-cta {
     padding-top: 64px;
     padding-bottom: 64px;
   }
 }
 
 @media (min-width: 1024px) {
-  .cta-section-padding {
+  .page-cta {
     padding-top: 80px;
     padding-bottom: 80px;
   }
 }
 
-/* ========== CTA SECTION ELEMENT SPACING ========== */
-/* Custom margins for spacing between elements in CTA section */
-/* Ensures proper spacing between heading, description and buttons */
-.cta-heading-margin {
-  margin-bottom: 32px;
+.page-cta__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-cta__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--foreground);
+  margin-bottom: 24px;
 }
 
 @media (min-width: 768px) {
-  .cta-heading-margin {
+  .page-cta__title {
+    font-size: 1.875rem;
+    margin-bottom: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-cta__title {
+    font-size: 2.25rem;
     margin-bottom: 40px;
   }
 }
 
-.cta-description-margin {
-  margin-bottom: 48px;
+.page-cta__description {
+  font-size: 1rem;
+  line-height: 1.625;
+  color: var(--foreground-secondary);
+  max-width: 42rem;
+  margin-bottom: 32px;
 }
 
 @media (min-width: 768px) {
-  .cta-description-margin {
+  .page-cta__description {
+    font-size: 1.125rem;
+    margin-bottom: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-cta__description {
+    font-size: 1.25rem;
     margin-bottom: 64px;
   }
 }
 
-/* ========== SERVICES LIST BOTTOM PADDING ========== */
-/* Custom bottom padding for services list in city detail pages */
-/* Ensures proper spacing at the bottom of services list */
-.services-list-bottom-padding {
-  padding-bottom: 48px !important;
+/* Page CTA buttons - controlled by Button component via Tailwind classes */
+.page-cta__button {
+  min-width: 160px;
 }
 
 @media (min-width: 768px) {
-  .services-list-bottom-padding {
-    padding-bottom: 64px !important;
+  .page-cta__button {
+    min-width: 180px;
   }
 }
 
-/* ========== SERVICES LIST TOP PADDING ========== */
-/* Custom top padding for services list in city detail pages */
-/* Ensures proper spacing above the services list block */
-.services-list-top-padding {
-  padding-top: 32px !important;
+/* ========================================================================== */
+/* REVIEW CARD                                                                 */
+/* ========================================================================== */
+
+.review-card {
+  padding: clamp(1.5rem, 4vw, 2rem);
 }
 
-@media (min-width: 768px) {
-  .services-list-top-padding {
-    padding-top: 48px !important;
-  }
+/* ========================================================================== */
+/* STAT CARD (Dynamic Color Support)                                           */
+/* ========================================================================== */
+
+.stat-card__icon {
+  background-color: var(--stat-color-bg);
+  color: var(--stat-color);
 }
 
-/* ========== CITY DESCRIPTION TOP PADDING ========== */
-/* Custom top padding for city description block */
-/* Ensures proper spacing above "О сервисе" section */
-.city-description-top-padding {
-  padding-top: 64px !important;
+.stat-card__value {
+  color: var(--stat-color);
 }
 
-@media (min-width: 768px) {
-  .city-description-top-padding {
-    padding-top: 80px !important;
-  }
+/* ========================================================================== */
+/* METRIC ITEM (Trust Bar - Dynamic Color Support)                             */
+/* ========================================================================== */
+
+.metric-item__icon {
+  background-color: var(--metric-color-bg);
+  color: var(--metric-color);
 }
 
-/* ========== RICH TEXT LIST STYLING ========== */
-/* Custom styles for lists in HTML content (city descriptions, etc.) */
-/* Ensures markers are properly aligned and don't "fly away" to the left */
-.prose ul,
-.prose ol,
-.city-description-content ul,
-.city-description-content ol {
-  list-style-position: outside !important;
-  padding-left: 1.25rem !important;  /* 20px - контролируемый отступ под маркер */
-  margin-left: 0 !important;
-  margin-bottom: 1rem !important;
+.metric-item__value {
+  color: var(--metric-color);
 }
 
-.prose li,
-.city-description-content li {
-  padding-left: 0.25rem !important;  /* 4px - чтобы текст не прилипал к маркеру */
-  margin: 0.25rem 0 !important;     /* аккуратный вертикальный ритм */
-  line-height: 1.625 !important;     /* relaxed line height */
+/* ========================================================================== */
+/* CARD VARIANTS                                                               */
+/* ========================================================================== */
+
+.card--no-border {
+  border: none;
+  box-shadow: none;
 }
 
-/* Для вложенных списков */
-.prose ul ul,
-.prose ol ol,
-.prose ul ol,
-.prose ol ul,
-.city-description-content ul ul,
-.city-description-content ol ol,
-.city-description-content ul ol,
-.city-description-content ol ul {
-  margin-top: 0.5rem !important;
-  margin-bottom: 0.5rem !important;
-  padding-left: 1.5rem !important;
+/* ========================================================================== */
+/* FORM SIDEBAR PATTERN                                                       */
+/* ========================================================================== */
+
+.form-sidebar {
+  /* Consistent spacing for sidebar forms */
+  /* Uses space-y-6 from Tailwind by default */
 }
 
-/* ========== CITY DESCRIPTION SECTION HEADINGS ========== */
-/* Custom spacing for h3 headings in city description sections */
-.prose .city-services h3,
-.city-description-content .city-services h3,
-.prose .city-how-works h3,
-.city-description-content .city-how-works h3 {
-  margin-top: 1.5rem !important;  /* 24px - увеличенный отступ сверху */
-  margin-bottom: 0.75rem !important;  /* 12px - отступ снизу */
-}
-
-.prose .city-services,
-.city-description-content .city-services,
-.prose .city-how-works,
-.city-description-content .city-how-works {
-  margin-top: 1rem !important;  /* 16px - отступ сверху у блока */
-}
-
-/* ========== CITY INTRO SECTION HEADINGS ========== */
-/* Custom styles for h2 headings in city-intro section */
-/* Makes them consistent with main h2 headings */
-.prose .city-intro h2,
-.city-description-content .city-intro h2 {
-  font-size: 1.25rem !important;  /* text-xl - 20px */
-  font-weight: 700 !important;     /* font-bold */
-  color: var(--foreground) !important;
-  margin-top: 1.5rem !important;    /* mt-6 - 24px */
-  margin-bottom: 0.75rem !important; /* mb-3 - 12px */
-}
-
-.prose .city-intro,
-.city-description-content .city-intro {
-  margin-bottom: 1.5rem !important;  /* mb-6 - 24px */
-}
-
-/* ========== INPUT FOCUS STYLES ========== */
-/* Light focus ring and border for input fields in modals */
-input:focus,
-textarea:focus {
-  outline: none !important;
-  box-shadow: 0 0 0 1px var(--focus-ring-light) !important;
-  border-color: var(--focus-border-light) !important;
-}
-
-/* ========== TEXTAREA PADDING STYLES ========== */
-/* Consistent padding for textarea fields */
-textarea {
-  padding: 8px 16px !important; /* py-2 px-4 equivalent */
-}
-
-/* ========== FORM BUTTON STYLES ========== */
-/* Consistent border-radius and spacing for form submit buttons */
-form button[type="submit"] {
-  border-radius: 6px !important; /* rounded-md equivalent */
-  margin-top: 24px !important; /* spacing above button */
-}
-
-/* ========== SIDEBAR CARD HEADER ALIGNMENT ========== */
-/* Align sidebar card title with main content heading */
 .sidebar-card-header {
-  padding-top: 0 !important; /* Remove top padding from CardHeader in sidebar */
+  /* Sticky form header styles can be added here if needed */
 }
 
-/* Increase top padding for sidebar sticky container */
-aside .sticky {
-  padding-top: 24px !important; /* Align with main content heading */
+/* ========================================================================== */
+/* PRICE ACCORDION COMPONENT                                                  */
+/* ========================================================================== */
+
+/*
+ * Price Accordion - Specialized component for displaying service prices
+ * Uses Radix UI Accordion as base with custom styling
+ * 
+ * Structure:
+ * .price-accordion
+ *   .price-accordion__category
+ *     .price-accordion__trigger
+ *       .price-accordion__icon
+ *       .price-accordion__title
+ *       .price-accordion__count
+ *       .price-accordion__chevron
+ *     .price-accordion__content
+ *       .price-accordion__list
+ *         .price-row
+ *           .price-row__title
+ *           .price-row__subtitle
+ *           .price-row__price / .price-row__badge
+ */
+
+.price-accordion {
+  /* Container styles handled by Tailwind */
 }
 
-@media (min-width: 768px) {
-  aside .sticky {
-    padding-top: 24px !important; /* md: larger padding */
+/* Category card hover effect */
+.price-accordion__category {
+  --tw-shadow: var(--shadow-sm);
+}
+
+.price-accordion__category[data-state="open"] {
+  --tw-shadow: var(--shadow-md);
+}
+
+/* Trigger icon container */
+.price-accordion__icon {
+  background: linear-gradient(135deg, #fff 0%, var(--background-secondary) 100%);
+}
+
+/* Smooth content animation (extends Radix default) */
+.price-accordion__content[data-state="open"] {
+  animation: price-accordion-open var(--duration-normal) var(--easing-smooth);
+}
+
+.price-accordion__content[data-state="closed"] {
+  animation: price-accordion-close var(--duration-fast) var(--easing-smooth);
+}
+
+@keyframes price-accordion-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
   }
 }
 
-/* ========== SERVICES LIST HEADING SPACING ========== */
-/* Add bottom margin to services list heading */
-main h2.font-bold {
+@keyframes price-accordion-close {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Price row hover highlight */
+.price-row {
+  position: relative;
+}
+
+.price-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-primary);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.price-row:hover::before {
+  opacity: 1;
+}
+
+/* Price amount styling */
+.price-row__price {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Section header */
+.price-section-header__title {
+  font-family: var(--font-heading);
+}
+
+/* Empty state */
+.price-empty-state {
+  background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-tertiary) 100%);
+}
+
+/* ========================================================================== */
+/* FAQ ACCORDION STYLES (Native HTML details/summary)                        */
+/* ========================================================================== */
+
+/*
+ * FAQ Accordion - Styles for native HTML <details> and <summary> elements
+ * Used in RichText component for FAQ sections
+ * 
+ * Structure:
+ * .service-faq (optional wrapper)
+ *   details.faq-accordion-item
+ *     summary.faq-accordion-trigger
+ *     div/p (content)
+ */
+
+/* FAQ Accordion Item (details element) */
+details.faq-accordion-item,
+.rich-text details,
+.service-faq details {
+  margin-bottom: 12px;
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: white;
+  transition: all var(--duration-fast) var(--easing-smooth);
+}
+
+details.faq-accordion-item[open],
+.rich-text details[open],
+.service-faq details[open] {
+  box-shadow: var(--shadow-sm);
+}
+
+/* FAQ Accordion Trigger (summary element) */
+summary.faq-accordion-trigger,
+.rich-text summary,
+.service-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  min-height: 56px;
+  background: white;
+  transition: background-color var(--duration-fast) var(--easing-smooth);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--foreground);
+  text-align: left;
+  list-style: none;
+  user-select: none;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  summary.faq-accordion-trigger,
+  .rich-text summary,
+  .service-faq summary {
+    padding: 16px 20px;
+    min-height: 60px;
+    font-size: 18px;
+  }
+}
+
+/* Hide default marker */
+summary.faq-accordion-trigger::-webkit-details-marker,
+.rich-text summary::-webkit-details-marker,
+.service-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.faq-accordion-trigger::marker,
+.rich-text summary::marker,
+.service-faq summary::marker {
+  display: none;
+}
+
+/* Chevron icon using CSS */
+summary.faq-accordion-trigger::after,
+.rich-text summary::after,
+.service-faq summary::after {
+  content: '';
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236C757D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transition: transform var(--duration-normal) var(--easing-smooth);
+  opacity: 0.7;
+}
+
+/* Rotate chevron when open */
+details[open] > summary.faq-accordion-trigger::after,
+details[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+/* Hover state */
+summary.faq-accordion-trigger:hover,
+.rich-text summary:hover,
+.service-faq summary:hover {
+  background-color: var(--background-secondary);
+}
+
+/* Active/open state */
+details[open] > summary.faq-accordion-trigger,
+details[open] > summary {
+  background-color: var(--background-secondary);
+}
+
+/* FAQ Accordion Content */
+details.faq-accordion-item > div,
+details.faq-accordion-item > p,
+.rich-text details > div,
+.rich-text details > p,
+.service-faq details > div,
+.service-faq details > p {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+  font-size: 15px;
+  line-height: 1.625;
+  color: var(--foreground-secondary);
+  animation: faq-accordion-open var(--duration-normal) var(--easing-smooth);
+}
+
+@media (min-width: 768px) {
+  details.faq-accordion-item > div,
+  details.faq-accordion-item > p,
+  .rich-text details > div,
+  .rich-text details > p,
+  .service-faq details > div,
+  .service-faq details > p {
+    padding: 20px 24px;
+    font-size: 16px;
+  }
+}
+
+/* Remove margin from nested elements */
+details.faq-accordion-item > div > *:first-child,
+details.faq-accordion-item > p:first-child,
+.rich-text details > div > *:first-child,
+.rich-text details > p:first-child,
+.service-faq details > div > *:first-child,
+.service-faq details > p:first-child {
+  margin-top: 0;
+}
+
+details.faq-accordion-item > div > *:last-child,
+details.faq-accordion-item > p:last-child,
+.rich-text details > div > *:last-child,
+.rich-text details > p:last-child,
+.service-faq details > div > *:last-child,
+.service-faq details > p:last-child {
+  margin-bottom: 0;
+}
+
+/* FAQ Section Wrapper */
+.service-faq {
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .service-faq {
+    margin-bottom: 40px;
+  }
+}
+
+.service-faq > * + * {
+  margin-top: 12px;
+}
+
+/* FAQ Section Title */
+.service-faq_h3 {
+  margin-top: 40px !important;
   margin-bottom: 24px !important;
 }
 
-/* ========== QUICK STATS SPACING ========== */
-/* Increase top margin for quick stats in hero section */
-#city-detail-hero-section .flex-wrap,
-#city-service-hero-section .flex-wrap {
-  margin-top: 40px !important; /* mt-10 equivalent */
-}
-
-/* ========== SERVICE DESCRIPTION SECTIONS SPACING ========== */
-/* Add bottom padding to service intro section */
-.service-intro {
-  padding-bottom: 2.5rem !important; /* 40px */
-}
-
-/* ========== CATEGORY SECTION BUTTON PADDING ========== */
-/* Force left padding for accordion button in category sections */
-.category-accordion-button {
-  padding-left: 1.5rem !important; /* 24px mobile */
-  padding-right: 1.5rem !important; /* 24px mobile - для стрелки справа */
-}
-
 @media (min-width: 768px) {
-  .category-accordion-button {
-    padding-left: 2rem !important; /* 32px desktop */
-    padding-right: 2rem !important; /* 32px desktop - для стрелки справа */
+  .service-faq_h3 {
+    margin-top: 48px !important;
+    margin-bottom: 32px !important;
   }
 }
 
-/* ========== OPTION ROW ITEM PADDING ========== */
-/* Same padding as accordion button for consistency */
-.divide-y > div.option-row-item,
-div.option-row-item {
-  padding-left: 1.5rem !important; /* 24px mobile */
-  padding-right: 1.5rem !important; /* 24px mobile */
-}
-
-@media (min-width: 768px) {
-  .divide-y > div.option-row-item,
-  div.option-row-item {
-    padding-left: 2rem !important; /* 32px desktop */
-    padding-right: 2rem !important; /* 32px desktop */
+/* Animation for FAQ accordion content */
+@keyframes faq-accordion-open {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* ========== SERVICE DESCRIPTION HEADING MARGIN ========== */
-/* Add top margin to "Подробнее об услуге" heading */
-.service-description-heading {
-  margin-top: 2rem !important; /* 32px mobile */
+/* Focus state for accessibility */
+summary.faq-accordion-trigger:focus-visible,
+.rich-text summary:focus-visible,
+.service-faq summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-2xl);
 }
 
-@media (min-width: 768px) {
-  .service-description-heading {
-    margin-top: 3rem !important; /* 48px desktop */
-  }
-}
 
-/* ========== SERVICE PRICES HEADING MARGIN ========== */
-/* Add top margin to "Цены на..." heading */
-.service-prices-section {
-  margin-top: 1.5rem !important; /* 32px mobile */
-}
 
-@media (min-width: 768px) {
-  .service-prices-section {
-    margin-top: 3rem !important; /* 48px desktop */
-  }
-}
-
-/* ========== GLOBAL H3 HEADING SPACING ========== */
-/* Unified spacing for all h3 elements across the site */
-main h3,
-.prose h3,
-section h3 {
-  margin-top: 2rem !important; /* 32px mobile */
-  margin-bottom: 1rem !important; /* 16px mobile */
-}
-
-@media (min-width: 768px) {
-  main h3,
-  .prose h3,
-  section h3 {
-    margin-top: 2.5rem !important; /* 40px desktop */
-    margin-bottom: 1.25rem !important; /* 20px desktop */
-  }
-}
-
-/* ========== SERVICES DROPDOWN MENU ========== */
-/* Padding inside the dropdown menu */
-.services-dropdown-menu {
-  padding: 12px !important;
-}
-
-.services-dropdown-menu > div:first-child {
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-.services-dropdown-menu a {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
-/* Footer link in dropdown */
-.services-dropdown-menu .border-t {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  margin-top: 8px !important;
-  padding-top: 8px !important;
-}

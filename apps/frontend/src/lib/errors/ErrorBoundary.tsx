@@ -64,13 +64,13 @@ export class ErrorBoundary extends React.Component<
               Произошла непредвиденная ошибка. Попробуйте обновить страницу или
               вернуться позже.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={this.handleReset} variant="outline">
-                <RefreshCw className="w-4 h-4" />
-                Попробовать снова
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button onClick={this.handleReset} variant="outline" className="sm:w-auto w-full">
+                <RefreshCw className="w-5 h-5 flex-shrink-0" />
+                <span className="leading-none">Попробовать снова</span>
               </Button>
-              <Button onClick={() => window.location.reload()}>
-                Обновить страницу
+              <Button onClick={() => window.location.reload()} className="sm:w-auto w-full">
+                <span className="leading-none">Обновить страницу</span>
               </Button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (

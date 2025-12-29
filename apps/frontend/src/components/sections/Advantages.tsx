@@ -4,6 +4,11 @@ import { Clock, Shield, DollarSign, MapPin, Star, Headphones, Zap, CheckCircle }
 import { useAdvantages } from "@/lib/api/hooks"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { Section, SectionHeader, FeatureCard } from "@/components/ui"
+import type { Advantage } from "@/lib/api/generated"
+
+interface AdvantagesProps {
+  initialAdvantages?: Advantage[]
+}
 
 // Icon mapping for advantages
 const advantageIcons: Record<string, React.ReactNode> = {
@@ -76,11 +81,15 @@ function AdvantageCardSkeleton() {
   )
 }
 
-export function Advantages() {
-  const { advantages, isLoading, isError, mutate } = useAdvantages({ 
-    targetAudience: 'client',
-    limit: 6 
-  })
+export function Advantages({ initialAdvantages = [] }: AdvantagesProps) {
+  // Use SWR with server-provided initial data for hydration
+  const { advantages, isLoading, isError, mutate } = useAdvantages(
+    { targetAudience: 'client', limit: 6 },
+    { fallbackData: initialAdvantages.length > 0 ? initialAdvantages : undefined }
+  )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialAdvantages.length === 0
 
   // Use API data if available, otherwise fallback
   const displayAdvantages = advantages.length > 0 
@@ -97,7 +106,7 @@ export function Advantages() {
           className="gap-1 md:gap-2 lg:gap-3"
         />
 
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex flex-wrap justify-center gap-8 md:gap-10 lg:gap-12">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="w-full md:w-[calc(50%-1.25rem)] lg:w-[calc(33.333%-1.6rem)] max-w-sm">

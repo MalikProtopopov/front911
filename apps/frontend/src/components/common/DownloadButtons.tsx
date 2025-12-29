@@ -56,12 +56,12 @@ function DownloadButtonsSkeleton({
     <div className="space-y-4">
       <div
         className={cn(
-          'flex gap-3',
+          'flex gap-4',
           direction === 'column' ? 'flex-col' : 'flex-col sm:flex-row'
         )}
       >
-        <Skeleton className="h-14 w-40 rounded-md" />
-        <Skeleton className="h-14 w-40 rounded-md" />
+        <Skeleton className="h-14 w-40 rounded-2xl" />
+        <Skeleton className="h-14 w-40 rounded-2xl" />
       </div>
       {showQr && (
         <div className="flex items-center gap-4 mt-4">
@@ -105,7 +105,7 @@ function AppStoreButton({
     <Button
       size={size}
       variant={variant}
-      className="group"
+      className="group sm:w-auto w-full"
       asChild
     >
       <a
@@ -114,8 +114,8 @@ function AppStoreButton({
         rel="noopener noreferrer"
         aria-label="Скачать в App Store"
       >
-        <Apple className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        App Store
+        <Apple className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <span className="leading-none">App Store</span>
       </a>
     </Button>
   )
@@ -139,7 +139,7 @@ function GooglePlayButton({
     <Button
       size={size}
       variant={variant}
-      className="group"
+      className="group sm:w-auto w-full"
       asChild
     >
       <a
@@ -148,8 +148,8 @@ function GooglePlayButton({
         rel="noopener noreferrer"
         aria-label="Скачать в Google Play"
       >
-        <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        Google Play
+        <Play className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <span className="leading-none">Google Play</span>
       </a>
     </Button>
   )
@@ -280,7 +280,7 @@ export function DownloadButtons({
       {/* Кнопки */}
       <div
         className={cn(
-          'flex gap-3',
+          'flex gap-4',
           direction === 'column' ? 'flex-col' : 'flex-col sm:flex-row',
           className
         )}

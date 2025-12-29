@@ -38,8 +38,20 @@ export { FeatureCard, LinkCard, SimpleLinkCard, StatCard } from './feature-card'
 export { ServiceCard, ServiceRow, type ServiceCardProps, type ServiceRowProps } from './service-card'
 
 // Layout
-export { Grid, Section, TwoColumnLayout, Stack, Row } from './grid'
+export { Grid, TwoColumnLayout, Stack, Row } from './grid'
+export { Section, type SectionProps } from './section'
 
 // Section Components
 export { SectionHeader, PageHeader } from './section-header'
+
+// Price Accordion (for service pricing lists)
+export { 
+  PriceAccordion, 
+  PriceAccordionCategory, 
+  PriceRow, 
+  PriceSectionHeader, 
+  PriceEmptyState,
+  formatPrice,
+  getOptionsLabel 
+} from './price-accordion'
 

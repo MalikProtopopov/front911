@@ -34,10 +34,14 @@ export function ServiceRow({
   const rowContent = (
     <div
       className={cn(
+        // Card styling
+        'bg-white border border-[var(--border)] rounded-lg',
         'flex items-center gap-4',
         'min-h-[72px] md:min-h-[80px]',
         'px-4 md:px-5 py-4 md:py-5',
-        'transition-colors duration-200',
+        // Transitions and interactions
+        'transition-all duration-200',
+        'hover:shadow-md hover:border-[var(--color-primary)]/30',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2',
         'cursor-pointer',
         className
@@ -74,16 +78,16 @@ export function ServiceRow({
         )}
       </div>
 
-      {/* Chevron */}
+      {/* Chevron - closer to content for better visibility */}
       <ChevronRight
         className={cn(
-          'w-4 h-4 md:w-5 md:h-5',
-          'text-[var(--foreground-tertiary)] opacity-60',
+          'w-5 h-5 md:w-6 md:h-6',
+          'text-[var(--foreground-tertiary)] opacity-70',
           'transition-all duration-200',
-          'flex-shrink-0 ml-2',
+          'flex-shrink-0',
           'group-hover:!text-[#FF5722]',
           'group-hover:opacity-100',
-          'group-hover:translate-x-0.5'
+          'group-hover:translate-x-1'
         )}
         strokeWidth={2.5}
       />

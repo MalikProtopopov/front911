@@ -4,7 +4,7 @@
  */
 
 import { servicesService, citiesService, contentService, seoService } from '../services'
-import type { GetServicesParams, GetCitiesParams, GetAdvantagesParams, GetMetricsParams } from '../services'
+import type { GetServicesParams, GetCitiesParams, GetAdvantagesParams, GetMetricsParams, GetContactsParams } from '../services'
 import type { Metadata } from 'next'
 
 // Services prefetch
@@ -51,8 +51,8 @@ export async function prefetchAppLinks() {
   return contentService.getAppLinks()
 }
 
-export async function prefetchContacts() {
-  return contentService.getContacts()
+export async function prefetchContacts(params?: GetContactsParams) {
+  return contentService.getContacts(params)
 }
 
 // SEO prefetch
