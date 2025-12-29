@@ -60,6 +60,7 @@ docker-compose -f docker-compose.prod.yml up -d
 - [Полное руководство по деплою](docs/DEPLOYMENT_GUIDE.md)
 - [Краткая справка](docs/QUICK_REFERENCE.md)
 - [Логика вывода опций с ценами](docs/PRICE_OPTIONS_LOGIC.md)
+- [План внедрения опций с ценами](docs/IMPLEMENTATION_PLAN.md)
 
 ## 🔧 Полезные команды
 
