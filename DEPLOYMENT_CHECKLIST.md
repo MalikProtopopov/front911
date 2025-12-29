@@ -68,6 +68,11 @@ ALLOWED_HOSTS=45.144.221.92,api.911.ru,www.911.ru,911.ru,89.169.1.53
 CORS_ALLOWED_ORIGINS=http://45.144.221.92,http://89.169.1.53
 ```
 
+**⚠️ ВАЖНО про порты:**
+- Если фронтенд и бекенд работают на стандартных портах (80 для HTTP, 443 для HTTPS), порт указывать **НЕ нужно**
+- Порт 80 (HTTP) и 443 (HTTPS) - это стандартные порты, браузер добавляет их автоматически
+- Указывайте порт только если используете нестандартный порт (например, `:3000`, `:8080`)
+
 ### 2. Пересоздать контейнер бекенда
 
 ```bash
@@ -191,10 +196,43 @@ curl http://45.144.221.92/api/website/services/
 
 ### Проблема: CORS ошибки в браузере
 
+**Симптомы:**
+```
+Access to fetch at 'http://45.144.221.92/api/website/...' from origin 'http://89.169.1.53' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+
+**Причина:** Бекенд не возвращает заголовок `Access-Control-Allow-Origin` для запросов с фронтенда.
+
 **Решение:**
-1. Проверить что `CORS_ALLOWED_ORIGINS` на бекенде включает `http://89.169.1.53`
-2. Пересоздать контейнер бекенда
-3. Проверить что заголовки CORS возвращаются
+1. **На сервере бекенда (45.144.221.92) проверить `.env.prod`:**
+   ```bash
+   # Убедиться что в .env.prod есть:
+   CORS_ALLOWED_ORIGINS=http://45.144.221.92,http://89.169.1.53
+   ```
+   ⚠️ **НЕ добавляйте порт** если используете стандартные порты (80/443)
+
+2. **Пересоздать контейнер бекенда:**
+   ```bash
+   docker compose --env-file .env.prod -f docker/docker-compose.prod.yml up -d --force-recreate web
+   ```
+
+3. **Проверить что CORS работает:**
+   ```bash
+   # С сервера фронтенда или локально
+   curl -H "Origin: http://89.169.1.53" \
+        -H "Access-Control-Request-Method: GET" \
+        -X OPTIONS \
+        http://45.144.221.92/api/website/services/ -v
+   
+   # Должен вернуть:
+   # < Access-Control-Allow-Origin: http://89.169.1.53
+   ```
+
+4. **Если все еще не работает, проверить логи бекенда:**
+   ```bash
+   docker logs <backend_container_name>
+   ```
 
 ### Проблема: 404 Not Found при запросах к API
 
