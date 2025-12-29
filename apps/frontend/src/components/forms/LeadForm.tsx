@@ -220,8 +220,9 @@ export function LeadForm({
 
           <Button
             type="submit"
-            className="w-full h-12 font-semibold rounded-md"
+            className="w-full"
             disabled={isSubmitting || isRateLimited}
+            loading={isSubmitting}
           >
             {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
           </Button>
@@ -264,7 +265,7 @@ export function LeadForm({
   if (!showCard) {
     return (
       <div>
-        <h2 className="text-3xl font-bold leading-tight mb-4">{title}</h2>
+        {title && <h2 className="text-3xl font-bold leading-tight mb-4">{title}</h2>}
         {formContent}
       </div>
     )
@@ -272,8 +273,7 @@ export function LeadForm({
 
   return (
     <Card 
-      className={cn("max-w-2xl mx-auto", cardClassName)}
-      style={noBorder ? { border: 'none', boxShadow: 'none' } : undefined}
+      className={cn("max-w-2xl mx-auto", noBorder && "card--no-border", cardClassName)}
     >
       <CardHeader className="sidebar-card-header">
         <CardTitle className="text-3xl font-bold leading-tight">{title}</CardTitle>

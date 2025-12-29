@@ -6,15 +6,27 @@ import { SkeletonServiceCard } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
 import { getServiceIcon } from "./serviceIcons"
+import type { ServiceList } from "@/lib/api/generated"
 
-export function ServicesList() {
-  const { services, isLoading, isError, error, mutate } = useServices()
+interface ServicesListProps {
+  initialServices?: ServiceList[]
+}
 
-  if (isLoading) {
+export function ServicesList({ initialServices = [] }: ServicesListProps) {
+  // Use SWR with server-provided initial data for hydration
+  const { services, isLoading, isError, error, mutate } = useServices(
+    undefined,
+    { fallbackData: initialServices.length > 0 ? initialServices : undefined }
+  )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialServices.length === 0
+
+  if (showLoading) {
     return (
       <Section spacing="lg">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-white overflow-hidden flex flex-col gap-2 md:gap-3">
+          <div className="flex flex-col gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
               <SkeletonServiceCard key={i} />
             ))}
@@ -51,7 +63,7 @@ export function ServicesList() {
   return (
     <Section spacing="lg">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white overflow-hidden flex flex-col gap-2 md:gap-3">
+        <div className="flex flex-col gap-3 md:gap-4">
           {services.map((service, index) => (
             <ServiceRow
               key={service.slug}
@@ -66,4 +78,3 @@ export function ServicesList() {
     </Section>
   )
 }
-

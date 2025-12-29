@@ -74,22 +74,30 @@ export function SkeletonCard({ className }: { className?: string }) {
 }
 
 /**
- * Skeleton for service cards
+ * Skeleton for service cards (row style)
  */
 export function SkeletonServiceCard({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'border border-[var(--border)] rounded-2xl p-6 h-full flex flex-col',
+        'bg-white border border-[var(--border)] rounded-lg',
+        'flex items-center gap-4',
+        'min-h-[72px] md:min-h-[80px]',
+        'px-4 md:px-5 py-4 md:py-5',
         className
       )}
     >
-      <div className="flex items-start gap-4 mb-4">
-        <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
-        <Skeleton className="h-6 flex-1" />
+      {/* Icon skeleton */}
+      <Skeleton className="w-11 h-11 md:w-12 md:h-12 rounded-full flex-shrink-0" />
+      
+      {/* Content skeleton */}
+      <div className="flex-1 min-w-0 space-y-2">
+        <Skeleton className="h-5 md:h-6 w-3/4" />
+        <Skeleton className="h-4 w-1/4" />
       </div>
-      <SkeletonText lines={2} className="mb-4" />
-      <Skeleton className="h-4 w-24 mt-auto" />
+      
+      {/* Chevron skeleton */}
+      <Skeleton className="w-5 h-5 md:w-6 md:h-6 rounded flex-shrink-0" />
     </div>
   )
 }

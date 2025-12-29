@@ -1,5 +1,15 @@
+import type { Metadata } from 'next'
 import { Breadcrumbs } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
+
+export const metadata: Metadata = {
+  title: 'Пользовательское соглашение — 911',
+  description: 'Условия использования сервиса 911 Автопомощь.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+}
 
 export default function TermsPage() {
   return (

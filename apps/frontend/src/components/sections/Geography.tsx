@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { MapPin, ArrowRight } from "lucide-react"
+import { MapPin, ArrowRight, ChevronRight } from "lucide-react"
 import { useClientCities } from "@/lib/api/hooks"
 import { SkeletonCityCard, SkeletonGrid } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
@@ -20,17 +20,17 @@ function CityCard({ city }: CityCardProps) {
   const slug = city.slug
 
   return (
-    <Link href={`/cities/${slug}`} className="group">
-      <Card className="hover:shadow-lg transition-all border-transparent h-full flex">
-        <CardContent 
-          className="flex items-center gap-3 h-full w-full"
-          style={{ padding: '24px 20px', paddingTop: '24px', paddingBottom: '24px' }}
-        >
-          <MapPin 
-            className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0" 
-            style={{ marginRight: '4px' }}
+    <Link href={`/cities/${slug}`} className="group block cursor-pointer">
+      <Card className="hover:shadow-lg hover:border-[var(--color-primary)]/30 transition-all border-[var(--border)] h-full flex">
+        <CardContent className="flex items-center gap-3 h-full w-full p-6">
+          <MapPin className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0" />
+          <span className="font-medium text-lg group-hover:text-[var(--color-primary)] transition-colors flex-1">
+            {title}
+          </span>
+          <ChevronRight 
+            className="w-5 h-5 text-[var(--foreground-tertiary)] opacity-70 group-hover:text-[var(--color-primary)] group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" 
+            strokeWidth={2.5}
           />
-          <span className="font-medium text-lg group-hover:text-[var(--color-primary)] transition-colors">{title}</span>
         </CardContent>
       </Card>
     </Link>
@@ -72,9 +72,9 @@ export function Geography() {
 
         <div className="flex justify-center">
           <Button size="lg" variant="outline" asChild>
-            <Link href="/cities" className="gap-2">
-              Все города
-              <ArrowRight className="w-5 h-5" />
+            <Link href="/cities">
+              <span className="leading-none">Все города</span>
+              <ArrowRight className="w-5 h-5 flex-shrink-0" />
             </Link>
           </Button>
         </div>

@@ -3,6 +3,18 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Build arguments for Next.js (NEXT_PUBLIC_* vars are embedded at build time)
+ARG NEXT_PUBLIC_API_URL=http://45.144.221.92/api/website
+ARG NEXT_PUBLIC_APP_DOMAIN=http://89.169.1.53
+ARG NEXT_PUBLIC_APP_NAME=911
+ARG NEXT_PUBLIC_APP_ENV=production
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_DOMAIN=$NEXT_PUBLIC_APP_DOMAIN
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV
+
 # Copy package files
 COPY package*.json ./
 

@@ -1,44 +1,22 @@
 'use client'
 
 import * as React from "react"
-import { Users, MapPin, MessageSquare, Star, TrendingUp } from "lucide-react"
 import { useMetrics } from "@/lib/api/hooks"
 import { SkeletonMetrics } from "@/components/common/Skeleton"
+import { Section } from "@/components/ui"
 import type { Metric } from "@/lib/api/generated"
 
-// Icon mapping for metrics
-const metricIcons: Record<string, React.ReactNode> = {
-  'cities': <MapPin className="w-8 h-8" />,
-  'partners': <Users className="w-8 h-8" />,
-  'reviews': <MessageSquare className="w-8 h-8" />,
-  'rating': <Star className="w-8 h-8" />,
-  'orders': <TrendingUp className="w-8 h-8" />,
-}
-
-// Color mapping for metrics
-const metricColors: Record<string, string> = {
-  'cities': 'var(--color-primary)',
-  'partners': 'var(--color-secondary)',
-  'reviews': 'var(--color-accent)',
-  'rating': 'var(--color-success)',
-  'orders': 'var(--color-primary)',
+interface TrustBarProps {
+  initialMetrics?: Metric[]
 }
 
 // Fallback metrics
 const fallbackMetrics = [
-  { key: 'cities', value: 82, label: 'города', color: 'var(--color-primary)' },
-  { key: 'partners', value: 195, label: 'партнёров', color: 'var(--color-secondary)' },
-  { key: 'reviews', value: 2728, label: 'отзывов', color: 'var(--color-accent)' },
-  { key: 'rating', value: 4.84, label: 'рейтинг', color: 'var(--color-success)' },
+  { key: 'cities', value: 82, label: 'города' },
+  { key: 'partners', value: 195, label: 'партнёров' },
+  { key: 'reviews', value: 2728, label: 'отзывов' },
+  { key: 'rating', value: 4.84, label: 'рейтинг' },
 ]
-
-function getMetricIcon(metricKey: string): React.ReactNode {
-  return metricIcons[metricKey] ?? <TrendingUp className="w-8 h-8" />
-}
-
-function getMetricColor(metricKey: string): string {
-  return metricColors[metricKey] ?? 'var(--color-primary)'
-}
 
 interface AnimatedCounterProps {
   target: number
@@ -82,39 +60,22 @@ interface MetricItemProps {
   metricKey: string
   value: string | number
   label: string
-  color: string
   isVisible: boolean
   index: number
 }
 
-function MetricItem({ metricKey, value, label, color, isVisible, index }: MetricItemProps) {
+function MetricItem({ metricKey, value, label, isVisible, index }: MetricItemProps) {
   const numericValue = typeof value === 'string' ? parseFloat(value) : value
   const isDecimal = numericValue % 1 !== 0 || metricKey === 'rating'
   
   return (
     <div
-      className="flex flex-col items-center text-center"
+      className={`flex flex-col items-center text-center ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}
       style={{
-        animation: isVisible
-          ? `fadeIn 0.5s ease-out ${index * 0.1}s backwards`
-          : 'none',
-      }}
+        animationDelay: isVisible ? `${index * 0.1}s` : undefined,
+      } as React.CSSProperties}
     >
-      <div className="flex justify-center mb-4 hidden">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center shadow-md"
-          style={{
-            backgroundColor: `${color}20`,
-            color: color,
-          }}
-        >
-          {getMetricIcon(metricKey)}
-        </div>
-      </div>
-      <div
-        className="text-5xl md:text-6xl font-bold mb-2 leading-none"
-        style={{ color }}
-      >
+      <div className="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 leading-none text-[var(--color-primary)]">
         <AnimatedCounter 
           target={numericValue} 
           isDecimal={isDecimal} 
@@ -128,9 +89,17 @@ function MetricItem({ metricKey, value, label, color, isVisible, index }: Metric
   )
 }
 
-export function TrustBar() {
+export function TrustBar({ initialMetrics = [] }: TrustBarProps) {
   const [isVisible, setIsVisible] = React.useState(false)
-  const { metrics, isLoading } = useMetrics()
+  
+  // Use SWR with server-provided initial data for hydration
+  const { metrics, isLoading } = useMetrics(
+    undefined,
+    { fallbackData: initialMetrics.length > 0 ? initialMetrics : undefined }
+  )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialMetrics.length === 0
   
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -157,37 +126,30 @@ export function TrustBar() {
         key: metric.metric_key,
         value: metric.value,
         label: metric.display_label,
-        color: getMetricColor(metric.metric_key),
       }))
     }
     return fallbackMetrics
   }, [metrics])
 
   return (
-    <section
-      id="trust-bar"
-      className="section-spacing-lg bg-gradient-to-r from-[var(--color-primary)]/5 via-[var(--color-secondary)]/5 to-[var(--color-accent)]/5"
-    >
-      <div className="container mx-auto px-4">
-        {isLoading ? (
-          <SkeletonMetrics />
-        ) : (
-          <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16">
-            {displayMetrics.map((metric, index) => (
-              <div key={metric.key} className="w-[calc(50%-1rem)] lg:w-[calc(25%-1.5rem)] flex justify-center">
-                <MetricItem
-                  metricKey={metric.key}
-                  value={metric.value}
-                  label={metric.label}
-                  color={metric.color}
-                  isVisible={isVisible}
-                  index={index}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+    <Section id="trust-bar" bg="secondary" spacing="lg">
+      {showLoading ? (
+        <SkeletonMetrics />
+      ) : (
+        <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16">
+          {displayMetrics.map((metric, index) => (
+            <div key={metric.key} className="w-[calc(50%-1rem)] md:w-[calc(50%-1.5rem)] lg:w-auto lg:flex-1 max-w-[280px] flex justify-center">
+              <MetricItem
+                metricKey={metric.key}
+                value={metric.value}
+                label={metric.label}
+                isVisible={isVisible}
+                index={index}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </Section>
   )
 }

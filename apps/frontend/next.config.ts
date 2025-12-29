@@ -3,11 +3,18 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   output: 'standalone',
   
+  // SEO: Consistent URL structure (no trailing slash)
+  trailingSlash: false,
+  
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '45.144.221.92',
       },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -24,6 +31,18 @@ const nextConfig: NextConfig = {
   // Experimental features
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+  
+  // SEO: Redirects for canonical URL consistency
+  async redirects() {
+    return [
+      // Redirect trailing slash to non-trailing (permanent 301)
+      {
+        source: '/:path+/',
+        destination: '/:path+',
+        permanent: true,
+      },
+    ]
   },
   
   // Headers for security and caching

@@ -57,21 +57,35 @@ export interface PageHeaderProps {
   subtitle?: string
   id?: string
   className?: string
+  align?: 'left' | 'center'
 }
 
-export function PageHeader({ title, subtitle, id, className }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, id, className, align = 'left' }: PageHeaderProps) {
   return (
-    <div className={cn('max-w-3xl mt-8', className)}>
+    <div 
+      className={cn(
+        'max-w-3xl mt-8',
+        align === 'center' && 'mx-auto text-center',
+        align === 'left' && 'text-left',
+        className
+      )}
+    >
       <Heading 
         level="h1" 
         id={id}
-        className="mb-6"
-        style={{ scrollMarginTop: '120px' }}
+        align={align}
+        className="mb-6 scroll-mt-[120px]"
       >
         {title}
       </Heading>
       {subtitle && (
-        <p className="text-base md:text-lg text-[var(--foreground-secondary)] leading-relaxed">
+        <p 
+          className={cn(
+            'text-base md:text-lg text-[var(--foreground-secondary)] leading-relaxed',
+            align === 'center' && 'text-center',
+            align === 'left' && 'text-left'
+          )}
+        >
           {subtitle}
         </p>
       )}

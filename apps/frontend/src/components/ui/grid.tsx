@@ -47,49 +47,6 @@ export function Grid({ className, cols, gap, children, ...props }: GridProps) {
 }
 
 /* =============================================================================
-   SECTION - Consistent section wrapper
-============================================================================= */
-
-export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
-  id?: string
-  bg?: 'white' | 'secondary' | 'primary' | 'gradient'
-  spacing?: 'sm' | 'md' | 'lg' | 'xl'
-}
-
-export function Section({ 
-  id, 
-  bg = 'white', 
-  spacing = 'lg',
-  className, 
-  children, 
-  ...props 
-}: SectionProps) {
-  const bgClasses = {
-    white: 'bg-white',
-    secondary: 'bg-[var(--background-secondary)]',
-    primary: 'bg-[var(--color-primary)] text-white',
-    gradient: 'bg-gradient-to-b from-white to-[var(--background-secondary)]',
-  }
-  
-  const spacingClasses = {
-    sm: 'section-spacing-sm',
-    md: 'section-spacing-md',
-    lg: 'section-spacing-lg',
-    xl: 'section-spacing-xl',
-  }
-
-  return (
-    <section
-      id={id}
-      className={cn(spacingClasses[spacing], bgClasses[bg], className)}
-      {...props}
-    >
-      <div className="container mx-auto px-4">{children}</div>
-    </section>
-  )
-}
-
-/* =============================================================================
    TWO COLUMN LAYOUT - Common pattern for content + sidebar
 ============================================================================= */
 
@@ -229,4 +186,3 @@ export function Row({
     </div>
   )
 }
-

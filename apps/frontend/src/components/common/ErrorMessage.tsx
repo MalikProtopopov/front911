@@ -56,19 +56,19 @@ export function ErrorMessage({
         {errorMessage}
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-4">
         {showRetry && onRetry && (
-          <Button onClick={onRetry} variant="outline">
-            <RefreshCw className="w-4 h-4" />
-            Попробовать снова
+          <Button onClick={onRetry} variant="outline" className="sm:w-auto w-full">
+            <RefreshCw className="w-5 h-5 flex-shrink-0" />
+            <span className="leading-none">Попробовать снова</span>
           </Button>
         )}
 
         {showHome && (
-          <Button asChild>
+          <Button asChild className="sm:w-auto w-full">
             <Link href="/">
-              <Home className="w-4 h-4" />
-              На главную
+              <Home className="w-5 h-5 flex-shrink-0" />
+              <span className="leading-none">На главную</span>
             </Link>
           </Button>
         )}

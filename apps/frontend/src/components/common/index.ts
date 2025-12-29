@@ -46,3 +46,12 @@ export {
   type DownloadButtonsProps,
 } from './DownloadButtons'
 
+export {
+  PhoneButton,
+  type PhoneButtonProps,
+} from './PhoneButton'
+
+export {
+  ContactLink,
+  type ContactLinkProps,
+} from './ContactLink'

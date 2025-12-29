@@ -1,5 +1,15 @@
+import type { Metadata } from 'next'
 import { Breadcrumbs } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
+
+export const metadata: Metadata = {
+  title: 'Политика конфиденциальности — 911',
+  description: 'Политика конфиденциальности сервиса 911 Автопомощь.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+}
 
 export default function PrivacyPage() {
   return (

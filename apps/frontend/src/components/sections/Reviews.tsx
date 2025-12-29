@@ -105,8 +105,7 @@ export function Reviews() {
                 className="min-w-full px-4 md:px-0"
               >
                 <figure 
-                  className="mx-auto max-w-3xl rounded-2xl border border-[var(--border)] bg-white shadow-sm transition-shadow hover:shadow-md flex flex-col gap-4"
-                  style={{ padding: 'clamp(1.5rem, 4vw, 2rem)' }}
+                  className="mx-auto max-w-3xl rounded-2xl border border-[var(--border)] bg-white shadow-sm transition-shadow hover:shadow-md flex flex-col gap-4 review-card"
                 >
                   {/* Row 1: Rating */}
                   <div className="flex items-center gap-[2px] h-6" aria-label={`Рейтинг ${review.rating} из 5`}>

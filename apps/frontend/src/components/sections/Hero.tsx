@@ -27,7 +27,7 @@ export function Hero({
   }
 
   return (
-    <section id="home-hero-section" className="relative min-h-screen flex items-center pt-20 pb-12 md:pt-24 md:pb-16 lg:pt-32 lg:pb-20 overflow-hidden bg-gradient-to-b from-white to-[var(--background-secondary)]">
+    <section id="home-hero-section" className="relative flex items-center pt-20 pb-8 md:pt-24 md:pb-12 lg:pt-28 lg:pb-16 overflow-hidden bg-gradient-to-b from-white to-[var(--background-secondary)]">
       <div className="container mx-auto px-4">
         <div className="grid-12">
           {/* Left Column - Content (columns 1-6 on desktop, full width on mobile/tablet) */}
@@ -92,7 +92,7 @@ export function Hero({
                   <div className="absolute inset-0 pt-10 pb-2 px-2">
                     <div className="w-full h-full bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-secondary)]/10 rounded-3xl p-6 flex flex-col gap-6">
                       <div className="text-center">
-                        <div className="text-4xl font-bold mb-2" style={{ color: "var(--color-primary)" }}>
+                        <div className="text-4xl font-bold mb-2 text-[var(--color-primary)]">
                           911
                         </div>
                         <p className="text-sm text-[var(--foreground-secondary)]">

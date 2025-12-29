@@ -32,7 +32,7 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        'flex flex-col items-center text-center p-6 rounded-xl hover:bg-[var(--background-secondary)] transition-colors duration-300 group h-full',
+        'flex flex-col items-center text-center p-6 rounded-xl group h-full',
         className
       )}
     >
@@ -41,7 +41,6 @@ export function FeatureCard({
         variant={iconVariant}
         size="xl"
         shadow="md"
-        hoverScale
         className="mb-8"
       />
       <h3 className="text-xl font-semibold mb-3 leading-tight">
@@ -163,23 +162,24 @@ export function StatCard({
   color = 'var(--color-primary)',
   className,
 }: StatCardProps) {
+  // Dynamic color requires CSS custom property approach
+  // Set --stat-color on parent, use it in children
+  const dynamicStyles = {
+    '--stat-color': color,
+    '--stat-color-bg': `${color}20`,
+  } as React.CSSProperties
+  
   return (
-    <div className={cn('flex flex-col items-center text-center', className)}>
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center shadow-md mb-4"
-        style={{
-          backgroundColor: `${color}20`,
-          color: color,
-        }}
-      >
+    <div 
+      className={cn('flex flex-col items-center text-center stat-card', className)}
+      style={dynamicStyles}
+    >
+      <div className="stat-card__icon w-16 h-16 rounded-full flex items-center justify-center shadow-md mb-4">
         <div className="w-8 h-8 [&>svg]:w-full [&>svg]:h-full">
           {icon}
         </div>
       </div>
-      <div
-        className="text-4xl md:text-5xl font-bold mb-2"
-        style={{ color }}
-      >
+      <div className="stat-card__value text-4xl md:text-5xl font-bold mb-2">
         {value}
       </div>
       <div className="text-[var(--foreground-secondary)] font-medium">
