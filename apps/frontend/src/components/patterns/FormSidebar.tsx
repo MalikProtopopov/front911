@@ -3,7 +3,6 @@
  * Переиспользуемый сайдбар с формой LeadForm для использования в TwoColumnLayout
  */
 
-import * as React from 'react'
 import { LeadForm } from '@/components/forms/LeadForm'
 
 export interface FormSidebarProps {

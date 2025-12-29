@@ -78,9 +78,23 @@ export function PriceAccordion({
   defaultValue,
   className 
 }: PriceAccordionProps) {
+  // Radix Accordion requires explicit type handling
+  if (type === 'single') {
+    return (
+      <Accordion
+        type="single"
+        collapsible
+        defaultValue={defaultValue?.[0]}
+        className={cn('space-y-3', className)}
+      >
+        {children}
+      </Accordion>
+    )
+  }
+
   return (
     <Accordion
-      type={type}
+      type="multiple"
       defaultValue={defaultValue}
       className={cn('space-y-3', className)}
     >
