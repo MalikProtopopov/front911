@@ -3,11 +3,9 @@
  * Handles all city-related API calls
  */
 
-import { Service } from '../client'
-import { OpenAPI } from '../generated'
+import { Service, OpenAPI } from '../client'
 import type { CityList, CityDetail, PaginatedCityListList, ServiceList, OptionPrice } from '../client'
 import { ApiError } from '@/lib/errors'
-import { contentService } from './content.service'
 
 export interface GetCitiesParams {
   limit?: number
