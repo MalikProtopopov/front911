@@ -788,7 +788,8 @@ a, button {
   width: 3px;
   background: var(--color-primary);
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--easing-default);
+  transition: opacity var(--duration-fast) var(--easing-smooth);
+  border-radius: 0 2px 2px 0;
 }
 
 .price-row:hover::before {

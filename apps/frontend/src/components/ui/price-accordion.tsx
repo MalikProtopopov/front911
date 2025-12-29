@@ -156,7 +156,7 @@ export function PriceAccordionCategory({
         </div>
       </AccordionTrigger>
       <AccordionContent className="px-0 pb-0">
-        <div className="divide-y divide-[var(--border-secondary)]">
+        <div>
           {children}
         </div>
       </AccordionContent>
@@ -184,8 +184,11 @@ export function PriceRow({
   return (
     <div 
       className={cn(
+        'price-row',
         'flex items-center justify-between py-4 px-5',
-        'hover:bg-[var(--background-secondary)] transition-colors duration-150',
+        'hover:bg-[var(--background-secondary)]',
+        'transition-colors duration-200',
+        'cursor-pointer',
         className
       )}
     >
@@ -200,7 +203,7 @@ export function PriceRow({
         )}
       </div>
       <div className="flex-shrink-0 text-right">
-        <span className="font-semibold text-[var(--color-primary)] whitespace-nowrap">
+        <span className="price-row__price font-semibold text-[var(--color-primary)] whitespace-nowrap">
           {formatPrice(price)}
         </span>
       </div>
