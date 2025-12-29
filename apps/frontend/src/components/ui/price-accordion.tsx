@@ -128,8 +128,9 @@ export function PriceAccordionCategory({
     <AccordionItem 
       value={value} 
       className={cn(
-        'border border-[var(--border-primary)] rounded-xl overflow-hidden',
+        'rounded-xl overflow-hidden',
         'bg-[var(--background-primary)]',
+        'shadow-sm hover:shadow-md transition-shadow duration-200',
         className
       )}
     >
@@ -260,7 +261,7 @@ export function PriceEmptyState({
       className={cn(
         'text-center py-12 px-6',
         'bg-[var(--background-secondary)] rounded-xl',
-        'border border-[var(--border-primary)]',
+        'shadow-sm',
         className
       )}
     >
