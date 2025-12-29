@@ -6,6 +6,17 @@ import { config } from '../config'
 // Default value is set in next.config.ts env section
 OpenAPI.BASE = config.api.baseUrl
 
+// Debug logging in development
+if (process.env.NODE_ENV === 'development') {
+  const location = typeof window === 'undefined' ? 'Server' : 'Client'
+  console.log(`[API Client ${location}] ========================================`)
+  console.log(`[API Client ${location}] OpenAPI.BASE (final):`, OpenAPI.BASE || '(empty - relative URLs)')
+  console.log(`[API Client ${location}] Config API baseUrl:`, config.api.baseUrl || '(empty)')
+  console.log(`[API Client ${location}] OpenAPI.BASE type:`, typeof OpenAPI.BASE)
+  console.log(`[API Client ${location}] Is relative:`, !OpenAPI.BASE || OpenAPI.BASE.startsWith('/'))
+  console.log(`[API Client ${location}] ========================================`)
+}
+
 // Export everything from generated client
 export * from './generated'
 

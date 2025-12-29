@@ -93,7 +93,34 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
             return substring;
         });
 
-    const url = `${config.BASE}${path}`;
+    // Handle relative URLs (for client-side proxying through Next.js)
+    const base = config.BASE || '';
+    const isEmpty = base === '';
+    const isRelative = isEmpty || base.startsWith('/');
+    
+    // For relative URLs (including empty base), ensure no double slashes
+    if (isRelative) {
+        // If base is empty, just use the path as-is (OpenAPI URLs already contain /api/website/)
+        if (isEmpty) {
+            const url = path.startsWith('/') ? path : `/${path}`;
+            if (options.query) {
+                return `${url}${getQueryString(options.query)}`;
+            }
+            return url;
+        }
+        
+        // If base is relative (starts with /), combine them
+        const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        const url = `${cleanBase}${cleanPath}`;
+        if (options.query) {
+            return `${url}${getQueryString(options.query)}`;
+        }
+        return url;
+    }
+    
+    // For absolute URLs (server-side)
+    const url = `${base}${path}`;
     if (options.query) {
         return `${url}${getQueryString(options.query)}`;
     }
@@ -203,16 +230,21 @@ export const sendRequest = async (
 ): Promise<Response> => {
     const controller = new AbortController();
 
-    // Log URL in development for debugging (server-side only)
-    if (process.env.NODE_ENV === 'development' && typeof window === 'undefined') {
-        console.log('[API Request] Fetching URL:', url);
-        console.log('[API Request] Method:', options.method);
-        console.log('[API Request] BASE:', config.BASE);
+    // Log URL in development for debugging
+    if (process.env.NODE_ENV === 'development') {
+        const location = typeof window === 'undefined' ? 'Server' : 'Client';
+        console.log(`[API Request ${location}] Fetching URL:`, url);
+        console.log(`[API Request ${location}] Method:`, options.method);
+        console.log(`[API Request ${location}] BASE:`, config.BASE);
     }
 
     // Validate URL
-    if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-        const error = new Error(`Invalid URL: ${url}. BASE URL: ${config.BASE}`);
+    // Allow relative URLs (for client-side proxying) and absolute URLs (for server-side)
+    const isRelative = url.startsWith('/');
+    const isAbsolute = url.startsWith('http://') || url.startsWith('https://');
+    
+    if (!url || (!isRelative && !isAbsolute)) {
+        const error = new Error(`Invalid URL: ${url}. BASE URL: ${config.BASE}. URL must be relative (/) or absolute (http://...)`);
         console.error('[API Request] URL validation failed:', error);
         throw error;
     }
@@ -320,8 +352,9 @@ export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): 
 export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): CancelablePromise<T> => {
     return new CancelablePromise(async (resolve, reject, onCancel) => {
         try {
-            // Ensure BASE URL is set
-            if (!config.BASE) {
+            // BASE can be empty string for relative URLs (client-side)
+            // Only check if BASE is undefined/null, not empty string
+            if (config.BASE === undefined || config.BASE === null) {
                 const error = new Error('OpenAPI BASE URL is not configured. Please set OpenAPI.BASE before making requests.');
                 console.error('[API Request] Configuration error:', error);
                 reject(error);

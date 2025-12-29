@@ -1,0 +1,48 @@
+# ===========================================
+# Development Docker Compose
+# ===========================================
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up -d
+#   docker-compose -f docker-compose.dev.yml logs -f frontend
+#   docker-compose -f docker-compose.dev.yml down
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: 911_frontend_dev
+    ports:
+      - "3000:3000"  # Host:Container
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Isolate node_modules (prevents conflicts between host and container)
+      - node_modules_dev:/app/node_modules
+      # Exclude .next build directory
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - NEXT_TELEMETRY_DISABLED=1
+      # Override API_INTERNAL_BASE for Docker (use host.docker.internal to reach host machine)
+      - API_INTERNAL_BASE=http://host.docker.internal:8001/api/website
+    env_file:
+      - .env.development
+    networks:
+      - app_network
+    stdin_open: true
+    tty: true
+    # Auto-install dependencies and start dev server
+    command: sh -c "npm install && npm run dev"
+
+volumes:
+  # Named volume to isolate node_modules
+  node_modules_dev:
+
+networks:
+  app_network:
+    driver: bridge
+

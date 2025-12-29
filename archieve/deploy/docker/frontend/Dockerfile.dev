@@ -1,0 +1,25 @@
+# Development Dockerfile - без npm run build
+# Переменные окружения читаются при запуске npm run dev
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Start development server
+CMD ["npm", "run", "dev"]
+

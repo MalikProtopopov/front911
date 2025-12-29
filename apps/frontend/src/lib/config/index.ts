@@ -1,6 +1,15 @@
 /**
  * Central configuration management
  * All environment variables and app configuration in one place
+ * 
+ * ARCHITECTURE:
+ * - Client (browser): uses relative URL /api/website (proxied by Next.js)
+ * - Server (SSR): uses internal backend URL (from API_INTERNAL_BASE env)
+ * 
+ * This ensures:
+ * 1. Browser never sees Docker hostnames (no ERR_NAME_NOT_RESOLVED)
+ * 2. No CORS issues (same-origin requests)
+ * 3. SEO-friendly (data available on server for SSR)
  */
 
 // Validate required environment variables
@@ -12,18 +21,54 @@ function getEnvVar(key: string, required = false): string {
   return value ?? ''
 }
 
+// Check if running on server (Node.js) or client (browser)
+const isServer = typeof window === 'undefined'
+
 // Helper to get API base URL
-// Default values are set in next.config.ts env section
+// Client: direct connection to backend (http://localhost:8001)
+// Server: internal backend URL (from API_INTERNAL_BASE env or default)
 function getApiBaseUrl(): string {
-  // NEXT_PUBLIC_API_URL is set via next.config.ts with default value
-  // This ensures it's always available on both server and client
-  return getEnvVar('NEXT_PUBLIC_API_URL') || 'http://45.144.221.92'
+  if (isServer) {
+    // Server-side (SSR): use internal backend URL
+    // OpenAPI generated URLs already contain /api/website/ prefix
+    // So BASE should be just the backend host without /api/website
+    const internalUrl = process.env.API_INTERNAL_BASE?.trim()
+    if (internalUrl) {
+      // Remove /api/website suffix if present (OpenAPI URLs already have it)
+      return internalUrl.replace(/\/api\/website\/?$/, '')
+    }
+    // Fallback based on environment
+    return process.env.NODE_ENV === 'development'
+      ? 'http://localhost:8001'  // Local backend (without /api/website)
+      : 'http://45.144.221.92'  // Production backend (without /api/website)
+  } else {
+    // Client-side (browser): direct connection to backend
+    // OpenAPI generated URLs already contain /api/website/ prefix
+    // So BASE should be just the backend host without /api/website
+    return process.env.NODE_ENV === 'development'
+      ? 'http://localhost:8001'  // Direct connection to local backend
+      : 'http://45.144.221.92'  // Direct connection to production backend
+  }
+}
+
+const apiBaseUrl = getApiBaseUrl()
+
+// Debug logging in development
+if (process.env.NODE_ENV === 'development') {
+  const location = isServer ? 'Server' : 'Client'
+  console.log(`[Config ${location}] ========================================`)
+  console.log(`[Config ${location}] API Base URL (final):`, apiBaseUrl || '(empty - relative URLs)')
+  console.log(`[Config ${location}] API_INTERNAL_BASE (raw):`, process.env.API_INTERNAL_BASE || '(not set)')
+  console.log(`[Config ${location}] NEXT_PUBLIC_API_BASE:`, process.env.NEXT_PUBLIC_API_BASE || '(not set)')
+  console.log(`[Config ${location}] NODE_ENV:`, process.env.NODE_ENV)
+  console.log(`[Config ${location}] Is Server:`, isServer)
+  console.log(`[Config ${location}] ========================================`)
 }
 
 export const config = {
   // API Configuration
   api: {
-    baseUrl: getApiBaseUrl(),
+    baseUrl: apiBaseUrl,
     timeout: parseInt(getEnvVar('NEXT_PUBLIC_API_TIMEOUT') || '30000', 10),
   },
 
@@ -71,4 +116,3 @@ export const config = {
 } as const
 
 export type Config = typeof config
-

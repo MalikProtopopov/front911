@@ -1,0 +1,55 @@
+# Base Docker Compose Configuration
+# Используется как база для dev и prod через docker-compose.override.yml
+# 
+# Запуск:
+#   Dev: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#   Prod: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # Backend service (Django/FastAPI/etc)
+  # В dev может быть на хосте, в prod - в контейнере
+  backend:
+    # В dev может быть пустым (backend на хосте)
+    # В prod должен быть build или image
+    image: backend:latest  # Замените на ваш backend image
+    container_name: 911_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,45.144.221.92
+      - DEBUG=${DEBUG:-false}
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: ../../deploy/docker/frontend/Dockerfile
+      target: runner
+    container_name: 911_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - appnet
+    # depends_on убран - в dev backend может быть на хосте, в prod будет переопределено
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  appnet:
+    driver: bridge
+    name: 911_appnet

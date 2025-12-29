@@ -18,6 +18,8 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.production
 
 # Testing
 coverage/
@@ -52,6 +54,11 @@ pids
 # Docker
 docker-compose.override.yml
 *.override.yml
+
+# SSL certificates and Certbot
+ssl/
+certbot/
+*.pem
 
 # Misc
 .turbo

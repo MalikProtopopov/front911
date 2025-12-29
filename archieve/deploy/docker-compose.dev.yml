@@ -1,0 +1,55 @@
+# Development Docker Compose Override
+# Использование: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Особенности dev:
+# - Backend может быть на хосте (не в Docker) - тогда используйте host.docker.internal
+# - Hot reload для frontend
+# - Volumes для live code editing
+
+version: '3.8'
+
+services:
+  backend:
+    # В dev backend может быть на хосте, тогда не нужен контейнер
+    # Раскомментируйте если backend тоже в Docker:
+    # build:
+    #   context: ../backend  # Путь к вашему backend
+    #   dockerfile: Dockerfile.dev
+    # Если backend на хосте, используйте host.docker.internal в API_INTERNAL_BASE
+    profiles:
+      - backend  # Запускается только с --profile backend
+    # Для backend на хосте используйте:
+    # environment:
+    #   - API_INTERNAL_BASE=http://host.docker.internal:8000/api/website
+
+  frontend:
+    build:
+      context: ../apps/frontend
+      dockerfile: ../../deploy/docker/frontend/Dockerfile.dev
+    container_name: 911_frontend_dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.development
+    environment:
+      - NODE_ENV=development
+      # Client-side: не используется (OpenAPI URLs уже содержат /api/website/)
+      # Server-side: internal backend URL (БЕЗ /api/website, так как OpenAPI URLs уже содержат префикс)
+      # Если backend в Docker: http://backend:8000
+      # Если backend на хосте: http://host.docker.internal:8000
+      - API_INTERNAL_BASE=${API_INTERNAL_BASE:-http://host.docker.internal:8000}
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-911}
+      - NEXT_PUBLIC_APP_DOMAIN=${NEXT_PUBLIC_APP_DOMAIN:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_ENV=development
+    volumes:
+      # Hot reload: mount source code
+      - ../apps/frontend/src:/app/src:delegated
+      - ../apps/frontend/public:/app/public:delegated
+      - ../apps/frontend/next.config.ts:/app/next.config.ts:delegated
+      # Prevent node_modules from being overwritten
+      - /app/node_modules
+      - /app/.next
+    extra_hosts:
+      # Позволяет контейнеру обращаться к localhost хоста
+      - "host.docker.internal:host-gateway"
+    # В dev не зависит от backend (backend на хосте)
