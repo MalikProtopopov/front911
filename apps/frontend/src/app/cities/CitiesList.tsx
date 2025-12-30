@@ -1,9 +1,7 @@
 'use client'
 
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
 import { PageLayout } from '@/components/layout'
-import { MapPin, ChevronRight } from "lucide-react"
+import { CityCard } from "@/components/ui"
 import { useCities } from "@/lib/api/hooks"
 import { LoadingSpinner, ErrorMessage } from "@/components/common"
 import { HeroSection, PageCTA } from "@/components/patterns"
@@ -75,24 +73,7 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
                   </h2>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {groupedCities[letter]?.map((city) => (
-                      <Link 
-                        key={city.slug} 
-                        href={`/cities/${city.slug}`} 
-                        className="group block cursor-pointer"
-                      >
-                        <Card className="hover:shadow-lg hover:border-[var(--color-primary)]/30 transition-all border-[var(--border)] h-full flex">
-                          <CardContent className="flex items-center gap-3 h-full w-full p-6">
-                            <MapPin className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0" />
-                            <span className="font-medium text-lg group-hover:text-[var(--color-primary)] transition-colors flex-1">
-                              {city.title}
-                            </span>
-                            <ChevronRight 
-                              className="w-5 h-5 text-[var(--foreground-tertiary)] opacity-70 group-hover:text-[var(--color-primary)] group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" 
-                              strokeWidth={2.5}
-                            />
-                          </CardContent>
-                        </Card>
-                      </Link>
+                      <CityCard key={city.slug} city={city} />
                     ))}
                   </div>
                 </div>

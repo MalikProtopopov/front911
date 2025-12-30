@@ -1,41 +1,12 @@
 'use client'
 
 import Link from "next/link"
-import { MapPin, ArrowRight, ChevronRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { useClientCities } from "@/lib/api/hooks"
 import { SkeletonCityCard, SkeletonGrid } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
-import { Section, SectionHeader, Grid, Button } from "@/components/ui"
-import { Card, CardContent } from "@/components/ui/card"
-import type { CityList } from "@/lib/api/generated"
-
-
-interface CityCardProps {
-  city: CityList | { name: string; slug: string; partners?: number }
-}
-
-function CityCard({ city }: CityCardProps) {
-  const title = 'title' in city ? city.title : city.name
-  const slug = city.slug
-
-  return (
-    <Link href={`/cities/${slug}`} className="group block cursor-pointer">
-      <Card className="hover:shadow-lg hover:border-[var(--color-primary)]/30 transition-all border-[var(--border)] h-full flex">
-        <CardContent className="flex items-center gap-3 h-full w-full p-6">
-          <MapPin className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0" />
-          <span className="font-medium text-lg group-hover:text-[var(--color-primary)] transition-colors flex-1">
-            {title}
-          </span>
-          <ChevronRight 
-            className="w-5 h-5 text-[var(--foreground-tertiary)] opacity-70 group-hover:text-[var(--color-primary)] group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" 
-            strokeWidth={2.5}
-          />
-        </CardContent>
-      </Card>
-    </Link>
-  )
-}
+import { Section, SectionHeader, Grid, Button, CityCard } from "@/components/ui"
 
 export function Geography() {
   const { cities, isLoading, isError } = useClientCities(10)
