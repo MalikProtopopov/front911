@@ -1,0 +1,74 @@
+# ===========================================
+# Docker Compose - Production Environment
+# ===========================================
+#
+# Использование:
+#   cd docker
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#
+# Остановка:
+#   docker-compose -f docker-compose.prod.yml down
+#
+# Логи:
+#   docker-compose -f docker-compose.prod.yml logs -f
+#
+# API URL: http://45.144.221.92/api/website/
+# Frontend URL: http://89.169.1.53 (или IP вашего сервера)
+# ===========================================
+
+name: frontend911
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env.production
+    restart: always
+    networks:
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx reverse proxy (порт 80 -> 3000)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+    restart: always
+    networks:
+      - frontend-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  frontend-network:
+    driver: bridge
+

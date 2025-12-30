@@ -1,12 +1,15 @@
 import { OpenAPI } from './generated'
 import { config } from '../config'
 
-// Configure the OpenAPI client with the base URL
-// This must be set before any API calls are made
-// The BASE URL is required for server-side requests in Next.js
-// Fallback to production URL if config is not set
-const baseUrl = config.api.baseUrl || 'http://45.144.221.92'
-OpenAPI.BASE = baseUrl
+// Configure the OpenAPI client with dynamic BASE URL
+// Uses getter from config to ensure correct URL for client/server
+// This is called every time OpenAPI.BASE is accessed
+Object.defineProperty(OpenAPI, 'BASE', {
+  get() {
+    return config.api.baseUrl
+  },
+  configurable: true,
+})
 
 // Export everything from generated client
 export * from './generated'

@@ -13,28 +13,36 @@ function getEnvVar(key: string, required = false): string {
 }
 
 // Helper to normalize API URL
-// Priority:
-// 1. NEXT_PUBLIC_API_URL environment variable (set at build time)
-// 2. Production fallback (45.144.221.92)
+// Called dynamically via getter to ensure correct URL for client/server
 function getApiBaseUrl(): string {
-  const envUrl = getEnvVar('NEXT_PUBLIC_API_URL')
-  if (envUrl) {
-    // If URL contains host.docker.internal, replace it with localhost for client-side
-    const isServer = typeof window === 'undefined'
-    if (!isServer && envUrl.includes('host.docker.internal')) {
-      return envUrl.replace('host.docker.internal', 'localhost')
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || ''
+  
+  if (!envUrl) {
+    // In production, fallback to prod URL
+    if (process.env.NODE_ENV === 'production') {
+      return 'http://45.144.221.92'
     }
-    return envUrl
+    // In development, warn and use localhost
+    if (typeof window !== 'undefined') {
+      console.warn('[Config] NEXT_PUBLIC_API_URL is not set, using localhost:8001')
+    }
+    return 'http://localhost:8001'
   }
-  // Fallback: Production backend URL
-  // This ensures production builds work even if env var is not set
-  return 'http://45.144.221.92'
+  
+  // Replace host.docker.internal with localhost for browser (client-side)
+  // host.docker.internal only works inside Docker containers
+  const isClient = typeof window !== 'undefined'
+  if (isClient && envUrl.includes('host.docker.internal')) {
+    return envUrl.replace('host.docker.internal', 'localhost')
+  }
+  
+  return envUrl
 }
 
 export const config = {
-  // API Configuration
+  // API Configuration - using getter for dynamic URL resolution
   api: {
-    baseUrl: getApiBaseUrl(),
+    get baseUrl() { return getApiBaseUrl() },
     timeout: parseInt(getEnvVar('NEXT_PUBLIC_API_TIMEOUT') || '30000', 10),
   },
 
