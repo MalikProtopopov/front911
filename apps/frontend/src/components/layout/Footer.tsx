@@ -80,7 +80,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
         {/* 4 Column Grid aligned to base grid system */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 section-gap-xl">
           {/* Company Info */}
-          <div>
+          <div className="text-left">
             <div className="flex items-center gap-3 mb-4">
               <div className="text-3xl font-bold leading-none text-[var(--color-primary)]">
                 911
@@ -119,7 +119,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Services from API */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">Услуги</h3>
             <ul className="space-y-3">
               {services.slice(0, 5).map((service) => (
@@ -144,7 +144,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Cities */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">География</h3>
             <ul className="space-y-3">
               <li>
@@ -159,7 +159,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Company & Help */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">Компания</h3>
             <ul className="space-y-3 mb-6">
               {companyLinks.map((link) => (
@@ -191,7 +191,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-700 mt-12">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="text-sm text-gray-400">
               © {currentYear} 911. Все права защищены.
             </div>
