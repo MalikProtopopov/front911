@@ -3,7 +3,6 @@
 import * as React from 'react'
 import Image from 'next/image'
 import useSWR from 'swr'
-import { Apple, Play } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/common/Skeleton'
@@ -113,8 +112,15 @@ function AppStoreButton({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Скачать в App Store"
+        className="flex items-center gap-2"
       >
-        <Apple className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <Image
+          src="/images/icons/appstore.png"
+          alt="App Store"
+          width={20}
+          height={20}
+          className="flex-shrink-0 group-hover:scale-110 transition-transform"
+        />
         <span className="leading-none">App Store</span>
       </a>
     </Button>
@@ -147,8 +153,15 @@ function GooglePlayButton({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Скачать в Google Play"
+        className="flex items-center gap-2"
       >
-        <Play className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <Image
+          src="/images/icons/google_play.png"
+          alt="Google Play"
+          width={20}
+          height={20}
+          className="flex-shrink-0 group-hover:scale-110 transition-transform"
+        />
         <span className="leading-none">Google Play</span>
       </a>
     </Button>
