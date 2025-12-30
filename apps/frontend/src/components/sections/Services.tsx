@@ -6,12 +6,11 @@ import { useServices } from "@/lib/api/hooks"
 import { SkeletonServiceCard } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
-import { Section, SectionHeader, ServiceRow, Button } from "@/components/ui"
-import { getServiceIcon } from "@/app/services/serviceIcons"
-import type { ServiceList } from "@/lib/api/generated"
+import { Section, SectionHeader, ServiceList, Button } from "@/components/ui"
+import type { ServiceList as ServiceListType } from "@/lib/api/generated"
 
 interface ServicesProps {
-  initialServices?: ServiceList[]
+  initialServices?: ServiceListType[]
 }
 
 export function Services({ initialServices = [] }: ServicesProps) {
@@ -35,7 +34,7 @@ export function Services({ initialServices = [] }: ServicesProps) {
         />
 
         {showLoading ? (
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-5xl mx-auto w-full">
             <div className="flex flex-col gap-3 md:gap-4">
               {[...Array(4)].map((_, i) => (
                 <SkeletonServiceCard key={i} />
@@ -55,19 +54,10 @@ export function Services({ initialServices = [] }: ServicesProps) {
             description="На данный момент услуги недоступны."
           />
         ) : (
-          <div className="max-w-5xl mx-auto">
-            <div className="flex flex-col gap-3 md:gap-4">
-              {services.map((service, index) => (
-                <ServiceRow
-                  key={service.slug}
-                  service={service}
-                  icon={getServiceIcon(service.slug, service.icon_url)}
-                  href={`/services/${service.slug}`}
-                  isLast={index === services.length - 1}
-                />
-              ))}
-            </div>
-          </div>
+          <ServiceList 
+            services={services}
+            className="max-w-5xl mx-auto w-full"
+          />
         )}
 
         <div className="flex justify-center">

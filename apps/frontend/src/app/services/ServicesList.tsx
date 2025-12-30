@@ -1,15 +1,14 @@
 'use client'
 
-import { Section, ServiceRow } from "@/components/ui"
+import { Section, ServiceList } from "@/components/ui"
 import { useServices } from "@/lib/api/hooks"
 import { SkeletonServiceCard } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
-import { getServiceIcon } from "./serviceIcons"
-import type { ServiceList } from "@/lib/api/generated"
+import type { ServiceList as ServiceListType } from "@/lib/api/generated"
 
 interface ServicesListProps {
-  initialServices?: ServiceList[]
+  initialServices?: ServiceListType[]
 }
 
 export function ServicesList({ initialServices = [] }: ServicesListProps) {
@@ -25,7 +24,7 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
   if (showLoading) {
     return (
       <Section spacing="lg">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="flex flex-col gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
               <SkeletonServiceCard key={i} />
@@ -62,19 +61,10 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
 
   return (
     <Section spacing="lg">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col gap-3 md:gap-4">
-          {services.map((service, index) => (
-            <ServiceRow
-              key={service.slug}
-              service={service}
-              icon={getServiceIcon(service.slug, service.icon_url)}
-              href={`/services/${service.slug}`}
-              isLast={index === services.length - 1}
-            />
-          ))}
-        </div>
-      </div>
+      <ServiceList 
+        services={services}
+        className="max-w-5xl mx-auto w-full"
+      />
     </Section>
   )
 }

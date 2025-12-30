@@ -33,10 +33,10 @@ function getApiBaseUrl(): string {
   // host.docker.internal only works inside Docker containers
   const isClient = typeof window !== 'undefined'
   if (isClient && envUrl.includes('host.docker.internal')) {
-    return envUrl.replace('host.docker.internal', 'localhost')
-  }
+      return envUrl.replace('host.docker.internal', 'localhost')
+    }
   
-  return envUrl
+    return envUrl
 }
 
 export const config = {
