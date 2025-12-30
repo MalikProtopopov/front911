@@ -232,7 +232,7 @@ function formatPriceNumber(price: number | string | null | undefined): string {
 
 function normalizeRangeLabel(values: string[]): string {
   if (values.length === 0) return ''
-  if (values.length === 1) return values[0]
+  if (values.length === 1) return values[0] || ''
   
   // Sort values naturally (R14, R15, R16...)
   const sorted = [...values].sort((a, b) => {
@@ -319,7 +319,6 @@ export function PriceRowExpandable({
   // Get all groups for selection display
   const allGroups = parameterTypes.flatMap(pt => groupValuesByModifier(pt.values))
   const selectedGroup = allGroups.find(g => g.id === selectedGroupId) || allGroups[0]
-  const selectedPrice = selectedGroup ? basePriceNum + selectedGroup.modifier : basePriceNum
   const selectedLabel = selectedGroup ? normalizeRangeLabel(selectedGroup.values) : ''
   
   return (
@@ -346,8 +345,6 @@ export function PriceRowExpandable({
             <p className="text-sm text-[var(--foreground-tertiary)] mt-1.5 flex items-center gap-1.5">
               <span className="text-[var(--foreground-secondary)]">{parameterTypes[0]?.title}:</span>
               <span>{selectedLabel}</span>
-              <span className="text-[var(--foreground-tertiary)]">·</span>
-              <span className="tabular-nums">{formatPriceNumber(selectedPrice)} ₽</span>
             </p>
           )}
           {description && !selectedLabel && (

@@ -82,7 +82,7 @@ export function TwoColumnLayout({
       {sidebarPosition === 'left' && (
         <aside className={widthClasses[sidebarWidth]}>{sidebar}</aside>
       )}
-      <main className={mainWidthClasses[sidebarWidth]}>{children}</main>
+      <main className={cn(mainWidthClasses[sidebarWidth], 'min-w-0 overflow-hidden')}>{children}</main>
       {sidebarPosition === 'right' && (
         <aside className={widthClasses[sidebarWidth]}>
           <div className="sticky top-24 pt-8 md:pt-12">{sidebar}</div>

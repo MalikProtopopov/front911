@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { Breadcrumbs } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
+import { HeroSection } from '@/components/patterns'
 
 export const metadata: Metadata = {
   title: 'Пользовательское соглашение — 911',
@@ -14,12 +14,17 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <PageLayout>
-      <section className="pt-8 pb-16 md:pt-12 md:pb-20">
+      {/* Hero Section */}
+      <HeroSection
+        id="terms-hero-section"
+        title="Пользовательское соглашение"
+        breadcrumbs={[{ label: 'Пользовательское соглашение' }]}
+        containerSize="narrow"
+      />
+
+      {/* Content */}
+      <section className="py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
-          <Breadcrumbs 
-            items={[{ label: 'Пользовательское соглашение' }]} 
-          />
-          <h1 className="text-5xl font-bold mb-6">Пользовательское соглашение</h1>
           <div className="prose prose-lg">
             <p>Последнее обновление: {new Date().toLocaleDateString('ru-RU')}</p>
             <h2>1. Общие положения</h2>

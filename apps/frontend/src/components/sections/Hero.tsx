@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { Star } from "lucide-react"
 import { DownloadButtons } from "@/components/common"
 
@@ -77,50 +78,16 @@ export function Hero({
               <div className="relative w-[280px] h-[570px] md:w-[320px] md:h-[650px] rounded-[48px] bg-gray-900 shadow-2xl p-3">
                 {/* Screen */}
                 <div className="relative w-full h-full rounded-[40px] overflow-hidden bg-white">
-                  {/* Status Bar */}
-                  <div className="absolute top-0 left-0 right-0 h-10 bg-gray-900 z-10">
-                    <div className="flex items-center justify-between px-6 h-full text-white text-xs">
-                      <span>9:41</span>
-                      <div className="flex items-center gap-1">
-                        <div className="w-4 h-3 border border-white rounded-sm"></div>
-                        <div className="w-3 h-3 rounded-full bg-white"></div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* App Screenshot */}
-                  <div className="absolute inset-0 pt-10 pb-2 px-2">
-                    <div className="w-full h-full bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-secondary)]/10 rounded-3xl p-6 flex flex-col gap-6">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold mb-2 text-[var(--color-primary)]">
-                          911
-                        </div>
-                        <p className="text-sm text-[var(--foreground-secondary)]">
-                          Автопомощь
-                        </p>
-                      </div>
-
-                      <div className="space-y-3 flex-1">
-                        {['Шиномонтаж', 'Эвакуатор', 'Доставка топлива', 'Техпомощь'].map((service, i) => (
-                          <div
-                            key={service}
-                            className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3"
-                            style={{
-                              animation: `fadeIn 0.5s ease-out ${i * 0.1}s backwards`,
-                            }}
-                          >
-                            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center flex-shrink-0">
-                              <div className="w-6 h-6 rounded-full bg-[var(--color-primary)]"></div>
-                            </div>
-                            <span className="font-medium text-sm">{service}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button className="w-full py-4 bg-[var(--color-primary)] text-white rounded-2xl font-semibold shadow-lg">
-                        Заказать услугу
-                      </button>
-                    </div>
+                  <div className="absolute inset-0">
+                    <Image
+                      src="/images/screenshots/IMG_9066.PNG"
+                      alt="Мобильное приложение 911"
+                      fill
+                      className="object-cover"
+                      priority
+                      sizes="(max-width: 768px) 280px, 320px"
+                    />
                   </div>
                 </div>
 

@@ -64,7 +64,7 @@ export function PageHeader({ title, subtitle, id, className, align = 'left' }: P
   return (
     <div 
       className={cn(
-        'max-w-3xl mt-8',
+        'max-w-3xl mt-8 min-w-0',
         align === 'center' && 'mx-auto text-center',
         align === 'left' && 'text-left',
         className

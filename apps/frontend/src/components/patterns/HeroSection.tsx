@@ -50,7 +50,7 @@ export function HeroSection({
         className
       )}
     >
-      <div className={cn(containerClasses[containerSize], centered && 'text-center')}>
+      <div className={cn(containerClasses[containerSize], 'min-w-0', centered && 'text-center')}>
         {breadcrumbs && breadcrumbs.length > 0 && (
           <Breadcrumbs 
             items={breadcrumbs}
