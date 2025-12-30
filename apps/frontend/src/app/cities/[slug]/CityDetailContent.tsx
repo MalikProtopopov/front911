@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { 
   TwoColumnLayout,
-  ServiceRow,
+  ServiceList,
   Button
 } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
@@ -11,13 +11,12 @@ import { Phone, Clock, Star } from 'lucide-react'
 import { useCityDetail, useCityServices } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
 import { HeroSection, PageCTA, RichText, FormSidebar } from '@/components/patterns'
-import { getServiceIcon } from '@/app/services/serviceIcons'
-import type { CityDetail, ServiceList } from '@/lib/api/generated'
+import type { CityDetail, ServiceList as ServiceListType } from '@/lib/api/generated'
 
 interface CityDetailContentProps {
   slug: string
   initialCity?: CityDetail | null
-  initialServices?: ServiceList[]
+  initialServices?: ServiceListType[]
 }
 
 export function CityDetailContent({ 
@@ -136,17 +135,10 @@ export function CityDetailContent({
               ) : servicesError ? (
                 <ErrorMessage message="Не удалось загрузить услуги" />
               ) : services.length > 0 ? (
-                <div className="flex flex-col gap-4 md:gap-5">
-                  {services.map((service, index) => (
-                    <ServiceRow
-                      key={service.slug}
-                      service={service}
-                      icon={getServiceIcon(service.slug, service.icon_url)}
-                      href={`/cities/${slug}/services/${service.slug}`}
-                      isLast={index === services.length - 1}
-                    />
-                  ))}
-                </div>
+                <ServiceList
+                  services={services}
+                  getHref={(service) => `/cities/${slug}/services/${service.slug}`}
+                />
               ) : (
                 <div className="text-center py-12 bg-[var(--background-secondary)] rounded-xl">
                   <p className="text-[var(--foreground-secondary)]">
