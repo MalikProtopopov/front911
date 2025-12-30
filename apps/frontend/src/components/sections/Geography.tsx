@@ -2,14 +2,26 @@
 
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { useClientCities } from "@/lib/api/hooks"
+import { useCities } from "@/lib/api/hooks"
 import { SkeletonCityCard, SkeletonGrid } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
 import { Section, SectionHeader, Button, CityGrid } from "@/components/ui"
+import type { CityList } from "@/lib/api/generated"
 
-export function Geography() {
-  const { cities, isLoading, isError } = useClientCities(10)
+interface GeographyProps {
+  initialCities?: CityList[]
+}
+
+export function Geography({ initialCities = [] }: GeographyProps) {
+  // Use SWR with server-provided initial data for hydration
+  const { cities, isLoading, isError } = useCities(
+    { limit: 10 },
+    { fallbackData: initialCities.length > 0 ? initialCities : undefined }
+  )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialCities.length === 0
 
   return (
     <Section id="geography">
@@ -21,7 +33,7 @@ export function Geography() {
           className="gap-1 md:gap-2 lg:gap-3"
         />
 
-        {isLoading ? (
+        {showLoading ? (
           <SkeletonGrid count={10} columns={5} CardComponent={SkeletonCityCard} />
         ) : isError ? (
           <ErrorMessage 

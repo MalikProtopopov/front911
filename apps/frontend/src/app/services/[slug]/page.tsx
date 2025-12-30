@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLayout } from '@/components/layout'
 import { TwoColumnLayout } from '@/components/ui'
 import { CheckCircle, MapPin, Clock, DollarSign, Phone, ChevronRight } from 'lucide-react'
-import { servicesService, citiesService } from '@/lib/api/services'
+import { servicesService, citiesService, contentService } from '@/lib/api/services'
+import type { Contact } from '@/lib/api/generated'
 import { prefetchServices } from '@/lib/api/hooks'
 import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
 import { ServiceJsonLd, BreadcrumbJsonLd, RelatedCities } from '@/components/seo'
@@ -109,6 +110,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
   
   let service
   let cities: { slug: string; title: string }[] = []
+  let initialContacts: Contact[] = []
   
   try {
     service = await servicesService.getBySlug(slug)
@@ -121,12 +123,16 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
     notFound()
   }
   
-  // Fetch cities for internal linking (non-blocking)
+  // Fetch cities and contacts for SSR (non-blocking)
   try {
-    const allCities = await citiesService.getAll()
+    const [allCities, contactsData] = await Promise.all([
+      citiesService.getAll(),
+      contentService.getContacts(),
+    ])
     cities = allCities.map(c => ({ slug: c.slug, title: c.title }))
+    initialContacts = contactsData
   } catch {
-    // Continue without cities
+    // Continue without cities/contacts
   }
 
   // Parse content - API returns string that can be JSON or HTML
@@ -335,6 +341,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
             { label: 'Позвонить', showPhoneIcon: true },
             { label: 'Выбрать город', href: '/cities', variant: 'outline' },
           ]}
+          initialContacts={initialContacts}
         />
       </PageLayout>
     </>

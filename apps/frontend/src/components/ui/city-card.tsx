@@ -3,7 +3,6 @@
  * Unified card for city listings across all pages
  */
 
-import * as React from 'react'
 import Link from 'next/link'
 import { MapPin, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'

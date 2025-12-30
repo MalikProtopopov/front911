@@ -6,7 +6,7 @@ import { TrustBar } from "@/components/sections/TrustBar"
 import { Reviews } from "@/components/sections/Reviews"
 import { Geography } from "@/components/sections/Geography"
 import { CTASection } from "@/components/sections/CTASection"
-import { servicesService, contentService } from "@/lib/api/services"
+import { servicesService, contentService, citiesService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 
 // ISR: revalidate every hour
@@ -16,11 +16,11 @@ export const revalidate = 3600
  * Home Page
  * Main landing page with all sections
  * Uses design system for consistent spacing and layout
- * Data is fetched on the server for SSR
+ * All data is fetched on the server for SSR
  */
 export default async function Home() {
-  // Fetch data on the server in parallel
-  const [initialServices, initialAdvantages, initialMetrics] = await Promise.all([
+  // Fetch all data on the server in parallel
+  const [initialServices, initialAdvantages, initialMetrics, initialCities, initialAppLinks] = await Promise.all([
     servicesService.getAll({ limit: 4 }).catch((error) => {
       logServerError(error, 'Failed to fetch services for home page SSR', { page: '/' })
       return []
@@ -33,12 +33,20 @@ export default async function Home() {
       logServerError(error, 'Failed to fetch metrics for home page SSR', { page: '/' })
       return []
     }),
+    citiesService.getAll({ limit: 10 }).catch((error) => {
+      logServerError(error, 'Failed to fetch cities for home page SSR', { page: '/' })
+      return []
+    }),
+    contentService.getAppLinks().catch((error) => {
+      logServerError(error, 'Failed to fetch app links for home page SSR', { page: '/' })
+      return []
+    }),
   ])
 
   return (
     <main className="min-h-screen overflow-hidden">
       {/* Hero Section - Full height with gradient background */}
-      <Hero />
+      <Hero initialAppLinks={initialAppLinks} />
       
       {/* Services Section - Subtle gray background for contrast */}
       <Services initialServices={initialServices} />
@@ -56,10 +64,10 @@ export default async function Home() {
       <Reviews />
       
       {/* Geography Section - White background */}
-      <Geography />
+      <Geography initialCities={initialCities} />
       
       {/* CTA Section - Final call to action with extra spacing */}
-      <CTASection />
+      <CTASection initialAppLinks={initialAppLinks} />
     </main>
   )
 }

@@ -1,9 +1,9 @@
 import { Metadata } from 'next'
 import { CityDetailContent } from './CityDetailContent'
-import { citiesService } from '@/lib/api/services'
+import { citiesService, contentService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
 import { LocalBusinessJsonLd, BreadcrumbJsonLd } from '@/components/seo'
-import type { CityDetail, ServiceList } from '@/lib/api/generated'
+import type { CityDetail, ServiceList, Contact } from '@/lib/api/generated'
 
 interface CityDetailPageProps {
   params: Promise<{ slug: string }>
@@ -68,18 +68,21 @@ export default async function CityPage({ params }: CityDetailPageProps) {
   const { slug } = await params
   const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
   
-  // Fetch city and services for SSR
+  // Fetch city, services and contacts for SSR
   let city: CityDetail | null = null
   let cityServices: ServiceList[] = []
+  let initialContacts: Contact[] = []
   
   try {
     // Parallel fetch for better performance
-    const [cityData, servicesData] = await Promise.all([
+    const [cityData, servicesData, contactsData] = await Promise.all([
       citiesService.getBySlug(slug),
-      citiesService.getServices(slug)
+      citiesService.getServices(slug),
+      contentService.getContacts(),
     ])
     city = cityData
     cityServices = servicesData
+    initialContacts = contactsData
   } catch (error) {
     logServerError(error, 'Failed to fetch city data for SSR', {
       page: '/cities/[slug]',
@@ -108,6 +111,7 @@ export default async function CityPage({ params }: CityDetailPageProps) {
         slug={slug} 
         initialCity={city}
         initialServices={cityServices}
+        initialContacts={initialContacts}
       />
     </>
   )

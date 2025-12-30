@@ -6,6 +6,7 @@ import { useClientAppLinks } from '@/lib/api/hooks'
 import { analytics } from '@/lib/analytics'
 import { EXTERNAL_LINKS } from '@/lib/config/constants'
 import { cn } from '@/lib/utils'
+import type { AppLink } from '@/lib/api/generated'
 
 /* =============================================================================
    CTA BANNER COMPONENT
@@ -25,6 +26,8 @@ export interface CTABannerProps {
   className?: string
   /** Analytics source identifier */
   analyticsSource?: string
+  /** Initial app links for SSR */
+  initialAppLinks?: AppLink[]
 }
 
 export function CTABanner({
@@ -34,8 +37,11 @@ export function CTABanner({
   id = 'download',
   className,
   analyticsSource,
+  initialAppLinks = [],
 }: CTABannerProps) {
-  const { clientIosLink, clientAndroidLink, getAppLink, isLoading } = useClientAppLinks()
+  const { clientIosLink, clientAndroidLink, getAppLink, isLoading } = useClientAppLinks({
+    initialData: initialAppLinks
+  })
 
   // Get appropriate links based on app type
   const iosLink = appType === 'client' 

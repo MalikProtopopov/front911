@@ -50,6 +50,7 @@ export default async function ContactsPage() {
           { label: 'Позвонить', showPhoneIcon: true },
           { label: 'Все услуги', href: '/services', variant: 'outline' },
         ]}
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

@@ -1,9 +1,9 @@
 import { Metadata } from 'next'
 import { generatePageMetadata } from "@/lib/api/hooks"
-import { citiesService } from "@/lib/api/services"
+import { citiesService, contentService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import { CitiesList } from "./CitiesList"
-import type { CityList } from "@/lib/api/generated"
+import type { CityList, Contact } from "@/lib/api/generated"
 
 // ISR: revalidate every hour
 export const revalidate = 3600
@@ -17,17 +17,26 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CitiesPage() {
-  // Fetch cities on the server for SSR
+  // Fetch cities and contacts on the server for SSR
   let initialCities: CityList[] = []
+  let initialContacts: Contact[] = []
   
   try {
-    initialCities = await citiesService.getAll({ limit: 1000, ordering: 'display_order,title' })
+    [initialCities, initialContacts] = await Promise.all([
+      citiesService.getAll({ limit: 1000, ordering: 'display_order,title' }),
+      contentService.getContacts(),
+    ])
   } catch (error) {
-    logServerError(error, 'Failed to fetch cities for SSR', {
+    logServerError(error, 'Failed to fetch data for cities page SSR', {
       page: '/cities',
     })
-    // Continue with empty array - client will try to fetch
+    // Continue with empty arrays - client will try to fetch
   }
 
-  return <CitiesList initialCities={initialCities} />
+  return (
+    <CitiesList 
+      initialCities={initialCities}
+      initialContacts={initialContacts}
+    />
+  )
 }

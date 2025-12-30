@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
 import { CityServiceContent } from './CityServiceContent'
-import { citiesService, servicesService } from '@/lib/api/services'
+import { citiesService, servicesService, contentService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
 import type { CityServiceResponse } from '@/lib/api/services'
+import type { Contact } from '@/lib/api/generated'
 
 interface CityServicePageProps {
   params: Promise<{ slug: string; serviceSlug: string }>
@@ -86,11 +87,17 @@ export async function generateMetadata({ params }: CityServicePageProps): Promis
 export default async function CityServicePage({ params }: CityServicePageProps) {
   const { slug, serviceSlug } = await params
   
-  // Fetch city service data for SSR
+  // Fetch city service data and contacts for SSR
   let initialData: CityServiceResponse | null = null
+  let initialContacts: Contact[] = []
   
   try {
-    initialData = await citiesService.getServiceByCity(slug, serviceSlug)
+    const [cityServiceData, contactsData] = await Promise.all([
+      citiesService.getServiceByCity(slug, serviceSlug),
+      contentService.getContacts(),
+    ])
+    initialData = cityServiceData
+    initialContacts = contactsData
   } catch (error) {
     logServerError(error, 'Failed to fetch city service data for SSR', {
       page: '/cities/[slug]/services/[serviceSlug]',
@@ -104,6 +111,7 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
       citySlug={slug} 
       serviceSlug={serviceSlug}
       initialData={initialData}
+      initialContacts={initialContacts}
     />
   )
 }

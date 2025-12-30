@@ -22,26 +22,34 @@ function findAppLink(
   )
 }
 
+interface UseClientAppLinksOptions {
+  initialData?: AppLink[]
+}
+
 /**
  * Client-side hook for app links
  * For use in client components only
+ * Supports SSR with initial data
  */
-export function useClientAppLinks() {
+export function useClientAppLinks(options?: UseClientAppLinksOptions) {
+  const initialData = options?.initialData
+
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const appLinksKey = QUERY_KEYS?.APP_LINKS?.ALL ?? 'app-links'
+
   const { data, error, isLoading } = useSWR<AppLink[]>(
-    QUERY_KEYS.APP_LINKS.ALL,
+    appLinksKey,
     () => contentService.getAppLinks(),
     {
       ...SWR_CONFIG,
-      fallbackData: [],
+      fallbackData: initialData && initialData.length > 0 ? initialData : [],
     }
   )
 
   const appLinks = data ?? []
 
-  // Debug logging (remove in production)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[useClientAppLinks] data:', data, 'error:', error, 'isLoading:', isLoading)
-  }
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && (!initialData || initialData.length === 0)
 
   // Pre-filtered links for client apps (most common use case)
   const clientIosLink = findAppLink(appLinks, 'client', 'ios')
@@ -55,29 +63,41 @@ export function useClientAppLinks() {
     // Helper function for custom filtering
     getAppLink: (appType: 'client' | 'partner', platform: 'ios' | 'android') =>
       findAppLink(appLinks, appType, platform),
-    isLoading,
+    isLoading: showLoading,
     isError: !!error,
   }
+}
+
+interface UseClientCitiesOptions {
+  initialData?: CityList[]
 }
 
 /**
  * Client-side hook for featured cities
  * For use in client components only
+ * Supports SSR with initial data
  */
-export function useClientCities(limit: number = PAGINATION.CITIES_PAGE_SIZE) {
+export function useClientCities(limit: number = PAGINATION.CITIES_PAGE_SIZE, options?: UseClientCitiesOptions) {
+  const initialData = options?.initialData
+
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const citiesKey = QUERY_KEYS?.CITIES?.ALL ?? 'cities'
+
   const { data, error, isLoading } = useSWR<CityList[]>(
-    [QUERY_KEYS.CITIES.ALL, { limit }],
+    [citiesKey, { limit }],
     () => citiesService.getAll({ limit }),
     {
       ...SWR_CONFIG,
-      fallbackData: [],
+      fallbackData: initialData && initialData.length > 0 ? initialData : [],
     }
   )
 
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && (!initialData || initialData.length === 0)
+
   return {
     cities: data ?? [],
-    isLoading,
+    isLoading: showLoading,
     isError: !!error,
   }
 }
-

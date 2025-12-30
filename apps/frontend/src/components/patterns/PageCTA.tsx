@@ -7,11 +7,12 @@ import { cn } from '@/lib/utils'
 import { ReactNode } from 'react'
 import { useContacts } from '@/lib/api/hooks'
 import { getPrimaryPhone, getContactLink, getFallbackPhoneLink } from '@/lib/utils/contacts'
+import type { Contact } from '@/lib/api/generated'
 
 /* =============================================================================
    PAGE CTA COMPONENT
    CTA section for bottom of pages with heading, description and action buttons
-   Now fetches phone from API with fallback to CONTACT_INFO
+   Fetches phone from API with SSR support and fallback to CONTACT_INFO
 ============================================================================= */
 
 export interface PageCTAAction {
@@ -40,6 +41,8 @@ export interface PageCTAProps {
   bg?: 'white' | 'secondary'
   /** Additional class names */
   className?: string
+  /** Initial contacts for SSR */
+  initialContacts?: Contact[]
 }
 
 export function PageCTA({
@@ -48,18 +51,17 @@ export function PageCTA({
   actions,
   bg = 'secondary',
   className,
+  initialContacts = [],
 }: PageCTAProps) {
-  // Fetch phone contacts from API
-  const { contacts: phoneContacts, isError } = useContacts({ contactType: 'phone' })
+  // Fetch phone contacts from API with SSR support
+  const { contacts: phoneContacts } = useContacts(
+    { contactType: 'phone' },
+    { fallbackData: initialContacts.length > 0 ? initialContacts.filter(c => c.contact_type === 'phone') : undefined }
+  )
   
   // Get primary phone from API or use fallback
   const primaryPhone = getPrimaryPhone(phoneContacts)
   const phoneLink = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
-  
-  // Log warning if using fallback (only in browser)
-  if ((isError || phoneContacts.length === 0) && typeof window !== 'undefined' && !primaryPhone) {
-    console.warn('[PageCTA] Contacts API unavailable, using fallback phone number')
-  }
 
   // Default actions with dynamic phone
   const defaultActions: PageCTAAction[] = [

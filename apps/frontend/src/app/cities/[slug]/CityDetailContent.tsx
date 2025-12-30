@@ -11,18 +11,20 @@ import { Phone, Clock, Star } from 'lucide-react'
 import { useCityDetail, useCityServices } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
 import { HeroSection, PageCTA, RichText, FormSidebar } from '@/components/patterns'
-import type { CityDetail, ServiceList as ServiceListType } from '@/lib/api/generated'
+import type { CityDetail, ServiceList as ServiceListType, Contact } from '@/lib/api/generated'
 
 interface CityDetailContentProps {
   slug: string
   initialCity?: CityDetail | null
   initialServices?: ServiceListType[]
+  initialContacts?: Contact[]
 }
 
 export function CityDetailContent({ 
   slug, 
   initialCity,
-  initialServices = []
+  initialServices = [],
+  initialContacts = [],
 }: CityDetailContentProps) {
   // Use SWR with server-provided initial data for hydration
   const { 
@@ -175,6 +177,7 @@ export function CityDetailContent({
           { label: 'Позвонить', showPhoneIcon: true },
           { label: 'Все города', href: '/cities', variant: 'outline' }
         ]}
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

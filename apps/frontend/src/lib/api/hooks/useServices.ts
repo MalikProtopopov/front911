@@ -23,8 +23,11 @@ export function useServices(
   params?: GetServicesParams,
   options?: HookOptions<ServiceList[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const servicesKey = QUERY_KEYS?.SERVICES?.ALL ?? 'services'
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceList[]>(
-    [QUERY_KEYS.SERVICES.ALL, params],
+    [servicesKey, params],
     async () => {
       try {
         const result = await servicesService.getAll(params)
@@ -66,8 +69,15 @@ export function useServiceDetail(
   slug: string | null | undefined,
   options?: HookOptions<ServiceDetail>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.SERVICES?.DETAIL 
+        ? QUERY_KEYS.SERVICES.DETAIL(slug)
+        : `services/${slug}`)
+    : null
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceDetail>(
-    slug ? QUERY_KEYS.SERVICES.DETAIL(slug) : null,
+    cacheKey,
     slug ? () => servicesService.getBySlug(slug) : null,
     {
       ...SWR_CONFIG,
@@ -94,8 +104,15 @@ export function useServiceOptions(
   slug: string | null | undefined,
   options?: HookOptions<ServiceDetail>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.SERVICES?.OPTIONS 
+        ? QUERY_KEYS.SERVICES.OPTIONS(slug)
+        : `services/${slug}/options`)
+    : null
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceDetail>(
-    slug ? QUERY_KEYS.SERVICES.OPTIONS(slug) : null,
+    cacheKey,
     slug ? () => servicesService.getOptions(slug) : null,
     {
       ...SWR_CONFIG,

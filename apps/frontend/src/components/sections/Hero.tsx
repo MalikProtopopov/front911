@@ -4,12 +4,14 @@ import * as React from "react"
 import Image from "next/image"
 import { Star } from "lucide-react"
 import { DownloadButtons } from "@/components/common"
+import type { AppLink } from "@/lib/api/generated"
 
 interface HeroProps {
   title?: string
   subtitle?: string
   rating?: number
   reviewCount?: number
+  initialAppLinks?: AppLink[]
 }
 
 export function Hero({
@@ -17,6 +19,7 @@ export function Hero({
   subtitle = "Шиномонтаж, эвакуатор, топливо — проверенные мастера приедут к вам. 82 города России.",
   rating = 4.84,
   reviewCount = 2728,
+  initialAppLinks = [],
 }: HeroProps) {
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 })
 
@@ -59,7 +62,7 @@ export function Hero({
 
             {/* App Store Badges */}
             <div className="section-gap-md">
-              <DownloadButtons appType="client" />
+              <DownloadButtons appType="client" initialAppLinks={initialAppLinks} />
             </div>
           </div>
 

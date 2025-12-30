@@ -5,13 +5,14 @@ import { CityGrid } from "@/components/ui"
 import { useCities } from "@/lib/api/hooks"
 import { LoadingSpinner, ErrorMessage } from "@/components/common"
 import { HeroSection, PageCTA } from "@/components/patterns"
-import type { CityList } from "@/lib/api/generated"
+import type { CityList, Contact } from "@/lib/api/generated"
 
 interface CitiesListProps {
   initialCities?: CityList[]
+  initialContacts?: Contact[]
 }
 
-export function CitiesList({ initialCities = [] }: CitiesListProps) {
+export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesListProps) {
   // Use SWR with server-provided initial data for hydration
   const { cities, isLoading, isError, error } = useCities(
     { limit: 1000, ordering: 'display_order,title' },
@@ -86,6 +87,7 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
       <PageCTA
         title="Не нашли свой город?"
         description="Мы постоянно расширяем географию. Оставьте заявку, и мы сообщим о запуске в вашем городе."
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

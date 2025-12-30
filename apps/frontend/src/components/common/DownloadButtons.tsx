@@ -38,6 +38,8 @@ export interface DownloadButtonsProps {
   size?: 'default' | 'sm' | 'lg'
   /** Направление расположения кнопок */
   direction?: 'row' | 'column'
+  /** Начальные данные для SSR */
+  initialAppLinks?: AppLink[]
 }
 
 // ============================================================================
@@ -250,16 +252,20 @@ export function DownloadButtons({
   androidVariant = 'outline',
   size = 'lg',
   direction = 'row',
+  initialAppLinks = [],
 }: DownloadButtonsProps) {
-  // Загружаем данные с API через SWR
+  // Загружаем данные с API через SWR с поддержкой SSR
   const { data, error, isLoading } = useSWR<AppLink[]>(
     QUERY_KEYS.APP_LINKS.ALL,
     () => contentService.getAppLinks(),
     {
       ...SWR_CONFIG,
-      fallbackData: [],
+      fallbackData: initialAppLinks.length > 0 ? initialAppLinks : [],
     }
   )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialAppLinks.length === 0
 
   // Нормализуем данные
   const links: AppLinksByPlatform = React.useMemo(() => {
@@ -274,7 +280,7 @@ export function DownloadButtons({
   }, [links, showQr])
 
   // Состояние загрузки
-  if (isLoading) {
+  if (showLoading) {
     return <DownloadButtonsSkeleton showQr={showQr} direction={direction} />
   }
 

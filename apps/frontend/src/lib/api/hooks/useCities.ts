@@ -23,8 +23,11 @@ export function useCities(
   params?: GetCitiesParams,
   options?: HookOptions<CityList[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const citiesKey = QUERY_KEYS?.CITIES?.ALL ?? 'cities'
+  
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityList[]>(
-    [QUERY_KEYS.CITIES.ALL, params],
+    [citiesKey, params],
     () => citiesService.getAll(params),
     {
       ...SWR_CONFIG,
@@ -51,8 +54,15 @@ export function useCityDetail(
   slug: string | null | undefined,
   options?: HookOptions<CityDetail>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.CITIES?.DETAIL 
+        ? QUERY_KEYS.CITIES.DETAIL(slug)
+        : `cities/${slug}`)
+    : null
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityDetail>(
-    slug ? QUERY_KEYS.CITIES.DETAIL(slug) : null,
+    cacheKey,
     () => (slug ? citiesService.getBySlug(slug) : Promise.reject('No slug')),
     {
       ...SWR_CONFIG,
@@ -79,8 +89,15 @@ export function useCityServices(
   slug: string | null | undefined,
   options?: HookOptions<ServiceList[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.CITIES?.SERVICES 
+        ? QUERY_KEYS.CITIES.SERVICES(slug)
+        : `cities/${slug}/services`)
+    : null
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceList[]>(
-    slug ? QUERY_KEYS.CITIES.SERVICES(slug) : null,
+    cacheKey,
     () => (slug ? citiesService.getServices(slug) : Promise.reject('No slug')),
     {
       ...SWR_CONFIG,
@@ -109,10 +126,15 @@ export function useCityService(
   serviceSlug: string | null | undefined,
   options?: HookOptions<CityServiceResponse>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = citySlug && serviceSlug
+    ? (QUERY_KEYS?.CITY_SERVICE?.DETAIL 
+        ? QUERY_KEYS.CITY_SERVICE.DETAIL(citySlug, serviceSlug)
+        : `cities/${citySlug}/services/${serviceSlug}`)
+    : null
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityServiceResponse>(
-    citySlug && serviceSlug
-      ? QUERY_KEYS.CITY_SERVICE.DETAIL(citySlug, serviceSlug)
-      : null,
+    cacheKey,
     () =>
       citySlug && serviceSlug
         ? citiesService.getServiceByCity(citySlug, serviceSlug)

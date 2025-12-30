@@ -1,11 +1,11 @@
 import { Metadata } from 'next'
 import { PageLayout } from '@/components/layout'
 import { generatePageMetadata } from "@/lib/api/hooks"
-import { servicesService } from "@/lib/api/services"
+import { servicesService, contentService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import { ServicesList } from "./ServicesList"
 import { PageCTA, HeroSection } from '@/components/patterns'
-import type { ServiceList } from "@/lib/api/generated"
+import type { ServiceList, Contact } from "@/lib/api/generated"
 
 // ISR: revalidate every hour
 export const revalidate = 3600
@@ -19,16 +19,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ServicesPage() {
-  // Fetch services on the server for SSR
+  // Fetch services and contacts on the server for SSR
   let initialServices: ServiceList[] = []
+  let initialContacts: Contact[] = []
   
   try {
-    initialServices = await servicesService.getAll()
+    [initialServices, initialContacts] = await Promise.all([
+      servicesService.getAll(),
+      contentService.getContacts(),
+    ])
   } catch (error) {
-    logServerError(error, 'Failed to fetch services for SSR', {
+    logServerError(error, 'Failed to fetch data for services page SSR', {
       page: '/services',
     })
-    // Continue with empty array - client will try to fetch
+    // Continue with empty arrays - client will try to fetch
   }
 
   return (
@@ -53,6 +57,7 @@ export default async function ServicesPage() {
           { label: 'Позвонить', showPhoneIcon: true },
           { label: 'Контакты', href: '/contacts', variant: 'outline' },
         ]}
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

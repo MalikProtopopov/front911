@@ -7,7 +7,6 @@ import {
   Button,
   PriceAccordion,
   PriceAccordionCategory,
-  PriceRow,
   PriceRowExpandable,
   PriceSectionHeader,
   PriceEmptyState
@@ -24,12 +23,13 @@ import { useCityService } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
 import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
 import type { CityServiceOption, CityServiceResponse } from '@/lib/api/services'
-import type { OptionPrice } from '@/lib/api/generated'
+import type { Contact } from '@/lib/api/generated'
 
 interface CityServiceContentProps {
   citySlug: string
   serviceSlug: string
   initialData?: CityServiceResponse | null
+  initialContacts?: Contact[]
 }
 
 // Group options by category based on prices
@@ -92,7 +92,8 @@ function groupOptionsByCategory(options: CityServiceOption[]) {
 export function CityServiceContent({ 
   citySlug, 
   serviceSlug,
-  initialData 
+  initialData,
+  initialContacts = [],
 }: CityServiceContentProps) {
   // Use SWR with server-provided initial data for hydration
   const { 
@@ -234,8 +235,9 @@ export function CityServiceContent({
                           }) || []
                           
                           // Get base price for this category
-                          const basePrice = categoryPrices.length > 0 
-                            ? categoryPrices[0].amount 
+                          const firstCategoryPrice = categoryPrices[0]
+                          const basePrice = firstCategoryPrice 
+                            ? firstCategoryPrice.amount 
                             : (option.price?.technic_category === category 
                                 ? option.price.amount 
                                 : null)
@@ -279,8 +281,9 @@ export function CityServiceContent({
                         }) || []
                         
                         // Get base price
-                        const basePrice = pricesWithoutCategory.length > 0
-                          ? pricesWithoutCategory[0].amount
+                        const firstPriceWithoutCategory = pricesWithoutCategory[0]
+                        const basePrice = firstPriceWithoutCategory
+                          ? firstPriceWithoutCategory.amount
                           : (option.price && !option.price.technic_category
                               ? option.price.amount
                               : null)
@@ -329,6 +332,7 @@ export function CityServiceContent({
             icon: <MapPin className="w-5 h-5 mr-2" />
           },
         ]}
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

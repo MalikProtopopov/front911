@@ -28,8 +28,11 @@ export function useAdvantages(
   params?: GetAdvantagesParams,
   options?: HookOptions<Advantage[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const advantagesKey = QUERY_KEYS?.ADVANTAGES?.ALL ?? 'advantages'
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<Advantage[]>(
-    [QUERY_KEYS.ADVANTAGES.ALL, params],
+    [advantagesKey, params],
     () => contentService.getAdvantages(params),
     {
       ...SWR_CONFIG,
@@ -56,8 +59,11 @@ export function useMetrics(
   params?: GetMetricsParams,
   options?: HookOptions<Metric[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const metricsKey = QUERY_KEYS?.METRICS?.ALL ?? 'metrics'
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<Metric[]>(
-    [QUERY_KEYS.METRICS.ALL, params],
+    [metricsKey, params],
     () => contentService.getMetrics(params),
     {
       ...SWR_CONFIG,
@@ -80,8 +86,11 @@ export function useMetrics(
  * @param options - SWR options including fallbackData for SSR
  */
 export function useAppLinks(options?: HookOptions<AppLink[]>) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const appLinksKey = QUERY_KEYS?.APP_LINKS?.ALL ?? 'app-links'
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<AppLink[]>(
-    QUERY_KEYS.APP_LINKS.ALL,
+    appLinksKey,
     () => contentService.getAppLinks(),
     {
       ...SWR_CONFIG,
@@ -108,10 +117,11 @@ export function useContacts(
   params?: GetContactsParams,
   options?: HookOptions<Contact[]>
 ) {
-  // Create unique cache key based on params
+  // Create unique cache key based on params with fallback
+  const contactsKey = QUERY_KEYS?.CONTACTS?.ALL ?? 'contacts'
   const cacheKey = params?.contactType 
-    ? [QUERY_KEYS.CONTACTS.ALL, params.contactType]
-    : QUERY_KEYS.CONTACTS.ALL
+    ? [contactsKey, params.contactType]
+    : contactsKey
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<Contact[]>(
     cacheKey,
