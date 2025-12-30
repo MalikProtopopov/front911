@@ -8,6 +8,7 @@ import {
   PriceAccordion,
   PriceAccordionCategory,
   PriceRow,
+  PriceRowExpandable,
   PriceSectionHeader,
   PriceEmptyState
 } from '@/components/ui'
@@ -232,54 +233,24 @@ export function CityServiceContent({
                             return false
                           }) || []
                           
-                          // Convert prices to OptionPrice format
-                          const pricesToShow: OptionPrice[] = categoryPrices.length > 0 
-                            ? categoryPrices.map(price => {
-                                // If already OptionPrice format, return as is
-                                if ('technic_category_title' in price && 'id' in price) {
-                                  return price as OptionPrice
-                                }
-                                // Convert legacy format to OptionPrice
-                                return {
-                                  id: 0,
-                                  city_slug: '',
-                                  city_title: '',
-                                  technic_category_id: null,
-                                  technic_category_title: ('technic_category' in price ? price.technic_category : null),
-                                  amount: price.amount,
-                                } as OptionPrice
-                              })
-                            : (option.price?.technic_category === category && option.price 
-                                ? [{
-                                    id: 0,
-                                    city_slug: '',
-                                    city_title: '',
-                                    technic_category_id: null,
-                                    technic_category_title: null,
-                                    amount: option.price.amount,
-                                  }] 
-                                : [])
+                          // Get base price for this category
+                          const basePrice = categoryPrices.length > 0 
+                            ? categoryPrices[0].amount 
+                            : (option.price?.technic_category === category 
+                                ? option.price.amount 
+                                : null)
                           
-                          // Show option even if no prices (will show "По запросу")
-                          // If has prices, show all prices for this category
-                          if (pricesToShow.length > 0) {
-                            return pricesToShow.map((price, priceIndex) => (
-                              <PriceRow 
-                                key={`${option.id}-${priceIndex}`}
-                                title={option.title}
-                                price={price.amount}
-                              />
-                            ))
-                          } else {
-                            // Show option without price (will display "По запросу")
-                            return (
-                              <PriceRow 
-                                key={`${option.id}-no-price`}
-                                title={option.title}
-                                price={null}
-                              />
-                            )
-                          }
+                          // Use PriceRowExpandable for options with parameters
+                          return (
+                            <PriceRowExpandable
+                              key={option.id}
+                              title={option.title}
+                              basePrice={basePrice}
+                              hasParameters={option.has_parameters}
+                              parameterTypes={option.parameter_types}
+                              description={option.description}
+                            />
+                          )
                         })}
                       </PriceAccordionCategory>
                     )
@@ -307,53 +278,24 @@ export function CityServiceContent({
                           return true
                         }) || []
                         
-                        // Convert prices to OptionPrice format
-                        const pricesToShow: OptionPrice[] = pricesWithoutCategory.length > 0
-                          ? pricesWithoutCategory.map(price => {
-                              // If already OptionPrice format, return as is
-                              if ('technic_category_title' in price && 'id' in price) {
-                                return price as OptionPrice
-                              }
-                              // Convert legacy format to OptionPrice
-                              return {
-                                id: 0,
-                                city_slug: '',
-                                city_title: '',
-                                technic_category_id: null,
-                                technic_category_title: null,
-                                amount: price.amount,
-                              } as OptionPrice
-                            })
+                        // Get base price
+                        const basePrice = pricesWithoutCategory.length > 0
+                          ? pricesWithoutCategory[0].amount
                           : (option.price && !option.price.technic_category
-                              ? [{
-                                  id: 0,
-                                  city_slug: '',
-                                  city_title: '',
-                                  technic_category_id: null,
-                                  technic_category_title: null,
-                                  amount: option.price.amount,
-                                }]
-                              : [])
+                              ? option.price.amount
+                              : null)
                         
-                        // Show option even if no prices (will show "По запросу")
-                        if (pricesToShow.length > 0) {
-                          return pricesToShow.map((price, priceIndex) => (
-                            <PriceRow 
-                              key={`${option.id}-uncategorized-${priceIndex}`}
-                              title={option.title}
-                              price={price.amount}
-                            />
-                          ))
-                        } else {
-                          // Show option without price (will display "По запросу")
-                          return (
-                            <PriceRow 
-                              key={`${option.id}-uncategorized-no-price`}
-                              title={option.title}
-                              price={null}
-                            />
-                          )
-                        }
+                        // Use PriceRowExpandable for options with parameters
+                        return (
+                          <PriceRowExpandable
+                            key={option.id}
+                            title={option.title}
+                            basePrice={basePrice}
+                            hasParameters={option.has_parameters}
+                            parameterTypes={option.parameter_types}
+                            description={option.description}
+                          />
+                        )
                       })}
                     </PriceAccordionCategory>
                   )}

@@ -48,7 +48,8 @@ export { SectionHeader, PageHeader } from './section-header'
 export { 
   PriceAccordion, 
   PriceAccordionCategory, 
-  PriceRow, 
+  PriceRow,
+  PriceRowExpandable,
   PriceSectionHeader, 
   PriceEmptyState,
   formatPrice,

@@ -19,9 +19,33 @@ export interface CityDetailWithServices extends CityDetail {
   services?: ServiceList[]
 }
 
+// Parameter value with price modifier
+export interface ParameterValue {
+  id: number
+  value: string
+  display_name: string
+  price_modifier: string
+}
+
+// Parameter type (e.g., "radius", "fuel_type")
+export interface ParameterType {
+  code: string
+  title: string
+  is_required: boolean
+  values: ParameterValue[]
+}
+
+// Parameter price item
+export interface ParameterPriceItem {
+  value_id: number
+  display_name: string
+  price_modifier: string
+}
+
 export interface CityServiceOption {
   id: number
   title: string
+  description?: string
   service_id: number
   service_title: string
   service_slug: string
@@ -37,6 +61,12 @@ export interface CityServiceOption {
     amount: string
     technic_category: string | null
   }> | OptionPrice[]
+  // NEW: Flag indicating if option has parameters
+  has_parameters?: boolean
+  // NEW: Parameter types with their values and price modifiers
+  parameter_types?: ParameterType[]
+  // NEW: Parameter prices grouped by parameter type code
+  parameter_prices?: Record<string, ParameterPriceItem[]>
 }
 
 export interface CityServiceResponse {
