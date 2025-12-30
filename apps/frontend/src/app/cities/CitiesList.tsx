@@ -1,7 +1,7 @@
 'use client'
 
 import { PageLayout } from '@/components/layout'
-import { CityCard } from "@/components/ui"
+import { CityGrid } from "@/components/ui"
 import { useCities } from "@/lib/api/hooks"
 import { LoadingSpinner, ErrorMessage } from "@/components/common"
 import { HeroSection, PageCTA } from "@/components/patterns"
@@ -71,11 +71,10 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
                   <h2 className="text-3xl font-bold mb-8 text-[var(--color-primary)]">
                     {letter}
                   </h2>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {groupedCities[letter]?.map((city) => (
-                      <CityCard key={city.slug} city={city} />
-                    ))}
-                  </div>
+                  <CityGrid 
+                    cities={groupedCities[letter] || []} 
+                    columns={4}
+                  />
                 </div>
               ))}
             </div>

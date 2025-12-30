@@ -38,6 +38,7 @@ export { FeatureCard, LinkCard, SimpleLinkCard, StatCard } from './feature-card'
 export { ServiceCard, ServiceRow, type ServiceCardProps, type ServiceRowProps } from './service-card'
 export { ServiceList, type ServiceListProps } from './service-list'
 export { CityCard, CityRow, type CityCardProps, type CityRowProps } from './city-card'
+export { CityGrid, type CityGridProps } from './city-grid'
 
 // Layout
 export { Grid, TwoColumnLayout, Stack, Row } from './grid'

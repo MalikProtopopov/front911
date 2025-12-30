@@ -6,7 +6,7 @@ import { useClientCities } from "@/lib/api/hooks"
 import { SkeletonCityCard, SkeletonGrid } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
-import { Section, SectionHeader, Grid, Button, CityCard } from "@/components/ui"
+import { Section, SectionHeader, Button, CityGrid } from "@/components/ui"
 
 export function Geography() {
   const { cities, isLoading, isError } = useClientCities(10)
@@ -34,11 +34,10 @@ export function Geography() {
             description="На данный момент города недоступны."
           />
         ) : (
-          <Grid cols={5} gap="md">
-            {cities.map((city) => (
-              <CityCard key={city.slug} city={city} />
-            ))}
-          </Grid>
+          <CityGrid 
+            cities={cities} 
+            columns={5}
+          />
         )}
 
         <div className="flex justify-center">
