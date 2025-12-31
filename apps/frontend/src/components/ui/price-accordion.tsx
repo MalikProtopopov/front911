@@ -177,16 +177,20 @@ interface PriceRowProps {
   price?: number | string | null
   description?: string
   className?: string
+  /** Callback when option is clicked */
+  onClick?: () => void
 }
 
 export function PriceRow({ 
   title, 
   price, 
   description,
-  className 
+  className,
+  onClick,
 }: PriceRowProps) {
   return (
     <div 
+      onClick={onClick}
       className={cn(
         'price-row',
         'flex items-center justify-between py-4 px-5',
@@ -265,6 +269,8 @@ interface PriceRowExpandableProps {
   parameterTypes?: ParameterType[]
   description?: string
   className?: string
+  /** Callback when option or parameter is clicked */
+  onSelect?: (message: string) => void
 }
 
 export function PriceRowExpandable({
@@ -273,7 +279,8 @@ export function PriceRowExpandable({
   hasParameters = false,
   parameterTypes = [],
   description,
-  className
+  className,
+  onSelect,
 }: PriceRowExpandableProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
@@ -286,6 +293,7 @@ export function PriceRowExpandable({
         price={basePrice} 
         description={description}
         className={className}
+        onClick={() => onSelect?.(`Хочу оставить заявку на услугу "${title}"`)}
       />
     )
   }
@@ -322,16 +330,23 @@ export function PriceRowExpandable({
   const selectedLabel = selectedGroup ? normalizeRangeLabel(selectedGroup.values) : ''
   
   return (
-    <div className={cn('price-row-expandable group', className)}>
+    <div 
+      className={cn(
+        'price-row-expandable group relative',
+        'hover:border-l-4 hover:border-[var(--color-primary)]',
+        'border-l-4 border-l-transparent',
+        'transition-all duration-200',
+        className
+      )}
+    >
       {/* Header row - clickable */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           'flex items-center justify-between py-5 px-5',
-          'hover:bg-[var(--background-secondary)]/50',
+          'group-hover:bg-[var(--background-secondary)]/50',
           'transition-all duration-200',
           'cursor-pointer',
-          'border-b border-transparent',
           isExpanded && 'bg-[var(--background-secondary)]/30'
         )}
       >
@@ -354,8 +369,8 @@ export function PriceRowExpandable({
           )}
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Price - secondary hierarchy */}
-          <span className="text-[var(--foreground-secondary)] text-sm whitespace-nowrap tabular-nums">
+          {/* Price - same style as regular options */}
+          <span className="font-semibold text-[var(--color-primary)] text-sm whitespace-nowrap tabular-nums">
             от {formatPriceNumber(basePrice)} ₽
           </span>
           <ChevronDown 
@@ -370,7 +385,7 @@ export function PriceRowExpandable({
       
       {/* Expanded content with parameters */}
       {isExpanded && (
-        <div className="overflow-hidden">
+        <div className="overflow-hidden group-hover:bg-[var(--background-secondary)]/30 transition-colors duration-200">
           {parameterTypes.map((paramType) => {
             const groups = groupValuesByModifier(paramType.values)
             
@@ -386,7 +401,6 @@ export function PriceRowExpandable({
                   {groups.map((group, index) => {
                     const totalPrice = basePriceNum + group.modifier
                     const valuesLabel = normalizeRangeLabel(group.values)
-                    const isSelected = selectedGroupId === group.id || (!selectedGroupId && index === 0)
                     
                     return (
                       <div 
@@ -394,37 +408,34 @@ export function PriceRowExpandable({
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedGroupId(group.id)
+                          // Generate message with proper declension
+                          const paramTitle = paramType.title.toLowerCase()
+                          const paramValue = valuesLabel
+                          // Use proper Russian grammar: "с параметром" for singular, "с параметрами" for plural
+                          const message = `Хочу оставить запрос на опцию "${title}" с параметром ${paramTitle} ${paramValue}`
+                          onSelect?.(message)
                         }}
                         className={cn(
                           'flex items-center gap-3 py-3 px-3 -mx-1 rounded-lg',
                           'cursor-pointer transition-all duration-150',
                           // Zebra pattern (very subtle)
-                          index % 2 === 1 && !isSelected && 'bg-[var(--background-secondary)]/30',
-                          // Hover state
-                          'hover:bg-[var(--color-primary)]/5',
-                          // Selected state
-                          isSelected && 'bg-[var(--color-primary)]/8 ring-1 ring-[var(--color-primary)]/20'
+                          index % 2 === 1 && 'bg-[var(--background-secondary)]/30',
+                          // Hover state only
+                          'hover:bg-[var(--color-primary)]/5'
                         )}
                       >
-                        {/* Radio indicator */}
+                        {/* Radio indicator - always unselected style */}
                         <div className={cn(
                           'w-4 h-4 rounded-full border-2 flex-shrink-0',
                           'flex items-center justify-center transition-colors',
-                          isSelected 
-                            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]' 
-                            : 'border-[var(--foreground-tertiary)]/40'
+                          'border-[var(--foreground-tertiary)]/40'
                         )}>
-                          {isSelected && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                          )}
                         </div>
                         
                         {/* Value label */}
                         <span className={cn(
                           'flex-grow text-sm',
-                          isSelected 
-                            ? 'text-[var(--foreground-primary)] font-medium' 
-                            : 'text-[var(--foreground-secondary)]'
+                          'text-[var(--foreground-secondary)]'
                         )}>
                           {valuesLabel}
                         </span>
@@ -433,9 +444,7 @@ export function PriceRowExpandable({
                         <div className="flex items-baseline gap-2 flex-shrink-0 text-right min-w-[100px] justify-end">
                           <span className={cn(
                             'tabular-nums text-sm',
-                            isSelected 
-                              ? 'text-[var(--foreground-primary)] font-medium' 
-                              : 'text-[var(--foreground-secondary)]'
+                            'text-[var(--foreground-secondary)]'
                           )}>
                             {formatPriceNumber(totalPrice)} ₽
                           </span>
@@ -462,17 +471,37 @@ export function PriceRowExpandable({
 // PriceSectionHeader - Section title with count
 // ============================================
 
+interface DeliveryZoneDisplay {
+  zone_name: string
+  delivery_price: string
+}
+
 interface PriceSectionHeaderProps {
   title: string
   totalCount?: number
+  deliveryZones?: DeliveryZoneDisplay[]
   className?: string
 }
 
 export function PriceSectionHeader({ 
   title, 
   totalCount,
+  deliveryZones,
   className 
 }: PriceSectionHeaderProps) {
+  // Format delivery zone price for display
+  const formatDeliveryPrice = (price: string): string => {
+    const numPrice = parseFloat(price)
+    if (isNaN(numPrice) || numPrice === 0) {
+      return 'бесплатно'
+    }
+    return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
+  }
+
+  // Filter out zones with zero price for cleaner display (only show paid ones)
+  const paidZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) > 0) || []
+  const freeZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) === 0) || []
+
   return (
     <div className={cn('mb-6', className)}>
       <h2 className="text-2xl md:text-3xl font-bold text-[var(--foreground-primary)]">
@@ -482,6 +511,25 @@ export function PriceSectionHeader({
         <p className="text-[var(--foreground-secondary)] mt-2">
           Доступно {getOptionsLabel(totalCount)} с указанными ценами
         </p>
+      )}
+      
+      {/* Delivery zones info */}
+      {deliveryZones && deliveryZones.length > 0 && (
+        <div className="mt-3 text-sm text-[var(--foreground-secondary)]">
+          <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
+          {freeZones.length > 0 && (
+            <span>
+              {freeZones.map(z => z.zone_name.toLowerCase()).join(', ')} — {formatDeliveryPrice('0')}
+            </span>
+          )}
+          {freeZones.length > 0 && paidZones.length > 0 && ', '}
+          {paidZones.map((zone, index) => (
+            <span key={zone.zone_name}>
+              {zone.zone_name.toLowerCase()} — {formatDeliveryPrice(zone.delivery_price)}
+              {index < paidZones.length - 1 && ', '}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )

@@ -6,18 +6,32 @@ import {
   ServiceList,
   Button
 } from '@/components/ui'
-import { PageLayout } from '@/components/layout'
-import { Phone, Clock, Star } from 'lucide-react'
 import { useCityDetail, useCityServices } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
-import { HeroSection, PageCTA, RichText, FormSidebar } from '@/components/patterns'
+import { PageCTA, RichText, FormSidebar } from '@/components/patterns'
 import type { CityDetail, ServiceList as ServiceListType, Contact } from '@/lib/api/generated'
+import type { DeliveryZone } from '@/lib/api/services'
 
 interface CityDetailContentProps {
   slug: string
   initialCity?: CityDetail | null
   initialServices?: ServiceListType[]
   initialContacts?: Contact[]
+  deliveryZones?: DeliveryZone[]
+}
+
+/**
+ * City Detail Content - Client Component
+ * Hero is rendered in page.tsx (server) for optimal LCP
+ * This component handles interactive content below the fold
+ */
+// Format delivery zone price for display
+function formatDeliveryPrice(price: string): string {
+  const numPrice = parseFloat(price)
+  if (isNaN(numPrice) || numPrice === 0) {
+    return 'бесплатно'
+  }
+  return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
 }
 
 export function CityDetailContent({ 
@@ -25,6 +39,7 @@ export function CityDetailContent({
   initialCity,
   initialServices = [],
   initialContacts = [],
+  deliveryZones = [],
 }: CityDetailContentProps) {
   // Use SWR with server-provided initial data for hydration
   const { 
@@ -47,71 +62,34 @@ export function CityDetailContent({
   // If we have initial data, don't show loading state on first render
   const showCityLoading = cityLoading && !initialCity
   const showServicesLoading = servicesLoading && initialServices.length === 0
-  const isLoading = showCityLoading || showServicesLoading
 
-  if (isLoading) {
+  // Show loading only if we don't have initial data
+  if (showCityLoading) {
     return (
-      <PageLayout className="flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <LoadingSpinner size="lg" />
-      </PageLayout>
+      </div>
     )
   }
 
   if (cityError || !city) {
     return (
-      <PageLayout className="flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию о городе"
           error={cityErrorData}
         />
-      </PageLayout>
+      </div>
     )
   }
 
   // Extract city content
   const cityContent = city.content as {
-    h1_title?: string
-    short_description?: string
     full_description?: string
-    partner_count?: number
-    avg_rating?: string
-    review_count?: number
   } | undefined
 
   return (
-    <PageLayout>
-      {/* Hero Section */}
-      <HeroSection
-        id="city-detail-hero-section"
-        title={cityContent?.h1_title || `Автопомощь в ${city.title}`}
-        subtitle={cityContent?.short_description || 
-          `Вызовите мастера для шиномонтажа, эвакуации или доставки топлива в ${city.title}. Работаем круглосуточно, приедем за 15-30 минут.`
-        }
-        breadcrumbs={[
-          { label: 'Все города', href: '/cities' },
-          { label: city.title }
-        ]}
-        containerSize="wide"
-      >
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-6">
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Clock className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Круглосуточно</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Phone className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Приедем за 15-30 мин</span>
-          </div>
-          {cityContent?.avg_rating && parseFloat(cityContent.avg_rating) > 0 && (
-            <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-              <Star className="w-5 h-5 text-[var(--color-warning)]" />
-              <span>{cityContent.avg_rating} ({cityContent?.review_count || 0} отзывов)</span>
-            </div>
-          )}
-        </div>
-      </HeroSection>
-
+    <>
       {/* Main Content */}
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-7xl">
@@ -126,9 +104,30 @@ export function CityDetailContent({
           >
             {/* Services */}
             <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-8 md:pt-12">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6">
-                Услуги в {city.title}
-              </h2>
+              <div className="mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold">
+                  Услуги в {city.title}
+                </h2>
+                {/* Delivery zones info */}
+                {deliveryZones.length > 0 && (
+                  <div className="mt-3 text-sm text-[var(--foreground-secondary)]">
+                    <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && (
+                      <span>
+                        {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).map(z => z.zone_name.toLowerCase()).join(', ')} — {formatDeliveryPrice('0')}
+                      </span>
+                    )}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && 
+                     deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).length > 0 && ', '}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).map((zone, index, arr) => (
+                      <span key={zone.zone_name}>
+                        {zone.zone_name.toLowerCase()} — {formatDeliveryPrice(zone.delivery_price)}
+                        {index < arr.length - 1 && ', '}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {showServicesLoading ? (
                 <div className="flex justify-center py-12">
@@ -179,6 +178,6 @@ export function CityDetailContent({
         ]}
         initialContacts={initialContacts}
       />
-    </PageLayout>
+    </>
   )
 }

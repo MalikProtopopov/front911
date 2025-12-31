@@ -1,5 +1,4 @@
 import { Metadata } from 'next'
-import { generatePageMetadata } from '@/lib/api/hooks'
 import { contentService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
 import { PartnersContent } from './PartnersContent'
@@ -10,10 +9,15 @@ export const revalidate = 3600
 
 // Generate metadata
 export async function generateMetadata(): Promise<Metadata> {
-  return generatePageMetadata('/partners/', {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+  
+  return {
     title: 'Стать партнёром — 911 Автопомощь',
     description: 'Присоединяйтесь к сети партнёров 911. Стабильный поток заказов, удобный личный кабинет, своевременные выплаты.',
-  })
+    alternates: {
+      canonical: `${baseUrl}/partners`,
+    },
+  }
 }
 
 export default async function PartnersPage() {

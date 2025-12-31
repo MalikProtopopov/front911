@@ -156,7 +156,12 @@ export function ContactsContent({ initialContacts = [] }: ContactsContentProps) 
             {/* Form */}
             <div className="lg:col-span-2 order-2 lg:order-1">
               <h2 className="text-3xl font-bold mb-8">Напишите нам</h2>
-              <LeadForm showCard={false} title="" />
+              <LeadForm 
+                showCard={false} 
+                title="" 
+                messagePlaceholder="Опишите ваш вопрос или предложение"
+                leadType="feedback"
+              />
             </div>
 
             {/* Sidebar */}

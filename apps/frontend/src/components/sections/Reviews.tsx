@@ -108,7 +108,11 @@ export function Reviews() {
                   className="mx-auto max-w-3xl rounded-2xl border border-[var(--border)] bg-white shadow-sm transition-shadow hover:shadow-md flex flex-col gap-4 review-card"
                 >
                   {/* Row 1: Rating */}
-                  <div className="flex items-center gap-[2px] h-6" aria-label={`Рейтинг ${review.rating} из 5`}>
+                  <div 
+                    className="flex items-center gap-[2px] h-6" 
+                    role="img"
+                    aria-label={`Рейтинг ${review.rating} из 5`}
+                  >
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
@@ -117,6 +121,7 @@ export function Reviews() {
                             ? "text-yellow-400 fill-yellow-400"
                             : "text-gray-300"
                         }`}
+                        aria-hidden="true"
                       />
                     ))}
                   </div>
@@ -140,19 +145,26 @@ export function Reviews() {
             ))}
           </div>
 
-          {/* Navigation Dots */}
-          <div className="flex justify-center mt-16 gap-2">
+          {/* Navigation Dots - min 44x44px touch target for accessibility */}
+          <div className="flex justify-center mt-16 gap-1" role="tablist" aria-label="Навигация по отзывам">
             {reviews.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setActiveIndex(index)}
-                className={`h-3 rounded-full transition-all duration-300 ${
-                  index === activeIndex
-                    ? "w-8 bg-[var(--color-primary)]"
-                    : "w-3 bg-gray-300 hover:bg-gray-400"
-                }`}
-                aria-label={`Go to review ${index + 1}`}
-              />
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label={`Перейти к отзыву ${index + 1}`}
+                aria-selected={index === activeIndex}
+                role="tab"
+              >
+                <span 
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    index === activeIndex
+                      ? "w-8 bg-[var(--color-primary)]"
+                      : "w-3 bg-gray-300 hover:bg-gray-400"
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
             ))}
           </div>
         </div>

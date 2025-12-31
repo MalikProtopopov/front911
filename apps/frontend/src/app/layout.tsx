@@ -8,6 +8,7 @@ import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo"
 import { servicesService, contentService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import type { ServiceList, Contact } from "@/lib/api/generated"
+import { Toaster } from 'sonner'
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -65,9 +66,18 @@ export default async function RootLayout({
     // Continue with empty arrays - client will try to fetch
   }
 
+  // API base URL for preconnect
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://45.144.221.92'
+  const apiOrigin = new URL(apiUrl).origin
+
   return (
     <html lang="ru">
       <head>
+        {/* Preconnect to critical origins for faster resource loading */}
+        <link rel="preconnect" href={apiOrigin} />
+        <link rel="dns-prefetch" href={apiOrigin} />
+        
+        {/* JSON-LD Structured Data */}
         <OrganizationJsonLd />
         <WebSiteJsonLd />
       </head>
@@ -76,6 +86,20 @@ export default async function RootLayout({
         <Header initialServices={initialServices} initialContacts={initialContacts} />
         <main>{children}</main>
         <Footer initialServices={initialServices} initialContacts={initialContacts} />
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            classNames: {
+              toast: 'bg-white border border-[var(--border)] shadow-lg rounded-xl',
+              title: 'text-[var(--foreground)] font-semibold',
+              description: 'text-[var(--foreground-secondary)]',
+              success: 'border-[var(--color-success)] bg-[var(--color-success)]/5',
+              error: 'border-red-500 bg-red-50',
+            },
+            duration: 4000,
+          }}
+          closeButton
+        />
       </body>
     </html>
   )

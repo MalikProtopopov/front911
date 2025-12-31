@@ -1,8 +1,11 @@
 import { Metadata } from 'next'
+import { Clock, Phone, CheckCircle } from 'lucide-react'
 import { CityServiceContent } from './CityServiceContent'
 import { citiesService, servicesService, contentService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
-import type { CityServiceResponse } from '@/lib/api/services'
+import { HeroSection } from '@/components/patterns'
+import { PageLayout } from '@/components/layout'
+import type { CityServiceResponse, DeliveryZone } from '@/lib/api/services'
 import type { Contact } from '@/lib/api/generated'
 
 interface CityServicePageProps {
@@ -87,9 +90,10 @@ export async function generateMetadata({ params }: CityServicePageProps): Promis
 export default async function CityServicePage({ params }: CityServicePageProps) {
   const { slug, serviceSlug } = await params
   
-  // Fetch city service data and contacts for SSR
+  // Fetch city service data, contacts, and delivery zones for SSR
   let initialData: CityServiceResponse | null = null
   let initialContacts: Contact[] = []
+  let deliveryZones: DeliveryZone[] = []
   
   try {
     const [cityServiceData, contactsData] = await Promise.all([
@@ -98,6 +102,11 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
     ])
     initialData = cityServiceData
     initialContacts = contactsData
+    
+    // Fetch delivery zones if we have city ID
+    if (cityServiceData?.city?.id) {
+      deliveryZones = await citiesService.getDeliveryZones(cityServiceData.city.id)
+    }
   } catch (error) {
     logServerError(error, 'Failed to fetch city service data for SSR', {
       page: '/cities/[slug]/services/[serviceSlug]',
@@ -106,12 +115,59 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
     // Continue - client will try to fetch
   }
   
+  // Extract data for SSR hero
+  const city = initialData?.city
+  const service = initialData?.service
+  const seo = initialData?.seo
+  const content = initialData?.content
+  const optionsCount = initialData?.options?.length ?? 0
+  
+  const pageTitle = seo?.h1_title || content?.h1_title || 
+    (city && service ? `${service.title} в ${city.title}` : 'Услуга в городе')
+  const pageSubtitle = content?.meta_description || 
+    (city && service ? `Закажите ${service.title.toLowerCase()} в ${city.title}. Быстрый выезд мастера, прозрачные цены, работаем 24/7.` : '')
+  
   return (
-    <CityServiceContent 
-      citySlug={slug} 
-      serviceSlug={serviceSlug}
-      initialData={initialData}
-      initialContacts={initialContacts}
-    />
+    <PageLayout>
+      {/* Hero Section - Server-rendered for optimal LCP */}
+      <HeroSection
+        id="city-service-hero-section"
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        breadcrumbs={city && service ? [
+          { label: 'Все города', href: '/cities' },
+          { label: city.title, href: `/cities/${slug}` },
+          { label: service.title }
+        ] : undefined}
+        containerSize="wide"
+      >
+        {/* Quick stats - also server-rendered */}
+        <div className="flex flex-wrap gap-6">
+          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
+            <Clock className="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true" />
+            <span>Выезд за 20-30 мин</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
+            <Phone className="w-5 h-5 text-[var(--color-primary)]" aria-hidden="true" />
+            <span>Работаем 24/7</span>
+          </div>
+          {optionsCount > 0 && (
+            <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
+              <CheckCircle className="w-5 h-5 text-[var(--color-success)]" aria-hidden="true" />
+              <span>{optionsCount} опций с ценами</span>
+            </div>
+          )}
+        </div>
+      </HeroSection>
+      
+      {/* Main Content - Client component for interactivity */}
+      <CityServiceContent 
+        citySlug={slug} 
+        serviceSlug={serviceSlug}
+        initialData={initialData}
+        initialContacts={initialContacts}
+        deliveryZones={deliveryZones}
+      />
+    </PageLayout>
   )
 }

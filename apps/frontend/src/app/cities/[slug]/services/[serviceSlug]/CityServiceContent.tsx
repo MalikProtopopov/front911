@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { 
   TwoColumnLayout,
   Button,
@@ -11,25 +11,20 @@ import {
   PriceSectionHeader,
   PriceEmptyState
 } from '@/components/ui'
-import { PageLayout } from '@/components/layout'
-import { 
-  MapPin, 
-  Phone, 
-  Clock, 
-  CheckCircle,
-  Truck
-} from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { useCityService } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
-import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
-import type { CityServiceOption, CityServiceResponse } from '@/lib/api/services'
+import { PageCTA, RichText, FormSidebar } from '@/components/patterns'
+import type { CityServiceOption, CityServiceResponse, DeliveryZone } from '@/lib/api/services'
 import type { Contact } from '@/lib/api/generated'
+import type { LeadFormRef } from '@/components/forms/LeadForm'
 
 interface CityServiceContentProps {
   citySlug: string
   serviceSlug: string
   initialData?: CityServiceResponse | null
   initialContacts?: Contact[]
+  deliveryZones?: DeliveryZone[]
 }
 
 // Group options by category based on prices
@@ -80,31 +75,42 @@ function groupOptionsByCategory(options: CityServiceOption[]) {
       grouped[category].push(option)
       categorySet.add(category)
     } else {
-      // Option has no prices at all - show in "Прочие услуги" with "По запросу"
+      // No price information at all
       uncategorized.push(option)
     }
   })
 
-  return { grouped, uncategorized, categoryNames: Array.from(categorySet).sort() }
+  return {
+    grouped,
+    uncategorized,
+    categoryNames: Array.from(categorySet)
+  }
 }
 
-
+/**
+ * City Service Content - Client Component
+ * Hero is rendered in page.tsx (server) for optimal LCP
+ * This component handles interactive content (prices, forms)
+ */
 export function CityServiceContent({ 
   citySlug, 
   serviceSlug,
   initialData,
   initialContacts = [],
+  deliveryZones = [],
 }: CityServiceContentProps) {
+  // Ref for form to set message
+  const formRef = useRef<LeadFormRef>(null)
+
   // Use SWR with server-provided initial data for hydration
   const { 
-    city, 
-    service, 
-    options, 
-    content, 
-    seo,
-    isLoading, 
-    isError, 
-    error 
+    city,
+    service,
+    options,
+    content,
+    isLoading,
+    isError,
+    error,
   } = useCityService(citySlug, serviceSlug, {
     fallbackData: initialData ?? undefined
   })
@@ -114,69 +120,35 @@ export function CityServiceContent({
     return groupOptionsByCategory(options ?? [])
   }, [options])
 
+  // Handler for option/parameter selection
+  const handleOptionSelect = (message: string) => {
+    formRef.current?.setMessage(message)
+  }
+
   // If we have initial data, don't show loading state on first render
   const showLoading = isLoading && !initialData
 
   if (showLoading) {
     return (
-      <PageLayout className="flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <LoadingSpinner size="lg" />
-      </PageLayout>
+      </div>
     )
   }
 
   if (isError || !city || !service) {
     return (
-      <PageLayout className="flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию об услуге"
           error={error}
         />
-      </PageLayout>
+      </div>
     )
   }
 
-  const pageTitle = seo?.h1_title || content?.h1_title || `${service.title} в ${city.title}`
-
   return (
-    <PageLayout>
-      {/* Hero Section */}
-      <HeroSection
-        id="city-service-hero-section"
-        title={pageTitle}
-        subtitle={content?.meta_description || 
-          `Закажите ${service.title.toLowerCase()} в ${city.title}. Быстрый выезд мастера, прозрачные цены, работаем 24/7.`
-        }
-        breadcrumbs={[
-          { label: 'Все города', href: '/cities' },
-          { label: city.title, href: `/cities/${citySlug}` },
-          { label: service.title }
-        ]}
-        containerSize="wide"
-      >
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-6">
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Clock className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Выезд за 20-30 мин</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Phone className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Работаем 24/7</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <CheckCircle className="w-5 h-5 text-[var(--color-success)]" />
-            <span>{options.length} опций с ценами</span>
-          </div>
-          {categoryNames.length > 0 && (
-            <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-              <Truck className="w-5 h-5 text-[var(--color-primary)]" />
-              <span>{categoryNames.length} категорий техники</span>
-            </div>
-          )}
-        </div>
-      </HeroSection>
-
+    <>
       {/* Main Content */}
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-7xl">
@@ -186,6 +158,7 @@ export function CityServiceContent({
                 cityId={city.id} 
                 serviceId={service.id}
                 title={`Заказать ${service.title.toLowerCase()}`}
+                formRef={formRef}
               />
             }
             sidebarPosition="right"
@@ -196,6 +169,7 @@ export function CityServiceContent({
               <PriceSectionHeader 
                 title={`Цены на ${service.title}`}
                 totalCount={options?.length ?? 0}
+                deliveryZones={deliveryZones}
               />
 
               {!options || options.length === 0 || (categoryNames.length === 0 && uncategorized.length === 0) ? (
@@ -207,96 +181,78 @@ export function CityServiceContent({
               ) : (
                 <PriceAccordion 
                   type="multiple" 
-                  defaultValue={categoryNames.length > 0 ? [`category-0`] : uncategorized.length > 0 ? ['uncategorized'] : []}
+                  defaultValue={categoryNames.length > 0 && categoryNames[0] ? [categoryNames[0]] : ['uncategorized']}
                 >
-                  {/* Options grouped by category */}
-                  {categoryNames.map((category, index) => {
-                    const categoryOptions = grouped[category] || []
-                    return (
-                      <PriceAccordionCategory
-                        key={category}
-                        value={`category-${index}`}
-                        title={category}
-                        count={categoryOptions.length}
-                        icon={<Truck />}
-                      >
-                        {categoryOptions.map(option => {
-                          // Filter prices for this specific category
-                          const categoryPrices = option.prices?.filter(price => {
-                            // Check if price is OptionPrice type (has technic_category_title)
-                            if ('technic_category_title' in price) {
-                              return price.technic_category_title === category
-                            }
-                            // Legacy format with technic_category
-                            if ('technic_category' in price) {
-                              return price.technic_category === category
-                            }
-                            return false
-                          }) || []
-                          
-                          // Get base price for this category
-                          const firstCategoryPrice = categoryPrices[0]
-                          const basePrice = firstCategoryPrice 
-                            ? firstCategoryPrice.amount 
-                            : (option.price?.technic_category === category 
-                                ? option.price.amount 
-                                : null)
-                          
-                          // Use PriceRowExpandable for options with parameters
-                          return (
-                            <PriceRowExpandable
-                              key={option.id}
-                              title={option.title}
-                              basePrice={basePrice}
-                              hasParameters={option.has_parameters}
-                              parameterTypes={option.parameter_types}
-                              description={option.description}
-                            />
-                          )
-                        })}
-                      </PriceAccordionCategory>
-                    )
-                  })}
-
-                  {/* Uncategorized options */}
-                  {uncategorized.length > 0 && (
+                  {/* Render categories */}
+                  {categoryNames.map((category) => (
                     <PriceAccordionCategory
-                      value="uncategorized"
-                      title="Прочие услуги"
-                      count={uncategorized.length}
-                      icon={<Truck />}
+                      key={category}
+                      value={category}
+                      title={category}
+                      count={grouped[category]?.length ?? 0}
                     >
-                      {uncategorized.map(option => {
-                        // Get prices without category or fallback to legacy price
-                        const pricesWithoutCategory = option.prices?.filter(price => {
-                          // Check if price is OptionPrice type (has technic_category_title)
-                          if ('technic_category_title' in price) {
-                            return !price.technic_category_title
+                      {grouped[category]?.map((option) => {
+                        // Filter prices for this category
+                        const categoryPrices = option.prices?.filter(p => {
+                          if ('technic_category_title' in p) {
+                            return p.technic_category_title === category
                           }
-                          // Legacy format with technic_category
-                          if ('technic_category' in price) {
-                            return !price.technic_category
+                          if ('technic_category' in p) {
+                            return p.technic_category === category
                           }
-                          return true
-                        }) || []
-                        
-                        // Get base price
-                        const firstPriceWithoutCategory = pricesWithoutCategory[0]
-                        const basePrice = firstPriceWithoutCategory
-                          ? firstPriceWithoutCategory.amount
-                          : (option.price && !option.price.technic_category
-                              ? option.price.amount
-                              : null)
-                        
-                        // Use PriceRowExpandable for options with parameters
+                          return false
+                        }) ?? []
+
+                        // Get min price for display
+                        const minPrice = categoryPrices.length > 0 
+                          ? Math.min(...categoryPrices.map(p => Number(p.amount)))
+                          : Number(option.price?.amount ?? 0)
+
                         return (
                           <PriceRowExpandable
                             key={option.id}
                             title={option.title}
-                            basePrice={basePrice}
+                            basePrice={minPrice}
                             hasParameters={option.has_parameters}
                             parameterTypes={option.parameter_types}
-                            description={option.description}
+                            onSelect={handleOptionSelect}
+                          />
+                        )
+                      })}
+                    </PriceAccordionCategory>
+                  ))}
+
+                  {/* Render uncategorized options */}
+                  {uncategorized.length > 0 && (
+                    <PriceAccordionCategory
+                      value="uncategorized"
+                      title="Другие опции"
+                      count={uncategorized.length}
+                    >
+                      {uncategorized.map((option) => {
+                        // Get prices without category
+                        const pricesWithoutCategory = option.prices?.filter(p => {
+                          if ('technic_category_title' in p) {
+                            return !p.technic_category_title
+                          }
+                          if ('technic_category' in p) {
+                            return !p.technic_category
+                          }
+                          return true
+                        }) ?? []
+
+                        const minPrice = pricesWithoutCategory.length > 0
+                          ? Math.min(...pricesWithoutCategory.map(p => Number(p.amount)))
+                          : Number(option.price?.amount ?? 0)
+
+                        return (
+                          <PriceRowExpandable
+                            key={option.id}
+                            title={option.title}
+                            basePrice={minPrice}
+                            hasParameters={option.has_parameters}
+                            parameterTypes={option.parameter_types}
+                            onSelect={handleOptionSelect}
                           />
                         )
                       })}
@@ -334,6 +290,6 @@ export function CityServiceContent({
         ]}
         initialContacts={initialContacts}
       />
-    </PageLayout>
+    </>
   )
 }

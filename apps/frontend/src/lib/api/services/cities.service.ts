@@ -69,6 +69,14 @@ export interface CityServiceOption {
   parameter_prices?: Record<string, ParameterPriceItem[]>
 }
 
+// Delivery zone for a city
+export interface DeliveryZone {
+  id: number
+  zone_name: string
+  location_status: 'in_city' | 'out_city'
+  delivery_price: string
+}
+
 export interface CityServiceResponse {
   city: {
     id: number
@@ -336,6 +344,37 @@ export const citiesService = {
       return mappedResponse
     } catch (error) {
       throw ApiError.fromUnknown(error)
+    }
+  },
+
+  /**
+   * Get delivery zones for a city
+   * @param cityId - City ID
+   * @returns Array of delivery zones with prices
+   */
+  getDeliveryZones: async (cityId: number): Promise<DeliveryZone[]> => {
+    try {
+      const baseUrl = OpenAPI.BASE || 'http://localhost:8001'
+      const fetchResponse = await fetch(`${baseUrl}/api/pricing/cities/${cityId}/delivery-zones/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      })
+
+      if (!fetchResponse.ok) {
+        if (fetchResponse.status === 404) {
+          return [] // No delivery zones for this city
+        }
+        throw new Error(`Failed to fetch delivery zones: ${fetchResponse.status}`)
+      }
+
+      const data = await fetchResponse.json()
+      return data.results || data || []
+    } catch (error) {
+      console.warn('[citiesService.getDeliveryZones] Failed to fetch delivery zones:', error)
+      return []
     }
   },
 }

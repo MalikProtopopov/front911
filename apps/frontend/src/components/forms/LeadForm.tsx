@@ -11,12 +11,19 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useLeadForm } from '@/lib/api/hooks'
+import type { LeadType } from '@/lib/api/services'
 import { CheckCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatPhoneInput, cleanPhoneNumber } from '@/lib/utils'
 
 const leadSchema = z.object({
   name: z.string().min(2, 'Имя должно быть не менее 2 символов').max(100).optional().or(z.literal('')),
-  phone: z.string().min(10, 'Введите корректный номер телефона').max(20),
+  phone: z.string()
+    .min(1, 'Введите номер телефона')
+    .refine((val) => {
+      const cleaned = val.replace(/\D/g, '')
+      // Must have 11 digits (7 + 10 digits)
+      return cleaned.length === 11 && cleaned.startsWith('7')
+    }, 'Введите корректный номер телефона в формате +7 (999)-999-99-99'),
   email: z.string().email('Введите корректный email').optional().or(z.literal('')),
   message: z.string().optional(),
 })
@@ -34,9 +41,18 @@ interface LeadFormProps {
   isModal?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  messagePlaceholder?: string
+  /** Lead type for categorization: service, feedback, partnership */
+  leadType?: LeadType
+  /** Show toast notifications (default: true, disabled when using inline success state) */
+  showToast?: boolean
 }
 
-export function LeadForm({ 
+export interface LeadFormRef {
+  setMessage: (message: string) => void
+}
+
+export const LeadForm = React.forwardRef<LeadFormRef, LeadFormProps>(({ 
   cityId, 
   serviceId, 
   onSuccess,
@@ -46,16 +62,22 @@ export function LeadForm({
   noBorder = false,
   isModal = false,
   open,
-  onOpenChange
-}: LeadFormProps) {
+  onOpenChange,
+  messagePlaceholder = 'Опишите ваш запрос менеджеру',
+  leadType = 'service',
+  showToast = true,
+}, ref) => {
   const [isSuccess, setIsSuccess] = React.useState(false)
   const [isRateLimited, setIsRateLimited] = React.useState(false)
   const [isOpen, setIsOpen] = React.useState(open ?? false)
+  const [phoneValue, setPhoneValue] = React.useState('')
   const phoneInputRef = React.useRef<HTMLInputElement>(null)
   
   const { submitLead, isSubmitting } = useLeadForm({
+    showToast,
     onSuccess: () => {
       setIsSuccess(true)
+      setPhoneValue('')
       reset()
       onSuccess?.()
       
@@ -100,6 +122,7 @@ export function LeadForm({
     onOpenChange?.(newOpen)
     if (!newOpen) {
       setIsSuccess(false)
+      setPhoneValue('')
       reset()
     }
   }
@@ -109,15 +132,22 @@ export function LeadForm({
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<LeadFormData>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
       name: '',
       phone: '',
-      email: '',
       message: '',
     },
   })
+
+  // Expose setMessage method via ref
+  React.useImperativeHandle(ref, () => ({
+    setMessage: (message: string) => {
+      setValue('message', message, { shouldValidate: false })
+    },
+  }))
 
   const phoneRegister = register('phone')
 
@@ -126,13 +156,16 @@ export function LeadForm({
       return
     }
 
+    // Clean phone number before sending (remove formatting)
+    const cleanPhone = cleanPhoneNumber(data.phone)
+
     await submitLead({
       name: data.name,
-      phone: data.phone,
-      email: data.email,
+      phone: cleanPhone,
       message: data.message,
       city: cityId,
       service: serviceId,
+      lead_type: leadType,
     })
   }
 
@@ -157,7 +190,7 @@ export function LeadForm({
             <Input
               id="name"
               {...register('name')}
-              placeholder="Иван Иванов"
+              placeholder="Иван"
               disabled={isSubmitting}
               className={errors.name ? 'border-red-500 focus:ring-red-200' : ''}
             />
@@ -173,13 +206,37 @@ export function LeadForm({
             <Input
               id="phone"
               type="tel"
-              {...phoneRegister}
+              value={phoneValue}
+              onChange={(e) => {
+                // Only allow digits and format
+                const formatted = formatPhoneInput(e.target.value)
+                setPhoneValue(formatted)
+                // Update form value
+                setValue('phone', formatted, { shouldValidate: true })
+              }}
+              onKeyDown={(e) => {
+                // Allow: backspace, delete, tab, escape, enter, and arrow keys
+                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                  return
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                  e.preventDefault()
+                }
+              }}
+              onBlur={phoneRegister.onBlur}
               ref={(e) => {
                 phoneRegister.ref(e)
                 phoneInputRef.current = e
               }}
-              placeholder="+7 (999) 123-45-67"
+              placeholder="+7 (999)-999-99-99"
               disabled={isSubmitting}
+              maxLength={18} // +7 (999)-999-99-99 = 18 chars
               className={errors.phone ? 'border-red-500 focus:ring-red-200' : ''}
             />
             {errors.phone && (
@@ -189,31 +246,12 @@ export function LeadForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              Email <span className="text-sm font-normal text-[var(--foreground-secondary)]">(необязательно)</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="ivan@example.com"
-              disabled={isSubmitting}
-              className={errors.email ? 'border-red-500 focus:ring-red-200' : ''}
-            />
-            {errors.email && (
-              <p className="text-xs text-red-600 mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-
           <div className="space-y-2 mb-6">
             <Label htmlFor="message">Сообщение</Label>
             <Textarea
               id="message"
               {...register('message')}
-              placeholder="Опишите вашу проблему..."
+              placeholder={messagePlaceholder}
               disabled={isSubmitting}
             />
           </div>
@@ -237,7 +275,7 @@ export function LeadForm({
             Нажимая кнопку, вы соглашаетесь с{' '}
             <a
               href="/privacy"
-              className="text-[var(--color-primary)] hover:underline"
+              className="text-[var(--color-primary)] underline hover:no-underline"
             >
               политикой конфиденциальности
             </a>
@@ -281,4 +319,6 @@ export function LeadForm({
       <CardContent className="mt-4">{formContent}</CardContent>
     </Card>
   )
-}
+})
+
+LeadForm.displayName = 'LeadForm'

@@ -126,7 +126,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
                 <li key={service.slug}>
                   <Link
                     href={`/services/${service.slug}`}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
                     {service.title}
                   </Link>
@@ -166,7 +166,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
                     {link.label}
                   </Link>
@@ -179,7 +179,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
                     {link.label}
                   </Link>

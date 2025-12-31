@@ -46,11 +46,13 @@ export async function generateStaticParams() {
     }))
   } catch (error) {
     console.error('Failed to generate static params:', error)
+    // Fallback paths - ensure all known services are included
     return [
       { slug: 'shinomontazh' },
-      { slug: 'fuel-delivery' },
-      { slug: 'evacuator' },
-      { slug: 'auto-lift' },
+      { slug: 'vyezdnoy-shinomontazh' },
+      { slug: 'dostavka-topliva' },
+      { slug: 'evakuator' },
+      { slug: 'avtovyshka' },
     ]
   }
 }

@@ -350,12 +350,19 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
           {/* Mobile Actions */}
           <div className="flex lg:hidden items-center gap-3 flex-shrink-0">
             <Button variant="outline" size="icon" asChild>
-              <a href={phoneLink}>
-                <Phone className="w-5 h-5 flex-shrink-0" />
+              <a href={phoneLink} aria-label="Позвонить">
+                <Phone className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
               </a>
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} className="h-10 w-10">
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="h-10 w-10"
+              aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </Button>
           </div>
         </div>
