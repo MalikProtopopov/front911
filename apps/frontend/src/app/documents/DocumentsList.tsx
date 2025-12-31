@@ -27,7 +27,7 @@ function formatDate(dateString: string): string {
 
 export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
   // Use SWR with server-provided initial data for hydration
-  const { data: documents, isLoading, isError } = useSWR<DocumentListItem[]>(
+  const { data: documents, isLoading, error } = useSWR<DocumentListItem[]>(
     'documents',
     () => documentsService.getAll({ ordering: '-updated_at' }),
     {
@@ -47,7 +47,7 @@ export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
     )
   }
 
-  if (isError) {
+  if (error) {
     return (
       <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage message="Не удалось загрузить документы" />
