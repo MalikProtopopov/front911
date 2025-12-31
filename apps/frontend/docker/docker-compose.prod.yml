@@ -18,8 +18,6 @@
 
 version: '3.8'
 
-name: frontend911
-
 services:
   frontend:
     build:
