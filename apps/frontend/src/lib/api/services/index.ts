@@ -23,4 +23,11 @@ export {
   type GetAppLinksParams,
   type GetOptionsParams,
 } from './content.service'
+export { 
+  documentsService, 
+  type DocumentListItem,
+  type DocumentDetail,
+  type DocumentListResponse,
+  type GetDocumentsParams,
+} from './documents.service'
 

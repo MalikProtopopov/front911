@@ -272,12 +272,12 @@ export const LeadForm = React.forwardRef<LeadFormRef, LeadFormProps>(({
           )}
 
           <p className="text-sm text-[var(--foreground-secondary)] text-center mt-3">
-            Нажимая кнопку, вы соглашаетесь с{' '}
+            Нажимая кнопку, вы{' '}
             <a
-              href="/privacy"
+              href="/documents"
               className="text-[var(--color-primary)] underline hover:no-underline"
             >
-              политикой конфиденциальности
+              соглашаетесь с документами
             </a>
           </p>
         </form>

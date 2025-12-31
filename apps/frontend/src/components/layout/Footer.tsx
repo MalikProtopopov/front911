@@ -17,13 +17,15 @@ import {
   VKIcon,
 } from "@/lib/utils/contacts"
 import type { ServiceList, Contact } from "@/lib/api/generated"
+import type { DocumentListItem } from "@/lib/api/services"
 
 interface FooterProps {
   initialServices?: ServiceList[]
   initialContacts?: Contact[]
+  initialDocuments?: DocumentListItem[]
 }
 
-export function Footer({ initialServices = [], initialContacts = [] }: FooterProps) {
+export function Footer({ initialServices = [], initialContacts = [], initialDocuments = [] }: FooterProps) {
   const currentYear = new Date().getFullYear()
   
   // Use SWR with server-provided initial data for hydration
@@ -68,11 +70,8 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
     { label: "Контакты", href: "/contacts" },
   ]
 
-  // Help links - only existing pages
-  const helpLinks = [
-    { label: "Политика конфиденциальности", href: "/privacy" },
-    { label: "Пользовательское соглашение", href: "/terms" },
-  ]
+  // Documents from API (first 5)
+  const documents = initialDocuments.slice(0, 5)
 
   return (
     <footer className="bg-[var(--background-dark)] text-[var(--foreground-inverse)] section-spacing">
@@ -173,18 +172,28 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
                 </li>
               ))}
             </ul>
-            <h3 className="text-lg font-semibold mb-4 leading-tight">Помощь</h3>
+            <h3 className="text-lg font-semibold mb-4 leading-tight">Документы</h3>
             <ul className="space-y-3">
-              {helpLinks.map((link) => (
-                <li key={link.href}>
+              {documents.map((doc) => (
+                <li key={doc.slug}>
                   <Link
-                    href={link.href}
+                    href={`/documents/${doc.slug}`}
                     className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
-                    {link.label}
+                    {doc.title}
                   </Link>
                 </li>
               ))}
+              {documents.length > 0 && (
+                <li>
+                  <Link
+                    href="/documents"
+                    className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors inline-block font-medium"
+                  >
+                    Все документы →
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

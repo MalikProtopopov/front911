@@ -274,7 +274,7 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
                                   className={cn(
                                     "flex items-center gap-4 p-4 rounded-lg transition-all duration-150 group/item min-h-[52px]",
                                     isActive 
-                                      ? "bg-[var(--color-primary)]/5 border-l-2 border-[var(--color-primary)]"
+                                      ? "bg-[var(--color-primary)]/5"
                                       : "hover:bg-[var(--background-secondary)]"
                                   )}
                                   onClick={() => setIsServicesOpen(false)}

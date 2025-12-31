@@ -5,9 +5,10 @@ import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { YandexMetrika } from "@/lib/analytics"
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo"
-import { servicesService, contentService } from "@/lib/api/services"
+import { servicesService, contentService, documentsService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import type { ServiceList, Contact } from "@/lib/api/generated"
+import type { DocumentListItem } from "@/lib/api/services"
 import { Toaster } from 'sonner'
 
 const manrope = Manrope({
@@ -50,14 +51,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Fetch services and contacts on the server for Header/Footer
+  // Fetch services, contacts and documents on the server for Header/Footer
   let initialServices: ServiceList[] = []
   let initialContacts: Contact[] = []
+  let initialDocuments: DocumentListItem[] = []
   
   try {
-    [initialServices, initialContacts] = await Promise.all([
+    [initialServices, initialContacts, initialDocuments] = await Promise.all([
       servicesService.getAll(),
       contentService.getContacts(),
+      documentsService.getAll({ ordering: '-updated_at' }),
     ])
   } catch (error) {
     logServerError(error, 'Failed to fetch data for layout SSR', {
@@ -85,7 +88,7 @@ export default async function RootLayout({
         <YandexMetrika />
         <Header initialServices={initialServices} initialContacts={initialContacts} />
         <main>{children}</main>
-        <Footer initialServices={initialServices} initialContacts={initialContacts} />
+        <Footer initialServices={initialServices} initialContacts={initialContacts} initialDocuments={initialDocuments} />
         <Toaster 
           position="top-center"
           toastOptions={{

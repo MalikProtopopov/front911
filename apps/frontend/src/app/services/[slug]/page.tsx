@@ -17,6 +17,7 @@ interface ServiceContent {
   meta_title?: string | null
   meta_description?: string | null
   h1_title?: string | null
+  short_description?: string | null
   description?: string | null
   how_it_works_html?: string | null
   benefits_html?: string | null
@@ -162,7 +163,13 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
 
   // Get page title and subtitle from content or defaults
   const pageTitle = content?.h1_title || service.title
-  const pageSubtitle = content?.meta_description || 
+  // Use short_description as HTML subtitle if available, otherwise use plain text fallback
+  const heroHtmlSubtitle = content?.short_description || undefined
+  const heroSubtitle = !content?.short_description 
+    ? 'Профессиональная помощь на дороге круглосуточно. Быстрый выезд мастера с профессиональным оборудованием.'
+    : undefined
+  // Description for JSON-LD (use meta_description or fallback)
+  const jsonLdDescription = content?.meta_description || heroSubtitle || 
     'Профессиональная помощь на дороге круглосуточно. Быстрый выезд мастера с профессиональным оборудованием.'
 
   return (
@@ -171,7 +178,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
       <ServiceJsonLd
         name={service.title}
         slug={slug}
-        description={pageSubtitle}
+        description={jsonLdDescription}
       />
       <BreadcrumbJsonLd
         items={[
@@ -186,7 +193,8 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
         <HeroSection
           id="service-detail-hero-section"
           title={pageTitle}
-          subtitle={pageSubtitle}
+          subtitle={heroSubtitle}
+          htmlSubtitle={heroHtmlSubtitle}
           breadcrumbs={[
             { label: 'Услуги', href: '/services' },
             { label: service.title }
@@ -221,7 +229,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
               sidebar={
                 <FormSidebar 
                   serviceId={service.id} 
-                  title={`Заказать ${service.title.toLowerCase()}`}
+                  title={`Заказать услугу "${service.title}"`}
                 />
               }
               sidebarPosition="right"
@@ -279,14 +287,6 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
                         <li className="flex items-start gap-2">
                           <ChevronRight className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 mt-1" />
                           <span>Сложность выполняемых работ</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <ChevronRight className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 mt-1" />
-                          <span>Время суток (ночной тариф)</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <ChevronRight className="w-4 h-4 text-[var(--color-primary)] flex-shrink-0 mt-1" />
-                          <span>Необходимость дополнительного оборудования</span>
                         </li>
                       </ul>
                     </div>
