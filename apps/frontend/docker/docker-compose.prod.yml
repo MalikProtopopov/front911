@@ -16,6 +16,8 @@
 # Frontend URL: http://89.169.1.53 (или IP вашего сервера)
 # ===========================================
 
+version: '3.8'
+
 name: frontend911
 
 services:
@@ -33,7 +35,7 @@ services:
     networks:
       - frontend-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
