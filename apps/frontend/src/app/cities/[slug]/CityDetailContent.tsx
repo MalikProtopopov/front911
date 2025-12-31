@@ -34,6 +34,12 @@ function formatDeliveryPrice(price: string): string {
   return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
 }
 
+// Capitalize first letter of zone name
+function capitalizeZoneName(name: string): string {
+  if (!name) return name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+}
+
 export function CityDetailContent({ 
   slug, 
   initialCity,
@@ -104,7 +110,7 @@ export function CityDetailContent({
             sidebarPosition="right"
           >
             {/* Services */}
-            <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-8 md:pt-12">
+            <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-4 md:pt-6">
               <div className="mb-6">
                 <h2 className="text-2xl md:text-3xl font-bold">
                   Услуги в {city.title}
@@ -115,14 +121,14 @@ export function CityDetailContent({
                     <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
                     {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && (
                       <span>
-                        {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).map(z => z.zone_name.toLowerCase()).join(', ')} — {formatDeliveryPrice('0')}
+                        {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).map(z => capitalizeZoneName(z.zone_name)).join(', ')} — {formatDeliveryPrice('0')}
                       </span>
                     )}
                     {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && 
                      deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).length > 0 && ', '}
                     {deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).map((zone, index, arr) => (
                       <span key={zone.zone_name}>
-                        {zone.zone_name.toLowerCase()} — {formatDeliveryPrice(zone.delivery_price)}
+                        {capitalizeZoneName(zone.zone_name)} — {formatDeliveryPrice(zone.delivery_price)}
                         {index < arr.length - 1 && ', '}
                       </span>
                     ))}

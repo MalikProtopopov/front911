@@ -57,12 +57,11 @@ export async function generateMetadata({ params }: CityServicePageProps): Promis
     const cityTitle = cityService.city?.title || slug
     const serviceTitle = cityService.service?.title || serviceSlug
     
-    // Use SEO data from API if available
-    const seoTitle = cityService.seo?.title || cityService.content?.meta_title
-    const seoDescription = cityService.seo?.meta_description || cityService.content?.meta_description
-    
-    const title = seoTitle || `${serviceTitle} в ${cityTitle} — цены, вызов мастера 24/7 | 911`
-    const description = seoDescription || `${serviceTitle} в ${cityTitle}: быстрый выезд мастера, прозрачные цены. Работаем круглосуточно.`
+    // Use meta_title and meta_description from content if available, otherwise use SEO or formula
+    const title = cityService.content?.meta_title || cityService.seo?.title || 
+      `${serviceTitle} в ${cityTitle} — цены, вызов мастера 24/7 | 911`
+    const description = cityService.content?.meta_description || cityService.seo?.meta_description || 
+      `${serviceTitle} в ${cityTitle}: быстрый выезд мастера, прозрачные цены. Работаем круглосуточно.`
     
     return {
       title,
@@ -124,8 +123,11 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
   
   const pageTitle = seo?.h1_title || content?.h1_title || 
     (city && service ? `${service.title} в ${city.title}` : 'Услуга в городе')
-  const pageSubtitle = content?.meta_description || 
-    (city && service ? `Закажите ${service.title.toLowerCase()} в ${city.title}. Быстрый выезд мастера, прозрачные цены, работаем 24/7.` : '')
+  // Use short_description as HTML subtitle if available, otherwise use plain text fallback
+  const heroHtmlSubtitle = content?.short_description || undefined
+  const heroSubtitle = !content?.short_description 
+    ? (city && service ? `Закажите ${service.title.toLowerCase()} в ${city.title}. Быстрый выезд мастера, прозрачные цены, работаем 24/7.` : undefined)
+    : undefined
   
   return (
     <PageLayout>
@@ -133,7 +135,8 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
       <HeroSection
         id="city-service-hero-section"
         title={pageTitle}
-        subtitle={pageSubtitle}
+        subtitle={heroSubtitle}
+        htmlSubtitle={heroHtmlSubtitle}
         breadcrumbs={city && service ? [
           { label: 'Все города', href: '/cities' },
           { label: city.title, href: `/cities/${slug}` },

@@ -157,17 +157,17 @@ export function CityServiceContent({
               <FormSidebar 
                 cityId={city.id} 
                 serviceId={service.id}
-                title={`Заказать ${service.title.toLowerCase()}`}
+                title="Заказать услугу"
                 formRef={formRef}
               />
             }
             sidebarPosition="right"
           >
             {/* Options with prices */}
-            <div className="py-8 md:py-12">
+            <div className="pt-4 md:pt-6 pb-8 md:pb-12">
               {/* Заголовок секции */}
               <PriceSectionHeader 
-                title={`Цены на ${service.title}`}
+                title={`Цены на услугу ${service.title}`}
                 totalCount={options?.length ?? 0}
                 deliveryZones={deliveryZones}
               />
@@ -266,6 +266,32 @@ export function CityServiceContent({
                 <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
                   <RichText 
                     content={content.description}
+                    variant="service"
+                  />
+                </div>
+              )}
+
+              {/* Benefits (Преимущества) */}
+              {content?.benefits_html && (
+                <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-8">
+                    Преимущества
+                  </h2>
+                  <RichText 
+                    content={content.benefits_html}
+                    variant="service"
+                  />
+                </div>
+              )}
+
+              {/* How it works (Как это работает) */}
+              {content?.how_it_works_html && (
+                <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-8">
+                    Как это работает
+                  </h2>
+                  <RichText 
+                    content={content.how_it_works_html}
                     variant="service"
                   />
                 </div>

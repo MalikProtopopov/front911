@@ -96,6 +96,7 @@ export interface CityServiceResponse {
     meta_title?: string
     meta_description?: string
     h1_title?: string
+    short_description?: string
     description?: string
     how_it_works_html?: string
     benefits_html?: string

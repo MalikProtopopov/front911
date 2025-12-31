@@ -498,6 +498,12 @@ export function PriceSectionHeader({
     return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
   }
 
+  // Capitalize first letter of zone name
+  const capitalizeZoneName = (name: string): string => {
+    if (!name) return name
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+  }
+
   // Filter out zones with zero price for cleaner display (only show paid ones)
   const paidZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) > 0) || []
   const freeZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) === 0) || []
@@ -519,13 +525,13 @@ export function PriceSectionHeader({
           <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
           {freeZones.length > 0 && (
             <span>
-              {freeZones.map(z => z.zone_name.toLowerCase()).join(', ')} — {formatDeliveryPrice('0')}
+              {freeZones.map(z => capitalizeZoneName(z.zone_name)).join(', ')} — {formatDeliveryPrice('0')}
             </span>
           )}
           {freeZones.length > 0 && paidZones.length > 0 && ', '}
           {paidZones.map((zone, index) => (
             <span key={zone.zone_name}>
-              {zone.zone_name.toLowerCase()} — {formatDeliveryPrice(zone.delivery_price)}
+              {capitalizeZoneName(zone.zone_name)} — {formatDeliveryPrice(zone.delivery_price)}
               {index < paidZones.length - 1 && ', '}
             </span>
           ))}
