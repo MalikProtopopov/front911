@@ -42,6 +42,12 @@ const nextConfig: NextConfig = {
         destination: '/:path+',
         permanent: true,
       },
+      // Redirect incorrect city slug to correct one (nizhnij-novgorod -> nizhniy-novgorod)
+      {
+        source: '/cities/nizhnij-novgorod/:path*',
+        destination: '/cities/nizhniy-novgorod/:path*',
+        permanent: true,
+      },
     ]
   },
   
