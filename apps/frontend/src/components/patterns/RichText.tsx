@@ -41,8 +41,12 @@ export function RichText({
 
   const baseClasses = "prose prose-lg max-w-none text-[var(--foreground-secondary)]"
   
+  // Remove background-color from all elements (ignore inline styles from backend)
+  const removeBackgroundColor = "[&_*]:!bg-transparent [&_*]:!bg-[transparent]"
+  
   const variantClasses = {
     default: `
+      ${removeBackgroundColor}
       [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--foreground)] [&_h2]:mt-6 [&_h2]:mb-3
       [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[var(--foreground)] [&_h3]:mt-8 [&_h3]:mb-4
       [&_p]:mb-4 [&_p]:leading-relaxed
@@ -68,6 +72,7 @@ export function RichText({
       [&_details>p]:text-[15px] [&_details>p]:md:text-base [&_details>p]:leading-relaxed [&_details>p]:text-[var(--foreground-secondary)]
     `,
     service: `
+      ${removeBackgroundColor}
       [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--foreground)] [&_h2]:mt-6 [&_h2]:mb-3
       [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[var(--foreground)] [&_h3]:mt-8 [&_h3]:mb-4
       [&_p]:mb-4 [&_p]:leading-relaxed
@@ -102,6 +107,7 @@ export function RichText({
       [&_.service-faq_details]:!mb-0
     `,
     city: `
+      ${removeBackgroundColor}
       [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--foreground)] [&_h2]:mt-6 [&_h2]:mb-3
       [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-[var(--foreground)] [&_h3]:mt-6 [&_h3]:mb-3
       [&_p]:mb-4 [&_p]:leading-relaxed

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Breadcrumbs, PageHeader, type BreadcrumbItem } from '@/components/ui'
+import { RichText } from './RichText'
 import { cn } from '@/lib/utils'
 
 /* =============================================================================
@@ -12,8 +13,10 @@ export interface HeroSectionProps {
   id: string
   /** Page title */
   title: string
-  /** Page subtitle/description */
+  /** Page subtitle/description (plain text) */
   subtitle?: string
+  /** HTML subtitle/description (rendered as HTML) */
+  htmlSubtitle?: string
   /** Breadcrumb items */
   breadcrumbs?: BreadcrumbItem[]
   /** Center text alignment */
@@ -30,6 +33,7 @@ export function HeroSection({
   id,
   title,
   subtitle,
+  htmlSubtitle,
   breadcrumbs,
   centered = false,
   containerSize = 'default',
@@ -64,6 +68,19 @@ export function HeroSection({
           subtitle={subtitle}
           align={centered ? 'center' : 'left'}
         />
+        
+        {/* HTML subtitle rendered after title */}
+        {htmlSubtitle && (
+          <div className={cn(
+            'max-w-3xl mt-6',
+            centered && 'mx-auto'
+          )}>
+            <RichText 
+              content={htmlSubtitle}
+              variant="city"
+            />
+          </div>
+        )}
         
         {children && (
           <div className="hero-section__content">

@@ -1022,5 +1022,10 @@ summary.faq-accordion-trigger:focus-visible,
   border-radius: var(--radius-2xl);
 }
 
+/* Remove background-color from all elements in rich-text (ignore inline styles from backend) */
+.rich-text * {
+  background-color: transparent !important;
+}
+
 
 

@@ -85,6 +85,7 @@ export function CityDetailContent({
 
   // Extract city content
   const cityContent = city.content as {
+    short_description?: string
     full_description?: string
   } | undefined
 

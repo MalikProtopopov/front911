@@ -43,9 +43,17 @@ export async function generateMetadata({ params }: CityDetailPageProps): Promise
     const city = await citiesService.getBySlug(slug)
     const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
     
-    const title = `Автопомощь в ${city.title} — эвакуатор, шиномонтаж 24/7 | 911`
-    const partnerCount = city.content?.partner_count
-    const description = `Срочная автопомощь в ${city.title}: эвакуатор, мобильный шиномонтаж, доставка топлива. Выезд за 15 минут.${partnerCount ? ` ${partnerCount} мастеров.` : ''}`
+    // Use meta_title and meta_description from backend if available, otherwise use formula
+    const cityContent = city.content as {
+      meta_title?: string
+      meta_description?: string
+      partner_count?: number
+    } | undefined
+    
+    const title = cityContent?.meta_title || `Автопомощь в ${city.title} — эвакуатор, шиномонтаж 24/7 | 911`
+    const partnerCount = cityContent?.partner_count
+    const description = cityContent?.meta_description || 
+      `Срочная автопомощь в ${city.title}: эвакуатор, мобильный шиномонтаж, доставка топлива. Выезд за 15 минут.${partnerCount ? ` ${partnerCount} мастеров.` : ''}`
     
     return {
       title,
@@ -110,8 +118,11 @@ export default async function CityPage({ params }: CityDetailPageProps) {
   } | undefined
   
   const heroTitle = cityContent?.h1_title || (city ? `Автопомощь в ${city.title}` : 'Автопомощь в городе')
-  const heroSubtitle = cityContent?.short_description || 
-    (city ? `Вызовите мастера для шиномонтажа, эвакуации или доставки топлива в ${city.title}. Работаем круглосуточно, приедем за 15-30 минут.` : '')
+  // Use short_description as HTML subtitle if available, otherwise use plain text fallback
+  const heroHtmlSubtitle = cityContent?.short_description || undefined
+  const heroSubtitle = !cityContent?.short_description 
+    ? (city ? `Вызовите мастера для шиномонтажа, эвакуации или доставки топлива в ${city.title}. Работаем круглосуточно, приедем за 15-30 минут.` : undefined)
+    : undefined
   
   return (
     <>
@@ -135,6 +146,7 @@ export default async function CityPage({ params }: CityDetailPageProps) {
           id="city-detail-hero-section"
           title={heroTitle}
           subtitle={heroSubtitle}
+          htmlSubtitle={heroHtmlSubtitle}
           breadcrumbs={city ? [
             { label: 'Все города', href: '/cities' },
             { label: city.title }
