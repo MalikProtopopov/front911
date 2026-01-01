@@ -82,18 +82,21 @@ function AdvantageCardSkeleton() {
 }
 
 export function Advantages({ initialAdvantages = [] }: AdvantagesProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { advantages, isLoading, isError, mutate } = useAdvantages(
+  // SSR-only mode: uses server data, no client revalidation
+  const { advantages, isLoading } = useAdvantages(
     { targetAudience: 'client', limit: 6 },
     { fallbackData: initialAdvantages.length > 0 ? initialAdvantages : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialAdvantages.length === 0
+  // Use SSR data (advantages from hook includes fallbackData)
+  const advantagesData = advantages.length > 0 ? advantages : initialAdvantages
+  
+  // Only show loading if no data at all
+  const showLoading = isLoading && advantagesData.length === 0
 
   // Use API data if available, otherwise fallback
-  const displayAdvantages = advantages.length > 0 
-    ? advantages.slice(0, 6) 
+  const displayAdvantages = advantagesData.length > 0 
+    ? advantagesData.slice(0, 6) 
     : fallbackAdvantages
 
   return (
@@ -114,25 +117,6 @@ export function Advantages({ initialAdvantages = [] }: AdvantagesProps) {
               </div>
             ))}
           </div>
-        ) : isError ? (
-          <>
-            <ErrorMessage 
-              title="Не удалось загрузить преимущества"
-              showRetry
-              onRetry={() => mutate()}
-            />
-            <div className="flex flex-wrap justify-center gap-8 md:gap-10 lg:gap-12">
-              {fallbackAdvantages.map((advantage) => (
-                <div key={advantage.id} className="w-full md:w-[calc(50%-1.25rem)] lg:w-[calc(33.333%-1.6rem)] max-w-sm">
-                  <FeatureCard
-                    icon={getAdvantageIcon(advantage.icon_name)}
-                    title={advantage.title}
-                    description={advantage.description}
-                  />
-                </div>
-              ))}
-            </div>
-          </>
         ) : (
           <div className="flex flex-wrap justify-center gap-8 md:gap-10 lg:gap-12">
             {displayAdvantages.map((advantage) => (

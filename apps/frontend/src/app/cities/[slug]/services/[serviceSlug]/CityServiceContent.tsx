@@ -102,7 +102,7 @@ export function CityServiceContent({
   // Ref for form to set message
   const formRef = useRef<LeadFormRef>(null)
 
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { 
     city,
     service,
@@ -110,23 +110,30 @@ export function CityServiceContent({
     content,
     isLoading,
     isError,
-    error,
   } = useCityService(citySlug, serviceSlug, {
     fallbackData: initialData ?? undefined
   })
 
+  // Use SSR data (from hook includes fallbackData)
+  const displayCity = city ?? initialData?.city
+  const displayService = service ?? initialData?.service
+  const displayOptions = options ?? initialData?.options ?? []
+  const displayContent = content ?? initialData?.content
+
   // Group options by category
   const { grouped, uncategorized, categoryNames } = useMemo(() => {
-    return groupOptionsByCategory(options ?? [])
-  }, [options])
+    return groupOptionsByCategory(displayOptions)
+  }, [displayOptions])
 
   // Handler for option/parameter selection
   const handleOptionSelect = (message: string) => {
     formRef.current?.setMessage(message)
   }
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && !initialData
+  // Only show loading if no data at all
+  const showLoading = isLoading && !initialData && !displayCity
+  // Only show error if no data to display
+  const showError = isError && !displayCity && !displayService
 
   if (showLoading) {
     return (
@@ -136,12 +143,11 @@ export function CityServiceContent({
     )
   }
 
-  if (isError || !city || !service) {
+  if (showError || !displayCity || !displayService) {
     return (
       <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию об услуге"
-          error={error}
         />
       </div>
     )
@@ -155,8 +161,8 @@ export function CityServiceContent({
           <TwoColumnLayout
             sidebar={
               <FormSidebar 
-                cityId={city.id} 
-                serviceId={service.id}
+                cityId={displayCity.id} 
+                serviceId={displayService.id}
                 title="Заказать услугу"
                 formRef={formRef}
               />
@@ -167,12 +173,12 @@ export function CityServiceContent({
             <div className="pt-4 md:pt-6 pb-8 md:pb-12">
               {/* Заголовок секции */}
               <PriceSectionHeader 
-                title={`Цены на услугу ${service.title}`}
-                totalCount={options?.length ?? 0}
+                title={`Цены на услугу ${displayService.title}`}
+                totalCount={displayOptions.length}
                 deliveryZones={deliveryZones}
               />
 
-              {!options || options.length === 0 || (categoryNames.length === 0 && uncategorized.length === 0) ? (
+              {displayOptions.length === 0 || (categoryNames.length === 0 && uncategorized.length === 0) ? (
                 <PriceEmptyState message="Цены для данной услуги в этом городе пока не указаны.">
                   <Button asChild>
                     <Link href="/contacts">Узнать цены</Link>
@@ -262,36 +268,36 @@ export function CityServiceContent({
               )}
 
               {/* Service description */}
-              {content?.description && (
+              {displayContent?.description && (
                 <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
                   <RichText 
-                    content={content.description}
+                    content={displayContent.description}
                     variant="service"
                   />
                 </div>
               )}
 
               {/* Benefits (Преимущества) */}
-              {content?.benefits_html && (
+              {displayContent?.benefits_html && (
                 <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
                   <h2 className="text-2xl md:text-3xl font-bold mb-8">
                     Преимущества
                   </h2>
                   <RichText 
-                    content={content.benefits_html}
+                    content={displayContent.benefits_html}
                     variant="service"
                   />
                 </div>
               )}
 
               {/* How it works (Как это работает) */}
-              {content?.how_it_works_html && (
+              {displayContent?.how_it_works_html && (
                 <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
                   <h2 className="text-2xl md:text-3xl font-bold mb-8">
                     Как это работает
                   </h2>
                   <RichText 
-                    content={content.how_it_works_html}
+                    content={displayContent.how_it_works_html}
                     variant="service"
                   />
                 </div>
@@ -308,7 +314,7 @@ export function CityServiceContent({
         actions={[
           { label: 'Позвонить', showPhoneIcon: true },
           { 
-            label: `Все услуги в ${city.title}`, 
+            label: `Все услуги в ${displayCity.title}`, 
             href: `/cities/${citySlug}`, 
             variant: 'outline',
             icon: <MapPin className="w-5 h-5 mr-2" />

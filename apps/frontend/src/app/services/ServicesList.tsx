@@ -12,14 +12,19 @@ interface ServicesListProps {
 }
 
 export function ServicesList({ initialServices = [] }: ServicesListProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { services, isLoading, isError, error, mutate } = useServices(
+  // SSR-only mode: uses server data, no client revalidation
+  const { services, isLoading, isError } = useServices(
     undefined,
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialServices.length === 0
+  // Use SSR data (services from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayServices.length === 0
 
   if (showLoading) {
     return (
@@ -35,20 +40,18 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
     )
   }
 
-  if (isError) {
+  if (showError) {
     return (
       <Section spacing="xl">
         <ErrorMessage 
           title="Не удалось загрузить услуги"
-          message={error instanceof Error ? error.message : "Попробуйте обновить страницу"}
-          showRetry
-          onRetry={() => mutate()}
+          message="Попробуйте обновить страницу"
         />
       </Section>
     )
   }
 
-  if (services.length === 0) {
+  if (displayServices.length === 0) {
     return (
       <Section spacing="xl">
         <EmptyState
@@ -62,7 +65,7 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
   return (
     <Section spacing="lg">
       <ServiceList 
-        services={services}
+        services={displayServices}
         className="max-w-5xl mx-auto w-full"
       />
     </Section>

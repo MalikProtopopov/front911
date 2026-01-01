@@ -2,7 +2,6 @@
 
 import { MapPin, Clock } from 'lucide-react'
 import { IconCircle } from '@/components/ui'
-import { Button } from '@/components/ui/button'
 import { useContacts } from '@/lib/api/hooks'
 import { 
   getContactLink, 
@@ -100,21 +99,23 @@ function getGridCols(count: number): 1 | 2 | 3 | 4 {
 }
 
 export function ContactsContent({ initialContacts = [] }: ContactsContentProps) {
-  // Fetch all contacts from API with server-provided initial data
-  const { contacts, isError } = useContacts(
+  // SSR-only mode: uses server data, no client revalidation
+  const { contacts } = useContacts(
     undefined,
     { fallbackData: initialContacts.length > 0 ? initialContacts : undefined }
   )
   
+  // Use SSR data (contacts from hook includes fallbackData)
+  const displayContacts = contacts.length > 0 ? contacts : initialContacts
+  
   // Filter contacts to show in the main grid (phone, email, whatsapp, telegram, address)
-  // Only show contacts that are actually returned from the API
-  const mainContacts = contacts.filter(c => 
+  const mainContacts = displayContacts.filter(c => 
     ['phone', 'email', 'whatsapp', 'telegram', 'address'].includes(c.contact_type)
   ).slice(0, 4) // Show max 4 cards
 
   // Get social contacts for sidebar
-  const telegramContact = contacts.find(c => c.contact_type === 'telegram')
-  const vkContact = contacts.find(c => c.contact_type === 'vk')
+  const telegramContact = displayContacts.find(c => c.contact_type === 'telegram')
+  const vkContact = displayContacts.find(c => c.contact_type === 'vk')
   
   // Get social links - only use if API returns these contacts
   const telegramHref = telegramContact ? getContactLink(telegramContact) : null
@@ -124,11 +125,6 @@ export function ContactsContent({ initialContacts = [] }: ContactsContentProps) 
   const hasTelegram = !!telegramHref
   const hasVk = !!vkHref
   const hasSocialLinks = hasTelegram || hasVk
-
-  // Log warning if using fallback
-  if (isError && typeof window !== 'undefined') {
-    console.warn('[ContactsContent] Contacts API unavailable')
-  }
   
   // Calculate grid columns based on number of contacts
   const gridCols = getGridCols(mainContacts.length)
@@ -195,32 +191,28 @@ export function ContactsContent({ initialContacts = [] }: ContactsContentProps) 
               {hasSocialLinks && (
                 <div className="p-6 rounded-xl bg-white">
                   <h3 className="font-semibold text-lg mb-4 !mt-0">Мы в соцсетях</h3>
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex gap-3">
                     {hasTelegram && (
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="flex-1"
-                        asChild
+                      <a 
+                        href={telegramHref} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-12 h-12 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--color-primary)] hover:text-white flex items-center justify-center transition-colors"
+                        aria-label="Telegram"
                       >
-                        <a href={telegramHref} target="_blank" rel="noopener noreferrer">
-                          <TelegramIcon className="w-5 h-5 flex-shrink-0" />
-                          <span className="leading-none hidden sm:inline">Telegram</span>
-                        </a>
-                      </Button>
+                        <TelegramIcon className="w-5 h-5" />
+                      </a>
                     )}
                     {hasVk && (
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="flex-1"
-                        asChild
+                      <a 
+                        href={vkHref} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="w-12 h-12 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--color-primary)] hover:text-white flex items-center justify-center transition-colors"
+                        aria-label="VK"
                       >
-                        <a href={vkHref} target="_blank" rel="noopener noreferrer">
-                          <VKIcon className="w-5 h-5 flex-shrink-0" />
-                          <span className="leading-none hidden sm:inline">VK</span>
-                        </a>
-                      </Button>
+                        <VKIcon className="w-5 h-5" />
+                      </a>
                     )}
                   </div>
                 </div>

@@ -74,41 +74,40 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
   const closeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   
-  // Use SWR with server-provided initial data for hydration
-  const { services, isLoading, isError, mutate } = useServices(
+  // SSR-only mode: uses server data, no client revalidation
+  const { services, isLoading, isError } = useServices(
     undefined,
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
   // Fetch phone contacts from API with server-provided initial data
   const phoneInitialData = initialContacts.filter(c => c.contact_type === 'phone')
-  const { contacts: phoneContacts, isError: isContactsError } = useContacts(
+  const { contacts: phoneContacts } = useContacts(
     { contactType: 'phone' },
     { fallbackData: phoneInitialData.length > 0 ? phoneInitialData : undefined }
   )
   
-  // Get primary phone from API or use fallback
-  const primaryPhone = getPrimaryPhone(phoneContacts)
-  const phoneLink = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
+  // Use SSR data (from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+  const displayPhoneContacts = phoneContacts.length > 0 ? phoneContacts : phoneInitialData
   
-  // Log warning if using fallback
-  React.useEffect(() => {
-    if (isContactsError || (phoneContacts.length === 0 && !primaryPhone)) {
-      console.warn('[Header] Contacts API unavailable, using fallback phone number')
-    }
-  }, [isContactsError, phoneContacts.length, primaryPhone])
+  // Get primary phone from API or use fallback
+  const primaryPhone = getPrimaryPhone(displayPhoneContacts)
+  const phoneLink = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialServices.length === 0
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayServices.length === 0
 
   // Process services: sort by title, limit to MAX_DROPDOWN_ITEMS
   const processedServices = React.useMemo(() => {
-    if (!services || services.length === 0) return []
+    if (!displayServices || displayServices.length === 0) return []
     
-    return [...services]
+    return [...displayServices]
       .sort((a, b) => a.title.localeCompare(b.title, 'ru'))
       .slice(0, MAX_DROPDOWN_ITEMS)
-  }, [services])
+  }, [displayServices])
 
   // Check if current page is a service page
   const isServiceActive = (slug: string) => pathname === `/services/${slug}`
@@ -176,8 +175,6 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
   // Get icon for service
   const getServiceIcon = (slug: string) => serviceIcons[slug] || Wrench
 
-  // Retry handler
-  const handleRetry = () => mutate()
 
   return (
     <header
@@ -252,15 +249,12 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
                       <div className="px-2 py-2 max-h-[400px] overflow-y-auto">
                         {showLoading ? (
                           <DropdownSkeleton />
-                        ) : isError ? (
+                        ) : showError ? (
                           <div className="py-8 px-4 text-center">
                             <AlertCircle className="w-8 h-8 text-[var(--color-error)] mx-auto mb-3" />
-                            <p className="text-sm text-[var(--foreground-secondary)] mb-4">
+                            <p className="text-sm text-[var(--foreground-secondary)]">
                               Не удалось загрузить
                             </p>
-                            <Button variant="outline" size="sm" onClick={handleRetry}>
-                              Повторить
-                            </Button>
                           </div>
                         ) : processedServices.length > 0 ? (
                           <div className="space-y-1">
@@ -312,7 +306,7 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
                       </div>
                       
                       {/* Footer - All Services Link */}
-                      {!showLoading && !isError && processedServices.length > 0 && (
+                      {!showLoading && !showError && processedServices.length > 0 && (
                         <div className="border-t border-[var(--border)] mx-2 pt-2 pb-2">
                           <Link 
                             href="/services" 
@@ -392,10 +386,9 @@ export function Header({ initialServices = [], initialContacts = [] }: HeaderPro
                               <Loader2 className="w-4 h-4 animate-spin" />
                               Загрузка...
                             </div>
-                          ) : isError ? (
+                          ) : showError ? (
                             <div className="py-3 px-4">
-                              <p className="text-sm text-[var(--color-error)] mb-2">Ошибка загрузки</p>
-                              <Button variant="outline" size="sm" onClick={handleRetry}>Повторить</Button>
+                              <p className="text-sm text-[var(--color-error)]">Ошибка загрузки</p>
                             </div>
                           ) : processedServices.length > 0 ? (
                             processedServices.map((service) => {

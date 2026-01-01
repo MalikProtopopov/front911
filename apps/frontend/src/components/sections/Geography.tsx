@@ -14,14 +14,19 @@ interface GeographyProps {
 }
 
 export function Geography({ initialCities = [] }: GeographyProps) {
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { cities, isLoading, isError } = useCities(
     { limit: 10 },
     { fallbackData: initialCities.length > 0 ? initialCities : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialCities.length === 0
+  // Use SSR data (cities from hook includes fallbackData)
+  const displayCities = cities.length > 0 ? cities : initialCities
+  
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayCities.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayCities.length === 0
 
   return (
     <Section id="geography">
@@ -35,19 +40,19 @@ export function Geography({ initialCities = [] }: GeographyProps) {
 
         {showLoading ? (
           <SkeletonGrid count={10} columns={5} CardComponent={SkeletonCityCard} />
-        ) : isError ? (
+        ) : showError ? (
           <ErrorMessage 
             title="Не удалось загрузить города"
             message="Попробуйте обновить страницу"
           />
-        ) : cities.length === 0 ? (
+        ) : displayCities.length === 0 ? (
           <EmptyState
             title="Города не найдены"
             description="На данный момент города недоступны."
           />
         ) : (
           <CityGrid 
-            cities={cities} 
+            cities={displayCities} 
             columns={5}
           />
         )}

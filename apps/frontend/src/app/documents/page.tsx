@@ -42,7 +42,6 @@ export default async function DocumentsPage() {
         title="Документы"
         subtitle="Юридические документы и соглашения сервиса 911"
         breadcrumbs={[
-          { label: 'Главная', href: '/' },
           { label: 'Документы' }
         ]}
         containerSize="wide"

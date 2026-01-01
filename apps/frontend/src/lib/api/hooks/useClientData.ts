@@ -1,7 +1,9 @@
 'use client'
 
 /**
- * Client-only hooks for components that need client-side data fetching
+ * Client-side hooks (SSR-only mode)
+ * Uses server-provided initial data, no client-side revalidation
+ * Data is loaded on server, client uses SSR data without making API requests
  */
 
 import useSWR from 'swr'

@@ -13,14 +13,17 @@ interface CitiesListProps {
 }
 
 export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesListProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { cities, isLoading, isError, error } = useCities(
+  // SSR-only mode: uses server data, no client revalidation
+  const { cities, isLoading, isError } = useCities(
     { limit: 1000, ordering: 'display_order,title' },
     { fallbackData: initialCities.length > 0 ? initialCities : undefined }
   )
 
+  // Use SSR data (cities from hook includes fallbackData)
+  const displayCities = cities.length > 0 ? cities : initialCities
+
   // Group cities by first letter
-  const groupedCities = cities.reduce((acc, city) => {
+  const groupedCities = displayCities.reduce((acc, city) => {
     const firstLetter = city.title.charAt(0).toUpperCase()
     if (!acc[firstLetter]) {
       acc[firstLetter] = []
@@ -33,8 +36,10 @@ export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesL
     a.localeCompare(b, 'ru')
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialCities.length === 0
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayCities.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayCities.length === 0
 
   return (
     <PageLayout>
@@ -53,12 +58,11 @@ export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesL
             <div className="flex justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>
-          ) : isError ? (
+          ) : showError ? (
             <ErrorMessage 
               message="Не удалось загрузить список городов"
-              error={error}
             />
-          ) : cities.length === 0 ? (
+          ) : displayCities.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-[var(--foreground-secondary)]">
                 Список городов пуст

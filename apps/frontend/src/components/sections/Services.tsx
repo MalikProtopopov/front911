@@ -14,14 +14,19 @@ interface ServicesProps {
 }
 
 export function Services({ initialServices = [] }: ServicesProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { services, isLoading, isError, mutate } = useServices(
+  // SSR-only mode: uses server data, no client revalidation
+  const { services, isLoading, isError } = useServices(
     { limit: 4 },
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialServices.length === 0
+  // Use SSR data (services from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+  
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayServices.length === 0
 
   return (
     <Section id="services" bg="secondary" spacing="md">
@@ -41,21 +46,19 @@ export function Services({ initialServices = [] }: ServicesProps) {
               ))}
             </div>
           </div>
-        ) : isError ? (
+        ) : showError ? (
           <ErrorMessage 
             title="Не удалось загрузить услуги"
             message="Попробуйте обновить страницу"
-            showRetry
-            onRetry={() => mutate()}
           />
-        ) : services.length === 0 ? (
+        ) : displayServices.length === 0 ? (
           <EmptyState
             title="Услуги не найдены"
             description="На данный момент услуги недоступны."
           />
         ) : (
           <ServiceList 
-            services={services}
+            services={displayServices}
             className="max-w-5xl mx-auto w-full"
           />
         )}

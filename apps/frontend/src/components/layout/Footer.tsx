@@ -28,24 +28,28 @@ interface FooterProps {
 export function Footer({ initialServices = [], initialContacts = [], initialDocuments = [] }: FooterProps) {
   const currentYear = new Date().getFullYear()
   
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { services } = useServices(
     undefined,
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
   // Fetch contacts from API with server-provided initial data
-  const { contacts, isError: isContactsError } = useContacts(
+  const { contacts } = useContacts(
     undefined,
     { fallbackData: initialContacts.length > 0 ? initialContacts : undefined }
   )
 
+  // Use SSR data (from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+  const displayContacts = contacts.length > 0 ? contacts : initialContacts
+
   // Get contacts by type with fallbacks
-  const primaryPhone = getPrimaryPhone(contacts)
-  const primaryEmail = getPrimaryEmail(contacts)
-  const whatsappContacts = getContactsByType(contacts, 'whatsapp')
-  const telegramContacts = getContactsByType(contacts, 'telegram')
-  const vkContacts = getContactsByType(contacts, 'vk')
+  const primaryPhone = getPrimaryPhone(displayContacts)
+  const primaryEmail = getPrimaryEmail(displayContacts)
+  const whatsappContacts = getContactsByType(displayContacts, 'whatsapp')
+  const telegramContacts = getContactsByType(displayContacts, 'telegram')
+  const vkContacts = getContactsByType(displayContacts, 'vk')
 
   // Fallback values
   const fallbackSocial = getFallbackSocialLinks()
@@ -58,11 +62,6 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
   const whatsappHref = whatsappContacts[0] ? getContactLink(whatsappContacts[0]) : getFallbackWhatsAppLink()
   const telegramHref = telegramContacts[0] ? getContactLink(telegramContacts[0]) : fallbackSocial.telegram
   const vkHref = vkContacts[0] ? getContactLink(vkContacts[0]) : fallbackSocial.vk
-
-  // Log warning if using fallback
-  if (isContactsError && typeof window !== 'undefined') {
-    console.warn('[Footer] Contacts API unavailable, using fallback values')
-  }
 
   // Company links - only existing pages
   const companyLinks = [
@@ -121,7 +120,7 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
           <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">Услуги</h3>
             <ul className="space-y-3">
-              {services.slice(0, 5).map((service) => (
+              {displayServices.slice(0, 5).map((service) => (
                 <li key={service.slug}>
                   <Link
                     href={`/services/${service.slug}`}

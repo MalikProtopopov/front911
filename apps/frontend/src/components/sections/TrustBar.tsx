@@ -92,14 +92,17 @@ function MetricItem({ metricKey, value, label, isVisible, index }: MetricItemPro
 export function TrustBar({ initialMetrics = [] }: TrustBarProps) {
   const [isVisible, setIsVisible] = React.useState(false)
   
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { metrics, isLoading } = useMetrics(
     undefined,
     { fallbackData: initialMetrics.length > 0 ? initialMetrics : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialMetrics.length === 0
+  // Use SSR data (metrics from hook includes fallbackData)
+  const displayMetricsData = metrics.length > 0 ? metrics : initialMetrics
+  
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayMetricsData.length === 0
   
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -121,15 +124,15 @@ export function TrustBar({ initialMetrics = [] }: TrustBarProps) {
 
   // Transform API metrics or use fallback
   const displayMetrics = React.useMemo(() => {
-    if (metrics.length > 0) {
-      return metrics.slice(0, 4).map((metric: Metric) => ({
+    if (displayMetricsData.length > 0) {
+      return displayMetricsData.slice(0, 4).map((metric: Metric) => ({
         key: metric.metric_key,
         value: metric.value,
         label: metric.display_label,
       }))
     }
     return fallbackMetrics
-  }, [metrics])
+  }, [displayMetricsData])
 
   return (
     <Section id="trust-bar" bg="secondary" spacing="lg">

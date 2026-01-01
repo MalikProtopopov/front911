@@ -41,12 +41,15 @@ export const QUERY_KEYS = {
   },
 } as const
 
-// SWR Configuration defaults
+// SWR Configuration defaults - SSR-only mode
+// Data is loaded on server, client uses SSR data without revalidation
 export const SWR_CONFIG = {
   revalidateOnFocus: false,
-  revalidateOnReconnect: true,
-  dedupingInterval: 60000, // 1 minute
-  errorRetryCount: 3,
+  revalidateOnReconnect: false,
+  revalidateOnMount: false,      // Don't fetch on mount - use SSR data
+  keepPreviousData: true,        // Keep SSR data on error
+  dedupingInterval: 60000,       // 1 minute
+  errorRetryCount: 0,            // Don't retry on error
   errorRetryInterval: 5000,
 } as const
 

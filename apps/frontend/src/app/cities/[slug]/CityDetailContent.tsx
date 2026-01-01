@@ -47,12 +47,11 @@ export function CityDetailContent({
   initialContacts = [],
   deliveryZones = [],
 }: CityDetailContentProps) {
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { 
     city, 
     isLoading: cityLoading, 
-    isError: cityError, 
-    error: cityErrorData 
+    isError: cityError
   } = useCityDetail(slug, {
     fallbackData: initialCity ?? undefined
   })
@@ -65,9 +64,15 @@ export function CityDetailContent({
     fallbackData: initialServices.length > 0 ? initialServices : undefined
   })
 
-  // If we have initial data, don't show loading state on first render
-  const showCityLoading = cityLoading && !initialCity
-  const showServicesLoading = servicesLoading && initialServices.length === 0
+  // Use SSR data (from hook includes fallbackData)
+  const displayCity = city ?? initialCity
+  const displayServices = services.length > 0 ? services : initialServices
+
+  // Only show loading if no data at all
+  const showCityLoading = cityLoading && !displayCity
+  const showServicesLoading = servicesLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showCityError = cityError && !displayCity
 
   // Show loading only if we don't have initial data
   if (showCityLoading) {
@@ -78,19 +83,18 @@ export function CityDetailContent({
     )
   }
 
-  if (cityError || !city) {
+  if (showCityError || !displayCity) {
     return (
       <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию о городе"
-          error={cityErrorData}
         />
       </div>
     )
   }
 
   // Extract city content
-  const cityContent = city.content as {
+  const cityContent = displayCity.content as {
     short_description?: string
     full_description?: string
   } | undefined
@@ -103,8 +107,8 @@ export function CityDetailContent({
           <TwoColumnLayout
             sidebar={
               <FormSidebar 
-                cityId={city.id} 
-                title={`Заказать в ${city.title}`}
+                cityId={displayCity.id} 
+                title={`Заказать в ${displayCity.title}`}
               />
             }
             sidebarPosition="right"
@@ -113,7 +117,7 @@ export function CityDetailContent({
             <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-4 md:pt-6">
               <div className="mb-6">
                 <h2 className="text-2xl md:text-3xl font-bold">
-                  Услуги в {city.title}
+                  Услуги в {displayCity.title}
                 </h2>
                 {/* Delivery zones info */}
                 {deliveryZones.length > 0 && (
@@ -140,11 +144,11 @@ export function CityDetailContent({
                 <div className="flex justify-center py-12">
                   <LoadingSpinner />
                 </div>
-              ) : servicesError ? (
+              ) : (servicesError && displayServices.length === 0) ? (
                 <ErrorMessage message="Не удалось загрузить услуги" />
-              ) : services.length > 0 ? (
+              ) : displayServices.length > 0 ? (
                 <ServiceList
-                  services={services}
+                  services={displayServices}
                   getHref={(service) => `/cities/${slug}/services/${service.slug}`}
                 />
               ) : (
@@ -162,7 +166,7 @@ export function CityDetailContent({
               {cityContent?.full_description && (
                 <div className="mt-20 md:mt-24 pt-16 md:pt-20 pb-8 md:pb-12">
                   <h2 className="text-2xl md:text-3xl font-bold mb-8">
-                    О сервисе в {city.title}
+                    О сервисе в {displayCity.title}
                   </h2>
                   <RichText 
                     content={cityContent.full_description}
@@ -177,7 +181,7 @@ export function CityDetailContent({
 
       {/* CTA Section */}
       <PageCTA
-        title={`Нужна помощь на дороге в ${city.title}?`}
+        title={`Нужна помощь на дороге в ${displayCity.title}?`}
         description="Наши специалисты готовы помочь вам 24/7. Позвоните или оставьте заявку — мы приедем в кратчайшие сроки."
         actions={[
           { label: 'Позвонить', showPhoneIcon: true },

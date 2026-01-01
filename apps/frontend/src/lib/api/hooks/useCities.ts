@@ -1,8 +1,9 @@
 'use client'
 
 /**
- * SWR hooks for Cities (Client-side only)
- * Support server-provided initial data for SSR hydration
+ * SWR hooks for Cities (SSR-only mode)
+ * Uses server-provided initial data, no client-side revalidation
+ * Data is loaded on server, client uses SSR data without making API requests
  */
 
 import useSWR, { type SWRConfiguration } from 'swr'

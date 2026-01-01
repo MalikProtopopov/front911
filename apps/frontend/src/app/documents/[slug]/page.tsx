@@ -111,7 +111,6 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
         subtitle={heroSubtitle}
         htmlSubtitle={heroHtmlSubtitle}
         breadcrumbs={[
-          { label: 'Главная', href: '/' },
           { label: 'Документы', href: '/documents' },
           { label: document.title }
         ]}

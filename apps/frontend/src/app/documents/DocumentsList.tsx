@@ -33,6 +33,12 @@ export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
     {
       fallbackData: initialDocuments,
       revalidateOnFocus: false,
+      revalidateOnMount: false, // Don't revalidate on mount - use SSR data
+      keepPreviousData: true, // Keep previous data on error
+      onError: (err) => {
+        // Log error but don't show it if we have fallback data
+        console.error('[DocumentsList] Failed to fetch documents:', err)
+      },
     }
   )
 
@@ -47,7 +53,8 @@ export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
     )
   }
 
-  if (error) {
+  // Only show error if we don't have fallback data
+  if (error && (!documents || documents.length === 0)) {
     return (
       <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage message="Не удалось загрузить документы" />
@@ -70,20 +77,23 @@ export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
   }
 
   return (
-    <section className="py-16 md:py-20">
+    <section className="py-16 md:py-20 overflow-hidden">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid gap-6 md:gap-8">
           {documents.map((doc) => (
             <Link
               key={doc.id}
               href={`/documents/${doc.slug}`}
-              className="block group"
+              className="block group overflow-hidden"
             >
-              <Card className="hover:shadow-lg transition-shadow duration-200">
-                <CardContent className="p-6 md:p-8">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground-primary)] mb-3 group-hover:text-[var(--color-primary)] transition-colors">
+              <Card className="hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+                <CardContent className="p-4 sm:p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 overflow-hidden">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <h2 
+                        className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-[var(--foreground-primary)] mb-3 group-hover:text-[var(--color-primary)] transition-colors break-words hyphens-auto"
+                        lang="ru"
+                      >
                         {doc.title}
                       </h2>
                       {doc.short_description && (

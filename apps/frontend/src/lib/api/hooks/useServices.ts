@@ -1,8 +1,9 @@
 'use client'
 
 /**
- * SWR hooks for Services (Client-side only)
- * Support server-provided initial data for SSR hydration
+ * SWR hooks for Services (SSR-only mode)
+ * Uses server-provided initial data, no client-side revalidation
+ * Data is loaded on server, client uses SSR data without making API requests
  */
 
 import useSWR, { type SWRConfiguration } from 'swr'
@@ -28,25 +29,10 @@ export function useServices(
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceList[]>(
     [servicesKey, params],
-    async () => {
-      try {
-        const result = await servicesService.getAll(params)
-        // Log for debugging in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[useServices] Fetched services:', result?.length || 0)
-        }
-        return result
-      } catch (err) {
-        console.error('[useServices] Error fetching services:', err)
-        throw err
-      }
-    },
+    () => servicesService.getAll(params),
     {
       ...SWR_CONFIG,
       fallbackData: options?.fallbackData,
-      onError: (error) => {
-        console.error('[useServices] SWR error:', error)
-      },
     } as SWRConfiguration<ServiceList[]>
   )
 

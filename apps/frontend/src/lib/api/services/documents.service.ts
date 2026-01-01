@@ -56,13 +56,21 @@ export const documentsService = {
       const ordering = params?.ordering || '-updated_at'
       const url = `${baseUrl}/api/website/documents/?ordering=${ordering}`
       
-      const fetchResponse = await fetch(url, {
+      // Check if we're on the server (for Next.js cache)
+      const isServer = typeof window === 'undefined'
+      const fetchOptions: RequestInit = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        next: { revalidate: 3600 }, // Cache for 1 hour
-      })
+      }
+      
+      // Only use next.revalidate on server-side
+      if (isServer) {
+        (fetchOptions as any).next = { revalidate: 3600 }
+      }
+      
+      const fetchResponse = await fetch(url, fetchOptions)
 
       if (!fetchResponse.ok) {
         throw new Error(`Failed to fetch documents: ${fetchResponse.status}`)
@@ -85,13 +93,21 @@ export const documentsService = {
       const baseUrl = OpenAPI.BASE || 'http://localhost:8001'
       const url = `${baseUrl}/api/website/documents/${slug}/`
       
-      const fetchResponse = await fetch(url, {
+      // Check if we're on the server (for Next.js cache)
+      const isServer = typeof window === 'undefined'
+      const fetchOptions: RequestInit = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        next: { revalidate: 3600 }, // Cache for 1 hour
-      })
+      }
+      
+      // Only use next.revalidate on server-side
+      if (isServer) {
+        (fetchOptions as any).next = { revalidate: 3600 }
+      }
+      
+      const fetchResponse = await fetch(url, fetchOptions)
 
       if (fetchResponse.status === 404) {
         return null
