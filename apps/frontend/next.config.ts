@@ -61,9 +61,9 @@ const nextConfig: NextConfig = {
     const cspDirectives = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru https://mc.yandex.com`,
-      `style-src 'self' 'unsafe-inline'`,
+      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+      `font-src 'self' data: https://fonts.gstatic.com`,
       `img-src 'self' data: blob: ${apiOrigin} https://mc.yandex.ru`,
-      `font-src 'self' data:`,
       `connect-src 'self' ${apiOrigin} https://mc.yandex.ru https://mc.yandex.com`,
       `frame-src 'self' https://mc.yandex.ru`,
       "object-src 'none'",

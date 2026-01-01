@@ -25,6 +25,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         - NODE_ENV=production
+        - NEXT_PUBLIC_API_URL=http://45.144.221.92
     ports:
       - "3000:3000"
     env_file:
