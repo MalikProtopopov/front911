@@ -1,34 +1,34 @@
 import { Metadata } from 'next'
 import { contentService } from '@/lib/api/services'
+import { generatePageSeo, prefetchSeoMeta } from '@/lib/api/hooks'
 import { logServerError } from '@/lib/utils/serverLogger'
 import { PartnersContent } from './PartnersContent'
-import type { AppLink, Contact } from '@/lib/api/generated'
+import type { AppLink, Contact, SeoMetaPublic } from '@/lib/api/generated'
 
 // ISR: revalidate every hour
 export const revalidate = 3600
 
-// Generate metadata
+// Generate metadata from SEO API
 export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
-  
-  return {
+  const seo = await generatePageSeo('/partners/', {
     title: 'Стать партнёром — 911 Автопомощь',
     description: 'Присоединяйтесь к сети партнёров 911. Стабильный поток заказов, удобный личный кабинет, своевременные выплаты.',
-    alternates: {
-      canonical: `${baseUrl}/partners`,
-    },
-  }
+    h1Title: 'Станьте партнёром 911',
+  })
+  return seo.metadata
 }
 
 export default async function PartnersPage() {
   // Fetch data on the server for SSR
   let initialAppLinks: AppLink[] = []
   let initialContacts: Contact[] = []
+  let seoData: SeoMetaPublic | null = null
   
   try {
-    [initialAppLinks, initialContacts] = await Promise.all([
+    [initialAppLinks, initialContacts, seoData] = await Promise.all([
       contentService.getAppLinks(),
       contentService.getContacts(),
+      prefetchSeoMeta('/partners/'),
     ])
   } catch (error) {
     logServerError(error, 'Failed to fetch data for partners page SSR', {
@@ -38,9 +38,20 @@ export default async function PartnersPage() {
   }
 
   return (
-    <PartnersContent 
-      initialAppLinks={initialAppLinks}
-      initialContacts={initialContacts}
-    />
+    <>
+      {/* JSON-LD Schema from SEO API */}
+      {seoData?.schema_json && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema_json) }}
+        />
+      )}
+      
+      <PartnersContent 
+        initialAppLinks={initialAppLinks}
+        initialContacts={initialContacts}
+        seoTitle={seoData?.h1_title}
+      />
+    </>
   )
 }

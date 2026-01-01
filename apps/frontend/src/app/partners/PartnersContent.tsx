@@ -13,6 +13,7 @@ import type { AppLink, Contact } from '@/lib/api/generated'
 interface PartnersContentProps {
   initialAppLinks?: AppLink[]
   initialContacts?: Contact[]
+  seoTitle?: string
 }
 
 const benefits = [
@@ -54,7 +55,8 @@ const steps = [
 
 export function PartnersContent({ 
   initialAppLinks = [], 
-  initialContacts = [] 
+  initialContacts = [],
+  seoTitle,
 }: PartnersContentProps) {
   return (
     <PageLayout>
@@ -67,7 +69,7 @@ export function PartnersContent({
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <h1 id="partners-heading" className="text-5xl md:text-6xl font-bold scroll-mt-30">
-                Станьте партнёром 911
+                {seoTitle || 'Станьте партнёром 911'}
               </h1>
               <p className="text-xl text-[var(--foreground-secondary)] leading-relaxed">
                 Присоединяйтесь к крупнейшей сети автопомощи в России. 

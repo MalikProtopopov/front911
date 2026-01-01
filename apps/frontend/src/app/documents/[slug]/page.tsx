@@ -1,12 +1,12 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { documentsService, contentService } from '@/lib/api/services'
+import { documentsService, contentService, seoService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
 import { HeroSection, RichText } from '@/components/patterns'
 import { PageLayout } from '@/components/layout'
 import { DocumentDetailContent } from './DocumentDetailContent'
 import type { DocumentDetail } from '@/lib/api/services'
-import type { Contact } from '@/lib/api/generated'
+import type { Contact, SeoMetaPublic } from '@/lib/api/generated'
 
 interface DocumentPageProps {
   params: Promise<{ slug: string }>
@@ -33,13 +33,18 @@ export async function generateStaticParams() {
   }
 }
 
-// Generate metadata with real document data
+// Generate metadata with SEO API priority
 export async function generateMetadata({ params }: DocumentPageProps): Promise<Metadata> {
   const { slug } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+  const seoSlug = `/documents/${slug}/`
   
   try {
-    const document = await documentsService.getBySlug(slug)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+    // Fetch SEO API and document data in parallel
+    const [seoData, document] = await Promise.all([
+      seoService.getBySlug(seoSlug).catch(() => null),
+      documentsService.getBySlug(slug),
+    ])
     
     if (!document) {
       return {
@@ -47,15 +52,20 @@ export async function generateMetadata({ params }: DocumentPageProps): Promise<M
       }
     }
     
-    // Use meta_title and meta_description from backend if available, otherwise use formula
-    const title = document.meta_title || `${document.title} | 911`
-    const description = document.meta_description || 
+    // Priority: SEO API > document > fallback formula
+    const title = seoData?.title || document.meta_title || `${document.title} | 911`
+    const description = seoData?.meta_description || document.meta_description || 
       `Ознакомьтесь с ${document.title.toLowerCase()} сервиса 911.`
     
     return {
       title,
       description,
-      keywords: document.meta_keywords,
+      keywords: seoData?.meta_keywords || document.meta_keywords,
+      openGraph: seoData?.og_title ? {
+        title: seoData.og_title,
+        description: seoData.og_description,
+        images: seoData.og_image_url ? [seoData.og_image_url] : undefined,
+      } : undefined,
       alternates: {
         canonical: `${baseUrl}/documents/${slug}`,
       },
@@ -71,18 +81,22 @@ export async function generateMetadata({ params }: DocumentPageProps): Promise<M
 
 export default async function DocumentPage({ params }: DocumentPageProps) {
   const { slug } = await params
+  const seoSlug = `/documents/${slug}/`
   
-  // Fetch document data and contacts for SSR
+  // Fetch document data, contacts and SEO for SSR
   let document: DocumentDetail | null = null
   let initialContacts: Contact[] = []
+  let seoData: SeoMetaPublic | null = null
   
   try {
-    const [documentData, contactsData] = await Promise.all([
+    const [documentData, contactsData, seoResult] = await Promise.all([
       documentsService.getBySlug(slug),
       contentService.getContacts(),
+      seoService.getBySlug(seoSlug).catch(() => null),
     ])
     document = documentData
     initialContacts = contactsData
+    seoData = seoResult
   } catch (error) {
     logServerError(error, 'Failed to fetch document data for SSR', {
       page: '/documents/[slug]',
@@ -95,15 +109,24 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
     notFound()
   }
   
-  // Extract data for SSR hero
-  const pageTitle = document.h1_title || document.title
+  // Priority: SEO API > document > fallback
+  const pageTitle = seoData?.h1_title || document.h1_title || document.title
   const heroHtmlSubtitle = document.short_description || undefined
   const heroSubtitle = !document.short_description 
     ? `Ознакомьтесь с ${document.title.toLowerCase()} сервиса 911.`
     : undefined
   
   return (
-    <PageLayout>
+    <>
+      {/* JSON-LD Schema from SEO API */}
+      {seoData?.schema_json && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema_json) }}
+        />
+      )}
+
+      <PageLayout>
       {/* Hero Section - Server-rendered for optimal LCP */}
       <HeroSection
         id="document-detail-hero-section"
@@ -149,6 +172,7 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
         initialContacts={initialContacts}
       />
     </PageLayout>
+    </>
   )
 }
 

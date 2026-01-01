@@ -10,9 +10,10 @@ import type { CityList, Contact } from "@/lib/api/generated"
 interface CitiesListProps {
   initialCities?: CityList[]
   initialContacts?: Contact[]
+  seoTitle?: string
 }
 
-export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesListProps) {
+export function CitiesList({ initialCities = [], initialContacts = [], seoTitle }: CitiesListProps) {
   // SSR-only mode: uses server data, no client revalidation
   const { cities, isLoading, isError } = useCities(
     { limit: 1000, ordering: 'display_order,title' },
@@ -46,7 +47,7 @@ export function CitiesList({ initialCities = [], initialContacts = [] }: CitiesL
       {/* Hero */}
       <HeroSection
         id="cities-hero-section"
-        title="Города присутствия"
+        title={seoTitle || "Города присутствия"}
         subtitle={`Работаем в ${cities.length > 0 ? cities.length : 82} городах России. Найдите услуги автопомощи в вашем городе.`}
         breadcrumbs={[{ label: 'Города' }]}
       />

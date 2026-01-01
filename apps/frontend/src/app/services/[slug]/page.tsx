@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLayout } from '@/components/layout'
 import { TwoColumnLayout } from '@/components/ui'
 import { CheckCircle, MapPin, Clock, DollarSign, Phone, ChevronRight } from 'lucide-react'
-import { servicesService, citiesService, contentService } from '@/lib/api/services'
-import type { Contact } from '@/lib/api/generated'
+import { servicesService, citiesService, contentService, seoService } from '@/lib/api/services'
+import type { Contact, SeoMetaPublic } from '@/lib/api/generated'
 import { prefetchServices } from '@/lib/api/hooks'
 import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
 import { ServiceJsonLd, BreadcrumbJsonLd, RelatedCities } from '@/components/seo'
@@ -58,13 +58,18 @@ export async function generateStaticParams() {
   }
 }
 
-// Generate metadata
+// Generate metadata with SEO API priority
 export async function generateMetadata({ params }: ServiceDetailPageProps): Promise<Metadata> {
   const { slug } = await params
   const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+  const seoSlug = `/services/${slug}/`
   
   try {
-    const service = await servicesService.getBySlug(slug)
+    // Fetch SEO API and service data in parallel
+    const [seoData, service] = await Promise.all([
+      seoService.getBySlug(seoSlug).catch(() => null),
+      servicesService.getBySlug(slug),
+    ])
     
     // Parse content for meta data
     let content: ServiceContent | null = null
@@ -83,14 +88,21 @@ export async function generateMetadata({ params }: ServiceDetailPageProps): Prom
       }
     }
     
-    const title = content?.meta_title || `${service.title} — вызов мастера 24/7 | 911`
-    const description = content?.meta_description || 
+    // Priority: SEO API > service.content > fallback formula
+    const title = seoData?.title || content?.meta_title || `${service.title} — вызов мастера 24/7 | 911`
+    const description = seoData?.meta_description || content?.meta_description || 
       `Заказать ${service.title.toLowerCase()} онлайн. Быстрый отклик, проверенные мастера, прозрачные цены.`
     
     return {
       title,
       description,
-      openGraph: {
+      keywords: seoData?.meta_keywords,
+      openGraph: seoData?.og_title ? {
+        title: seoData.og_title,
+        description: seoData.og_description,
+        images: seoData.og_image_url ? [seoData.og_image_url] : undefined,
+        type: 'website',
+      } : {
         title,
         description,
         type: 'website',
@@ -110,10 +122,12 @@ export async function generateMetadata({ params }: ServiceDetailPageProps): Prom
 export default async function ServiceDetailPage({ params }: ServiceDetailPageProps) {
   const { slug } = await params
   const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+  const seoSlug = `/services/${slug}/`
   
   let service
   let cities: { slug: string; title: string }[] = []
   let initialContacts: Contact[] = []
+  let seoData: SeoMetaPublic | null = null
   
   try {
     service = await servicesService.getBySlug(slug)
@@ -126,16 +140,18 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
     notFound()
   }
   
-  // Fetch cities and contacts for SSR (non-blocking)
+  // Fetch cities, contacts and SEO for SSR (non-blocking)
   try {
-    const [allCities, contactsData] = await Promise.all([
+    const [allCities, contactsData, seoResult] = await Promise.all([
       citiesService.getAll(),
       contentService.getContacts(),
+      seoService.getBySlug(seoSlug).catch(() => null),
     ])
     cities = allCities.map(c => ({ slug: c.slug, title: c.title }))
     initialContacts = contactsData
+    seoData = seoResult
   } catch {
-    // Continue without cities/contacts
+    // Continue without cities/contacts/seo
   }
 
   // Parse content - API returns string that can be JSON or HTML
@@ -161,8 +177,8 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
     }
   }
 
-  // Get page title and subtitle from content or defaults
-  const pageTitle = content?.h1_title || service.title
+  // Priority: SEO API > content > defaults
+  const pageTitle = seoData?.h1_title || content?.h1_title || service.title
   // Use short_description as HTML subtitle if available, otherwise use plain text fallback
   const heroHtmlSubtitle = content?.short_description || undefined
   const heroSubtitle = !content?.short_description 
@@ -174,19 +190,31 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
 
   return (
     <>
-      {/* JSON-LD Structured Data */}
-      <ServiceJsonLd
-        name={service.title}
-        slug={slug}
-        description={jsonLdDescription}
-      />
-      <BreadcrumbJsonLd
-        items={[
-          { name: 'Главная', url: baseUrl },
-          { name: 'Услуги', url: `${baseUrl}/services` },
-          { name: service.title, url: `${baseUrl}/services/${slug}` },
-        ]}
-      />
+      {/* JSON-LD Schema from SEO API (priority) */}
+      {seoData?.schema_json && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema_json) }}
+        />
+      )}
+      
+      {/* Fallback JSON-LD Structured Data */}
+      {!seoData?.schema_json && (
+        <>
+          <ServiceJsonLd
+            name={service.title}
+            slug={slug}
+            description={jsonLdDescription}
+          />
+          <BreadcrumbJsonLd
+            items={[
+              { name: 'Главная', url: baseUrl },
+              { name: 'Услуги', url: `${baseUrl}/services` },
+              { name: service.title, url: `${baseUrl}/services/${slug}` },
+            ]}
+          />
+        </>
+      )}
       
       <PageLayout>
         {/* Hero */}

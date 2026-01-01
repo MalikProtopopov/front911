@@ -1,12 +1,12 @@
 import { Metadata } from 'next'
 import { Clock, Phone, CheckCircle } from 'lucide-react'
 import { CityServiceContent } from './CityServiceContent'
-import { citiesService, servicesService, contentService } from '@/lib/api/services'
+import { citiesService, servicesService, contentService, seoService } from '@/lib/api/services'
 import { logServerError } from '@/lib/utils/serverLogger'
 import { HeroSection } from '@/components/patterns'
 import { PageLayout } from '@/components/layout'
 import type { CityServiceResponse, DeliveryZone } from '@/lib/api/services'
-import type { Contact } from '@/lib/api/generated'
+import type { Contact, SeoMetaPublic } from '@/lib/api/generated'
 
 interface CityServicePageProps {
   params: Promise<{ slug: string; serviceSlug: string }>
@@ -46,28 +46,38 @@ export async function generateStaticParams() {
   }
 }
 
-// Generate metadata with real data
+// Generate metadata with SEO API priority
 export async function generateMetadata({ params }: CityServicePageProps): Promise<Metadata> {
   const { slug, serviceSlug } = await params
+  const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+  const seoSlug = `/cities/${slug}/services/${serviceSlug}/`
   
   try {
-    const cityService = await citiesService.getServiceByCity(slug, serviceSlug)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_DOMAIN || 'https://911.ru'
+    // Fetch SEO API and city service data in parallel
+    const [seoData, cityService] = await Promise.all([
+      seoService.getBySlug(seoSlug).catch(() => null),
+      citiesService.getServiceByCity(slug, serviceSlug),
+    ])
     
     const cityTitle = cityService.city?.title || slug
     const serviceTitle = cityService.service?.title || serviceSlug
     
-    // Use meta_title and meta_description from content if available, otherwise use SEO or formula
-    const title = cityService.content?.meta_title || cityService.seo?.title || 
+    // Priority: SEO API > cityService.content > cityService.seo > fallback formula
+    const title = seoData?.title || cityService.content?.meta_title || cityService.seo?.title || 
       `${serviceTitle} в ${cityTitle} — цены, вызов мастера 24/7 | 911`
-    const description = cityService.content?.meta_description || cityService.seo?.meta_description || 
+    const description = seoData?.meta_description || cityService.content?.meta_description || cityService.seo?.meta_description || 
       `${serviceTitle} в ${cityTitle}: быстрый выезд мастера, прозрачные цены. Работаем круглосуточно.`
     
     return {
       title,
       description,
-      keywords: cityService.seo?.meta_keywords,
-      openGraph: {
+      keywords: seoData?.meta_keywords || cityService.seo?.meta_keywords,
+      openGraph: seoData?.og_title ? {
+        title: seoData.og_title,
+        description: seoData.og_description,
+        images: seoData.og_image_url ? [seoData.og_image_url] : undefined,
+        type: 'website',
+      } : {
         title: cityService.seo?.og_title || title,
         description: cityService.seo?.og_description || description,
         images: cityService.seo?.og_image_url ? [cityService.seo.og_image_url] : undefined,
@@ -88,19 +98,23 @@ export async function generateMetadata({ params }: CityServicePageProps): Promis
 
 export default async function CityServicePage({ params }: CityServicePageProps) {
   const { slug, serviceSlug } = await params
+  const seoSlug = `/cities/${slug}/services/${serviceSlug}/`
   
-  // Fetch city service data, contacts, and delivery zones for SSR
+  // Fetch city service data, contacts, delivery zones and SEO for SSR
   let initialData: CityServiceResponse | null = null
   let initialContacts: Contact[] = []
   let deliveryZones: DeliveryZone[] = []
+  let seoData: SeoMetaPublic | null = null
   
   try {
-    const [cityServiceData, contactsData] = await Promise.all([
+    const [cityServiceData, contactsData, seoResult] = await Promise.all([
       citiesService.getServiceByCity(slug, serviceSlug),
       contentService.getContacts(),
+      seoService.getBySlug(seoSlug).catch(() => null),
     ])
     initialData = cityServiceData
     initialContacts = contactsData
+    seoData = seoResult
     
     // Fetch delivery zones if we have city ID
     if (cityServiceData?.city?.id) {
@@ -117,11 +131,12 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
   // Extract data for SSR hero
   const city = initialData?.city
   const service = initialData?.service
-  const seo = initialData?.seo
+  const existingSeo = initialData?.seo
   const content = initialData?.content
   const optionsCount = initialData?.options?.length ?? 0
   
-  const pageTitle = seo?.h1_title || content?.h1_title || 
+  // Priority: SEO API > existingSeo > content > fallback
+  const pageTitle = seoData?.h1_title || existingSeo?.h1_title || content?.h1_title || 
     (city && service ? `${service.title} в ${city.title}` : 'Услуга в городе')
   // Use short_description as HTML subtitle if available, otherwise use plain text fallback
   const heroHtmlSubtitle = content?.short_description || undefined
@@ -130,7 +145,16 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
     : undefined
   
   return (
-    <PageLayout>
+    <>
+      {/* JSON-LD Schema from SEO API */}
+      {seoData?.schema_json && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema_json) }}
+        />
+      )}
+
+      <PageLayout>
       {/* Hero Section - Server-rendered for optimal LCP */}
       <HeroSection
         id="city-service-hero-section"
@@ -172,5 +196,6 @@ export default async function CityServicePage({ params }: CityServicePageProps) 
         deliveryZones={deliveryZones}
       />
     </PageLayout>
+    </>
   )
 }

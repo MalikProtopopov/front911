@@ -61,35 +61,91 @@ export async function prefetchSeoMeta(slug: string) {
 }
 
 /**
+ * Result type for generatePageSeo function
+ * Contains Next.js metadata plus additional SEO fields
+ */
+export interface SeoResult {
+  metadata: Metadata
+  h1Title?: string
+  schemaJson?: unknown
+  rawSeo?: {
+    title?: string
+    meta_description?: string
+    meta_keywords?: string
+    h1_title?: string
+    og_title?: string
+    og_description?: string
+    og_image_url?: string
+    schema_json?: unknown
+  } | null
+}
+
+/**
+ * Fallback options for SEO generation
+ */
+export interface SeoFallback {
+  title: string
+  description?: string
+  h1Title?: string
+}
+
+/**
+ * Generate page SEO data from API
+ * Returns metadata for Next.js plus h1_title and schema_json for page content
+ * SEO API data takes priority over fallback values
+ */
+export async function generatePageSeo(
+  slug: string,
+  fallback: SeoFallback
+): Promise<SeoResult> {
+  try {
+    const seo = await seoService.getBySlug(slug)
+    if (!seo) {
+      return {
+        metadata: {
+          title: fallback.title,
+          description: fallback.description,
+        },
+        h1Title: fallback.h1Title,
+        rawSeo: null,
+      }
+    }
+    return {
+      metadata: {
+        title: seo.title || fallback.title,
+        description: seo.meta_description || fallback.description,
+        keywords: seo.meta_keywords,
+        openGraph: seo.og_title ? {
+          title: seo.og_title,
+          description: seo.og_description,
+          images: seo.og_image_url ? [seo.og_image_url] : undefined,
+        } : undefined,
+      },
+      h1Title: seo.h1_title || fallback.h1Title,
+      schemaJson: seo.schema_json,
+      rawSeo: seo,
+    }
+  } catch {
+    return {
+      metadata: {
+        title: fallback.title,
+        description: fallback.description,
+      },
+      h1Title: fallback.h1Title,
+      rawSeo: null,
+    }
+  }
+}
+
+/**
  * Generate page metadata from API SEO data
+ * @deprecated Use generatePageSeo instead for full SEO support including h1_title and schema_json
  */
 export async function generatePageMetadata(
   slug: string,
   fallback: { title: string; description?: string }
 ): Promise<Metadata> {
-  try {
-    const seo = await seoService.getBySlug(slug)
-    if (!seo) {
-      return {
-        title: fallback.title,
-        description: fallback.description,
-      }
-    }
-    return {
-      title: seo.title || fallback.title,
-      description: seo.meta_description || fallback.description,
-      keywords: seo.meta_keywords,
-      openGraph: seo.og_title ? {
-        title: seo.og_title,
-        description: seo.og_description,
-        images: seo.og_image_url ? [seo.og_image_url] : undefined,
-      } : undefined,
-    }
-  } catch {
-    return {
-      title: fallback.title,
-      description: fallback.description,
-    }
-  }
+  const result = await generatePageSeo(slug, fallback)
+  return result.metadata
 }
 
