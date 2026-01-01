@@ -26,15 +26,20 @@ function formatDate(dateString: string): string {
 }
 
 export function DocumentsList({ initialDocuments = [] }: DocumentsListProps) {
+  // Check if we have SSR data
+  const hasInitialData = initialDocuments.length > 0
+  
   // Use SWR with server-provided initial data for hydration
   const { data: documents, isLoading, error } = useSWR<DocumentListItem[]>(
     'documents',
     () => documentsService.getAll({ ordering: '-updated_at' }),
     {
-      fallbackData: initialDocuments,
+      fallbackData: hasInitialData ? initialDocuments : undefined,
       revalidateOnFocus: false,
-      revalidateOnMount: false, // Don't revalidate on mount - use SSR data
+      // Fetch client-side if SSR data is empty
+      revalidateOnMount: !hasInitialData,
       keepPreviousData: true, // Keep previous data on error
+      errorRetryCount: 2,
       onError: (err) => {
         // Log error but don't show it if we have fallback data
         console.error('[DocumentsList] Failed to fetch documents:', err)

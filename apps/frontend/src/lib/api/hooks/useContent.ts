@@ -1,9 +1,8 @@
 'use client'
 
 /**
- * SWR hooks for Content (SSR-only mode)
- * Uses server-provided initial data, no client-side revalidation
- * Data is loaded on server, client uses SSR data without making API requests
+ * SWR hooks for Content (SSR-first mode)
+ * Uses server-provided initial data, fetches client-side if SSR data is empty
  */
 
 import useSWR, { type SWRConfiguration } from 'swr'
@@ -13,7 +12,7 @@ import {
   type GetMetricsParams,
   type GetContactsParams,
 } from '../services'
-import { QUERY_KEYS, SWR_CONFIG } from '@/lib/config/constants'
+import { QUERY_KEYS, getSWRConfig } from '@/lib/config/constants'
 import type { Advantage, Metric, AppLink, Contact } from '../generated'
 
 interface HookOptions<T> {
@@ -31,14 +30,14 @@ export function useAdvantages(
 ) {
   // Create cache key with fallback in case QUERY_KEYS is not available during SSR
   const advantagesKey = QUERY_KEYS?.ADVANTAGES?.ALL ?? 'advantages'
+  
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<Advantage[]>(
     [advantagesKey, params],
     () => contentService.getAdvantages(params),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<Advantage[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<Advantage[]>
   )
 
   return {
@@ -62,14 +61,14 @@ export function useMetrics(
 ) {
   // Create cache key with fallback in case QUERY_KEYS is not available during SSR
   const metricsKey = QUERY_KEYS?.METRICS?.ALL ?? 'metrics'
+  
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<Metric[]>(
     [metricsKey, params],
     () => contentService.getMetrics(params),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<Metric[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<Metric[]>
   )
 
   return {
@@ -89,14 +88,14 @@ export function useMetrics(
 export function useAppLinks(options?: HookOptions<AppLink[]>) {
   // Create cache key with fallback in case QUERY_KEYS is not available during SSR
   const appLinksKey = QUERY_KEYS?.APP_LINKS?.ALL ?? 'app-links'
+  
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<AppLink[]>(
     appLinksKey,
     () => contentService.getAppLinks(),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<AppLink[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<AppLink[]>
   )
 
   return {
@@ -123,14 +122,14 @@ export function useContacts(
   const cacheKey = params?.contactType 
     ? [contactsKey, params.contactType]
     : contactsKey
+  
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<Contact[]>(
     cacheKey,
     () => contentService.getContacts(params),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<Contact[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<Contact[]>
   )
 
   return {

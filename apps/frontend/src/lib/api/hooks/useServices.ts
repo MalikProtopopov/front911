@@ -1,14 +1,13 @@
 'use client'
 
 /**
- * SWR hooks for Services (SSR-only mode)
- * Uses server-provided initial data, no client-side revalidation
- * Data is loaded on server, client uses SSR data without making API requests
+ * SWR hooks for Services (SSR-first mode)
+ * Uses server-provided initial data, fetches client-side if SSR data is empty
  */
 
 import useSWR, { type SWRConfiguration } from 'swr'
 import { servicesService, type GetServicesParams } from '../services'
-import { QUERY_KEYS, SWR_CONFIG } from '@/lib/config/constants'
+import { QUERY_KEYS, getSWRConfig } from '@/lib/config/constants'
 import type { ServiceList, ServiceDetail } from '../generated'
 
 interface HookOptions<T> {
@@ -26,14 +25,15 @@ export function useServices(
 ) {
   // Create cache key with fallback in case QUERY_KEYS is not available during SSR
   const servicesKey = QUERY_KEYS?.SERVICES?.ALL ?? 'services'
+  
+  // Check if fallback data is empty (SSR failed or returned empty)
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceList[]>(
     [servicesKey, params],
     () => servicesService.getAll(params),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData,
-    } as SWRConfiguration<ServiceList[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<ServiceList[]>
   )
 
   return {
@@ -62,13 +62,13 @@ export function useServiceDetail(
         : `services/${slug}`)
     : null
 
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceDetail>(
     cacheKey,
     slug ? () => servicesService.getBySlug(slug) : null,
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData,
-    } as SWRConfiguration<ServiceDetail>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<ServiceDetail>
   )
 
   return {
@@ -97,13 +97,13 @@ export function useServiceOptions(
         : `services/${slug}/options`)
     : null
 
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceDetail>(
     cacheKey,
     slug ? () => servicesService.getOptions(slug) : null,
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData,
-    } as SWRConfiguration<ServiceDetail>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<ServiceDetail>
   )
 
   return {

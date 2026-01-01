@@ -41,17 +41,25 @@ export const QUERY_KEYS = {
   },
 } as const
 
-// SWR Configuration defaults - SSR-only mode
-// Data is loaded on server, client uses SSR data without revalidation
+// SWR Configuration defaults - SSR-first mode
+// Data is loaded on server, client revalidates only if SSR data is empty
 export const SWR_CONFIG = {
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
-  revalidateOnMount: false,      // Don't fetch on mount - use SSR data
+  revalidateOnMount: false,      // Don't fetch on mount - use SSR data (overridden when no data)
   keepPreviousData: true,        // Keep SSR data on error
   dedupingInterval: 60000,       // 1 minute
-  errorRetryCount: 0,            // Don't retry on error
-  errorRetryInterval: 5000,
+  errorRetryCount: 2,            // Retry on error (was 0)
+  errorRetryInterval: 3000,
 } as const
+
+// Helper to create SWR config that fetches if no fallback data
+export const getSWRConfig = <T>(fallbackData: T | undefined, isEmpty: boolean = false) => ({
+  ...SWR_CONFIG,
+  fallbackData,
+  // Enable client-side fetch if no SSR data available
+  revalidateOnMount: !fallbackData || isEmpty,
+})
 
 // Pagination defaults
 export const PAGINATION = {

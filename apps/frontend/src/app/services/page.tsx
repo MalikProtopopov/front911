@@ -7,8 +7,8 @@ import { ServicesList } from "./ServicesList"
 import { PageCTA, HeroSection } from '@/components/patterns'
 import type { ServiceList, Contact, SeoMetaPublic } from "@/lib/api/generated"
 
-// ISR: revalidate every hour
-export const revalidate = 3600
+// ISR: revalidate every minute for fresh data
+export const revalidate = 60
 
 // Generate metadata from SEO API
 export async function generateMetadata(): Promise<Metadata> {
