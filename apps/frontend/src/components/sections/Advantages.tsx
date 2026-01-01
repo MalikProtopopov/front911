@@ -2,7 +2,6 @@
 
 import { Clock, Shield, DollarSign, MapPin, Star, Headphones, Zap, CheckCircle } from "lucide-react"
 import { useAdvantages } from "@/lib/api/hooks"
-import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { Section, SectionHeader, FeatureCard } from "@/components/ui"
 import type { Advantage } from "@/lib/api/generated"
 
