@@ -12,7 +12,7 @@
 # Логи:
 #   docker-compose -f docker-compose.dev.yml logs -f
 #
-# API URL: http://localhost:8001/api/website/
+# API URL: https://api.sluzhba911.com (remote backend)
 # ===========================================
 
 name: frontend911-dev
