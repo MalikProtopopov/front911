@@ -12,18 +12,37 @@ function getEnvVar(key: string, required = false): string {
   return value ?? ''
 }
 
-// Helper to get API base URL
-// Default values are set in next.config.ts env section
+// Helper to normalize API URL
+// Called dynamically via getter to ensure correct URL for client/server
 function getApiBaseUrl(): string {
-  // NEXT_PUBLIC_API_URL is set via next.config.ts with default value
-  // This ensures it's always available on both server and client
-  return getEnvVar('NEXT_PUBLIC_API_URL') || 'http://45.144.221.92'
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || ''
+  
+  if (!envUrl) {
+    // In production, fallback to prod URL
+    if (process.env.NODE_ENV === 'production') {
+      return 'http://45.144.221.92'
+    }
+    // In development, warn and use localhost
+    if (typeof window !== 'undefined') {
+      console.warn('[Config] NEXT_PUBLIC_API_URL is not set, using localhost:8001')
+    }
+    return 'http://localhost:8001'
+  }
+  
+  // Replace host.docker.internal with localhost for browser (client-side)
+  // host.docker.internal only works inside Docker containers
+  const isClient = typeof window !== 'undefined'
+  if (isClient && envUrl.includes('host.docker.internal')) {
+      return envUrl.replace('host.docker.internal', 'localhost')
+    }
+  
+    return envUrl
 }
 
 export const config = {
-  // API Configuration
+  // API Configuration - using getter for dynamic URL resolution
   api: {
-    baseUrl: getApiBaseUrl(),
+    get baseUrl() { return getApiBaseUrl() },
     timeout: parseInt(getEnvVar('NEXT_PUBLIC_API_TIMEOUT') || '30000', 10),
   },
 

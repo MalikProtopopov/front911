@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button'
 import { useContacts } from '@/lib/api/hooks'
 import { getPrimaryPhone, getContactLink, getFallbackPhoneLink } from '@/lib/utils/contacts'
 import { cn } from '@/lib/utils'
+import type { Contact } from '@/lib/api/generated'
 
 /* =============================================================================
    PHONE BUTTON COMPONENT
    Reusable phone call button with consistent styling
-   Uses contacts from API with fallback to constants
+   Uses contacts from API with SSR support and fallback to constants
 ============================================================================= */
 
 export interface PhoneButtonProps {
@@ -25,11 +26,13 @@ export interface PhoneButtonProps {
   fullWidth?: boolean
   /** Additional class names */
   className?: string
+  /** Initial contacts for SSR */
+  initialContacts?: Contact[]
 }
 
 /**
  * Reusable phone call button
- * Fetches phone number from API with fallback to CONTACT_INFO
+ * Fetches phone number from API with SSR support and fallback to CONTACT_INFO
  * 
  * @example
  * ```tsx
@@ -39,11 +42,8 @@ export interface PhoneButtonProps {
  * // Outline variant
  * <PhoneButton variant="outline" />
  * 
- * // Without icon
- * <PhoneButton showIcon={false} label="Связаться" />
- * 
- * // Small size
- * <PhoneButton size="sm" />
+ * // With SSR data
+ * <PhoneButton initialContacts={contacts} />
  * ```
  */
 export function PhoneButton({
@@ -53,18 +53,17 @@ export function PhoneButton({
   size = 'lg',
   fullWidth = false,
   className,
+  initialContacts = [],
 }: PhoneButtonProps) {
-  // Fetch phone contacts from API
-  const { contacts, isError } = useContacts({ contactType: 'phone' })
+  // Fetch phone contacts from API with SSR support
+  const { contacts } = useContacts(
+    { contactType: 'phone' },
+    { fallbackData: initialContacts.length > 0 ? initialContacts.filter(c => c.contact_type === 'phone') : undefined }
+  )
   
   // Get primary phone from API or use fallback
   const primaryPhone = getPrimaryPhone(contacts)
   const phoneLink = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
-  
-  // Log warning if using fallback
-  if ((isError || contacts.length === 0) && typeof window !== 'undefined') {
-    console.warn('[PhoneButton] Contacts API unavailable, using fallback phone number')
-  }
 
   return (
     <Button

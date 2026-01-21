@@ -19,6 +19,10 @@ build/
 .env.test.local
 .env.production.local
 
+# Custom environment files (содержат конфигурацию окружения)
+.env.dev
+.env.prod
+
 # Testing
 coverage/
 .nyc_output/

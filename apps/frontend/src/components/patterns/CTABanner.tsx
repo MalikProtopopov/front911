@@ -1,11 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Apple, Play } from 'lucide-react'
 import { useClientAppLinks } from '@/lib/api/hooks'
 import { analytics } from '@/lib/analytics'
 import { EXTERNAL_LINKS } from '@/lib/config/constants'
 import { cn } from '@/lib/utils'
+import type { AppLink } from '@/lib/api/generated'
 
 /* =============================================================================
    CTA BANNER COMPONENT
@@ -25,6 +26,8 @@ export interface CTABannerProps {
   className?: string
   /** Analytics source identifier */
   analyticsSource?: string
+  /** Initial app links for SSR */
+  initialAppLinks?: AppLink[]
 }
 
 export function CTABanner({
@@ -34,8 +37,11 @@ export function CTABanner({
   id = 'download',
   className,
   analyticsSource,
+  initialAppLinks = [],
 }: CTABannerProps) {
-  const { clientIosLink, clientAndroidLink, getAppLink, isLoading } = useClientAppLinks()
+  const { clientIosLink, clientAndroidLink, getAppLink, isLoading } = useClientAppLinks({
+    initialData: initialAppLinks
+  })
 
   // Get appropriate links based on app type
   const iosLink = appType === 'client' 
@@ -106,8 +112,19 @@ export function CTABanner({
                   className="cta-banner__button sm:w-auto w-full"
                   onClick={() => handleAppClick('ios')}
                 >
-                  <a href={iosUrl} target="_blank" rel="noopener noreferrer">
-                    <Apple className="w-5 h-5 flex-shrink-0" />
+                  <a 
+                    href={iosUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Image
+                      src="/images/icons/appstore.png"
+                      alt="App Store"
+                      width={20}
+                      height={20}
+                      className="flex-shrink-0"
+                    />
                     <span className="leading-none">App Store</span>
                   </a>
                 </Button>
@@ -120,8 +137,19 @@ export function CTABanner({
                   className="cta-banner__button sm:w-auto w-full"
                   onClick={() => handleAppClick('android')}
                 >
-                  <a href={androidUrl} target="_blank" rel="noopener noreferrer">
-                    <Play className="w-5 h-5 flex-shrink-0" />
+                  <a 
+                    href={androidUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Image
+                      src="/images/icons/google_play.png"
+                      alt="Google Play"
+                      width={20}
+                      height={20}
+                      className="flex-shrink-0"
+                    />
                     <span className="leading-none">Google Play</span>
                   </a>
                 </Button>

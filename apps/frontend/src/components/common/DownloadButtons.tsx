@@ -3,7 +3,6 @@
 import * as React from 'react'
 import Image from 'next/image'
 import useSWR from 'swr'
-import { Apple, Play } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/common/Skeleton'
@@ -39,6 +38,8 @@ export interface DownloadButtonsProps {
   size?: 'default' | 'sm' | 'lg'
   /** Направление расположения кнопок */
   direction?: 'row' | 'column'
+  /** Начальные данные для SSR */
+  initialAppLinks?: AppLink[]
 }
 
 // ============================================================================
@@ -113,8 +114,15 @@ function AppStoreButton({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Скачать в App Store"
+        className="flex items-center gap-2"
       >
-        <Apple className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <Image
+          src="/images/icons/appstore.png"
+          alt="App Store"
+          width={20}
+          height={20}
+          className="flex-shrink-0 group-hover:scale-110 transition-transform"
+        />
         <span className="leading-none">App Store</span>
       </a>
     </Button>
@@ -147,8 +155,15 @@ function GooglePlayButton({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Скачать в Google Play"
+        className="flex items-center gap-2"
       >
-        <Play className="w-5 h-5 flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <Image
+          src="/images/icons/google_play.png"
+          alt="Google Play"
+          width={20}
+          height={20}
+          className="flex-shrink-0 group-hover:scale-110 transition-transform"
+        />
         <span className="leading-none">Google Play</span>
       </a>
     </Button>
@@ -237,16 +252,20 @@ export function DownloadButtons({
   androidVariant = 'outline',
   size = 'lg',
   direction = 'row',
+  initialAppLinks = [],
 }: DownloadButtonsProps) {
-  // Загружаем данные с API через SWR
+  // Загружаем данные с API через SWR с поддержкой SSR
   const { data, error, isLoading } = useSWR<AppLink[]>(
     QUERY_KEYS.APP_LINKS.ALL,
     () => contentService.getAppLinks(),
     {
       ...SWR_CONFIG,
-      fallbackData: [],
+      fallbackData: initialAppLinks.length > 0 ? initialAppLinks : [],
     }
   )
+
+  // If we have initial data, don't show loading state on first render
+  const showLoading = isLoading && initialAppLinks.length === 0
 
   // Нормализуем данные
   const links: AppLinksByPlatform = React.useMemo(() => {
@@ -261,7 +280,7 @@ export function DownloadButtons({
   }, [links, showQr])
 
   // Состояние загрузки
-  if (isLoading) {
+  if (showLoading) {
     return <DownloadButtonsSkeleton showQr={showQr} direction={direction} />
   }
 

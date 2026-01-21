@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 ============================================================================= */
 
 const headingVariants = cva(
-  'font-heading font-bold leading-tight text-[var(--color-secondary)]',
+  'font-heading font-bold leading-tight text-[var(--color-secondary)] break-words',
   {
     variants: {
       level: {

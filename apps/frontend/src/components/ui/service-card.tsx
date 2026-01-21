@@ -58,7 +58,7 @@ export function ServiceRow({
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <h3
           className={cn(
             'text-lg md:text-xl font-semibold',
@@ -66,13 +66,14 @@ export function ServiceRow({
             'transition-colors duration-200',
             'truncate',
             'mb-1.5',
-            'group-hover:!text-[#FF5722]'
+            'group-hover:!text-[#FF5722]',
+            'block w-full'
           )}
         >
           {service.title}
         </h3>
         {service.options_count && (
-          <p className="text-[13px] md:text-sm text-[var(--foreground-secondary)] truncate">
+          <p className="text-[13px] md:text-sm text-[var(--foreground-secondary)] truncate block w-full">
             {service.options_count} опций
           </p>
         )}

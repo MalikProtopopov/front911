@@ -1,27 +1,30 @@
 'use client'
 
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
 import { PageLayout } from '@/components/layout'
-import { MapPin, ChevronRight } from "lucide-react"
+import { CityGrid } from "@/components/ui"
 import { useCities } from "@/lib/api/hooks"
 import { LoadingSpinner, ErrorMessage } from "@/components/common"
 import { HeroSection, PageCTA } from "@/components/patterns"
-import type { CityList } from "@/lib/api/generated"
+import type { CityList, Contact } from "@/lib/api/generated"
 
 interface CitiesListProps {
   initialCities?: CityList[]
+  initialContacts?: Contact[]
+  seoTitle?: string
 }
 
-export function CitiesList({ initialCities = [] }: CitiesListProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { cities, isLoading, isError, error } = useCities(
+export function CitiesList({ initialCities = [], initialContacts = [], seoTitle }: CitiesListProps) {
+  // SSR-only mode: uses server data, no client revalidation
+  const { cities, isLoading, isError } = useCities(
     { limit: 1000, ordering: 'display_order,title' },
     { fallbackData: initialCities.length > 0 ? initialCities : undefined }
   )
 
+  // Use SSR data (cities from hook includes fallbackData)
+  const displayCities = cities.length > 0 ? cities : initialCities
+
   // Group cities by first letter
-  const groupedCities = cities.reduce((acc, city) => {
+  const groupedCities = displayCities.reduce((acc, city) => {
     const firstLetter = city.title.charAt(0).toUpperCase()
     if (!acc[firstLetter]) {
       acc[firstLetter] = []
@@ -34,15 +37,17 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
     a.localeCompare(b, 'ru')
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialCities.length === 0
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayCities.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayCities.length === 0
 
   return (
     <PageLayout>
       {/* Hero */}
       <HeroSection
         id="cities-hero-section"
-        title="Города присутствия"
+        title={seoTitle || "Города присутствия"}
         subtitle={`Работаем в ${cities.length > 0 ? cities.length : 82} городах России. Найдите услуги автопомощи в вашем городе.`}
         breadcrumbs={[{ label: 'Города' }]}
       />
@@ -54,12 +59,11 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
             <div className="flex justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>
-          ) : isError ? (
+          ) : showError ? (
             <ErrorMessage 
               message="Не удалось загрузить список городов"
-              error={error}
             />
-          ) : cities.length === 0 ? (
+          ) : displayCities.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-[var(--foreground-secondary)]">
                 Список городов пуст
@@ -73,28 +77,10 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
                   <h2 className="text-3xl font-bold mb-8 text-[var(--color-primary)]">
                     {letter}
                   </h2>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {groupedCities[letter]?.map((city) => (
-                      <Link 
-                        key={city.slug} 
-                        href={`/cities/${city.slug}`} 
-                        className="group block cursor-pointer"
-                      >
-                        <Card className="hover:shadow-lg hover:border-[var(--color-primary)]/30 transition-all border-[var(--border)] h-full flex">
-                          <CardContent className="flex items-center gap-3 h-full w-full p-6">
-                            <MapPin className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0" />
-                            <span className="font-medium text-lg group-hover:text-[var(--color-primary)] transition-colors flex-1">
-                              {city.title}
-                            </span>
-                            <ChevronRight 
-                              className="w-5 h-5 text-[var(--foreground-tertiary)] opacity-70 group-hover:text-[var(--color-primary)] group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0" 
-                              strokeWidth={2.5}
-                            />
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
-                  </div>
+                  <CityGrid 
+                    cities={groupedCities[letter] || []} 
+                    columns={4}
+                  />
                 </div>
               ))}
             </div>
@@ -106,6 +92,7 @@ export function CitiesList({ initialCities = [] }: CitiesListProps) {
       <PageCTA
         title="Не нашли свой город?"
         description="Мы постоянно расширяем географию. Оставьте заявку, и мы сообщим о запуске в вашем городе."
+        initialContacts={initialContacts}
       />
     </PageLayout>
   )

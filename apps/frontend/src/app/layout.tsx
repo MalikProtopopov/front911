@@ -5,9 +5,11 @@ import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { YandexMetrika } from "@/lib/analytics"
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo"
-import { servicesService, contentService } from "@/lib/api/services"
+import { servicesService, contentService, documentsService } from "@/lib/api/services"
 import { logServerError } from "@/lib/utils/serverLogger"
 import type { ServiceList, Contact } from "@/lib/api/generated"
+import type { DocumentListItem } from "@/lib/api/services"
+import { Toaster } from 'sonner'
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -49,14 +51,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Fetch services and contacts on the server for Header/Footer
+  // Fetch services, contacts and documents on the server for Header/Footer
   let initialServices: ServiceList[] = []
   let initialContacts: Contact[] = []
+  let initialDocuments: DocumentListItem[] = []
   
   try {
-    [initialServices, initialContacts] = await Promise.all([
+    [initialServices, initialContacts, initialDocuments] = await Promise.all([
       servicesService.getAll(),
       contentService.getContacts(),
+      documentsService.getAll({ ordering: '-updated_at' }),
     ])
   } catch (error) {
     logServerError(error, 'Failed to fetch data for layout SSR', {
@@ -65,9 +69,18 @@ export default async function RootLayout({
     // Continue with empty arrays - client will try to fetch
   }
 
+  // API base URL for preconnect
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://45.144.221.92'
+  const apiOrigin = new URL(apiUrl).origin
+
   return (
     <html lang="ru">
       <head>
+        {/* Preconnect to critical origins for faster resource loading */}
+        <link rel="preconnect" href={apiOrigin} />
+        <link rel="dns-prefetch" href={apiOrigin} />
+        
+        {/* JSON-LD Structured Data */}
         <OrganizationJsonLd />
         <WebSiteJsonLd />
       </head>
@@ -75,7 +88,21 @@ export default async function RootLayout({
         <YandexMetrika />
         <Header initialServices={initialServices} initialContacts={initialContacts} />
         <main>{children}</main>
-        <Footer initialServices={initialServices} initialContacts={initialContacts} />
+        <Footer initialServices={initialServices} initialContacts={initialContacts} initialDocuments={initialDocuments} />
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            classNames: {
+              toast: 'bg-white border border-[var(--border)] shadow-lg rounded-xl',
+              title: 'text-[var(--foreground)] font-semibold',
+              description: 'text-[var(--foreground-secondary)]',
+              success: 'border-[var(--color-success)] bg-[var(--color-success)]/5',
+              error: 'border-red-500 bg-red-50',
+            },
+            duration: 4000,
+          }}
+          closeButton
+        />
       </body>
     </html>
   )

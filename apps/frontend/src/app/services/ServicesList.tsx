@@ -1,31 +1,35 @@
 'use client'
 
-import { Section, ServiceRow } from "@/components/ui"
+import { Section, ServiceList } from "@/components/ui"
 import { useServices } from "@/lib/api/hooks"
 import { SkeletonServiceCard } from "@/components/common/Skeleton"
 import { ErrorMessage } from "@/components/common/ErrorMessage"
 import { EmptyState } from "@/components/common/EmptyState"
-import { getServiceIcon } from "./serviceIcons"
-import type { ServiceList } from "@/lib/api/generated"
+import type { ServiceList as ServiceListType } from "@/lib/api/generated"
 
 interface ServicesListProps {
-  initialServices?: ServiceList[]
+  initialServices?: ServiceListType[]
 }
 
 export function ServicesList({ initialServices = [] }: ServicesListProps) {
-  // Use SWR with server-provided initial data for hydration
-  const { services, isLoading, isError, error, mutate } = useServices(
+  // SSR-only mode: uses server data, no client revalidation
+  const { services, isLoading, isError } = useServices(
     undefined,
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialServices.length === 0
+  // Use SSR data (services from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+
+  // Only show loading if no data at all
+  const showLoading = isLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showError = isError && displayServices.length === 0
 
   if (showLoading) {
     return (
       <Section spacing="lg">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="flex flex-col gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
               <SkeletonServiceCard key={i} />
@@ -36,20 +40,18 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
     )
   }
 
-  if (isError) {
+  if (showError) {
     return (
       <Section spacing="xl">
         <ErrorMessage 
           title="Не удалось загрузить услуги"
-          message={error instanceof Error ? error.message : "Попробуйте обновить страницу"}
-          showRetry
-          onRetry={() => mutate()}
+          message="Попробуйте обновить страницу"
         />
       </Section>
     )
   }
 
-  if (services.length === 0) {
+  if (displayServices.length === 0) {
     return (
       <Section spacing="xl">
         <EmptyState
@@ -62,19 +64,10 @@ export function ServicesList({ initialServices = [] }: ServicesListProps) {
 
   return (
     <Section spacing="lg">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col gap-3 md:gap-4">
-          {services.map((service, index) => (
-            <ServiceRow
-              key={service.slug}
-              service={service}
-              icon={getServiceIcon(service.slug, service.icon_url)}
-              href={`/services/${service.slug}`}
-              isLast={index === services.length - 1}
-            />
-          ))}
-        </div>
-      </div>
+      <ServiceList 
+        services={displayServices}
+        className="max-w-5xl mx-auto w-full"
+      />
     </Section>
   )
 }

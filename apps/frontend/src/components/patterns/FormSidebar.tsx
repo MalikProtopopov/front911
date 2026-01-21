@@ -3,7 +3,9 @@
  * Переиспользуемый сайдбар с формой LeadForm для использования в TwoColumnLayout
  */
 
-import { LeadForm } from '@/components/forms/LeadForm'
+import * as React from 'react'
+import { LeadForm, type LeadFormRef } from '@/components/forms/LeadForm'
+import type { LeadType } from '@/lib/api/services'
 
 export interface FormSidebarProps {
   /** ID города для привязки заявки */
@@ -14,6 +16,10 @@ export interface FormSidebarProps {
   title?: string
   /** Коллбек при успешной отправке */
   onSuccess?: () => void
+  /** Тип заявки (по умолчанию service) */
+  leadType?: LeadType
+  /** Ref для доступа к методам формы */
+  formRef?: React.RefObject<LeadFormRef | null>
 }
 
 /**
@@ -35,16 +41,20 @@ export function FormSidebar({
   serviceId,
   title = 'Оставить заявку',
   onSuccess,
+  leadType = 'service',
+  formRef,
 }: FormSidebarProps) {
   return (
     <div className="form-sidebar space-y-6">
       <LeadForm
+        ref={formRef}
         cityId={cityId}
         serviceId={serviceId}
         title={title}
         noBorder
         cardClassName="-mt-6"
         onSuccess={onSuccess}
+        leadType={leadType}
       />
     </div>
   )

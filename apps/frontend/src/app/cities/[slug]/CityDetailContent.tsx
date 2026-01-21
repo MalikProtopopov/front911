@@ -3,34 +3,55 @@
 import Link from 'next/link'
 import { 
   TwoColumnLayout,
-  ServiceRow,
+  ServiceList,
   Button
 } from '@/components/ui'
-import { PageLayout } from '@/components/layout'
-import { Phone, Clock, Star } from 'lucide-react'
 import { useCityDetail, useCityServices } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
-import { HeroSection, PageCTA, RichText, FormSidebar } from '@/components/patterns'
-import { getServiceIcon } from '@/app/services/serviceIcons'
-import type { CityDetail, ServiceList } from '@/lib/api/generated'
+import { PageCTA, RichText, FormSidebar } from '@/components/patterns'
+import type { CityDetail, ServiceList as ServiceListType, Contact } from '@/lib/api/generated'
+import type { DeliveryZone } from '@/lib/api/services'
 
 interface CityDetailContentProps {
   slug: string
   initialCity?: CityDetail | null
-  initialServices?: ServiceList[]
+  initialServices?: ServiceListType[]
+  initialContacts?: Contact[]
+  deliveryZones?: DeliveryZone[]
+}
+
+/**
+ * City Detail Content - Client Component
+ * Hero is rendered in page.tsx (server) for optimal LCP
+ * This component handles interactive content below the fold
+ */
+// Format delivery zone price for display
+function formatDeliveryPrice(price: string): string {
+  const numPrice = parseFloat(price)
+  if (isNaN(numPrice) || numPrice === 0) {
+    return 'бесплатно'
+  }
+  return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
+}
+
+// Capitalize first letter of zone name
+function capitalizeZoneName(name: string): string {
+  if (!name) return name
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
 }
 
 export function CityDetailContent({ 
   slug, 
   initialCity,
-  initialServices = []
+  initialServices = [],
+  initialContacts = [],
+  deliveryZones = [],
 }: CityDetailContentProps) {
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { 
     city, 
     isLoading: cityLoading, 
-    isError: cityError, 
-    error: cityErrorData 
+    isError: cityError
   } = useCityDetail(slug, {
     fallbackData: initialCity ?? undefined
   })
@@ -43,110 +64,93 @@ export function CityDetailContent({
     fallbackData: initialServices.length > 0 ? initialServices : undefined
   })
 
-  // If we have initial data, don't show loading state on first render
-  const showCityLoading = cityLoading && !initialCity
-  const showServicesLoading = servicesLoading && initialServices.length === 0
-  const isLoading = showCityLoading || showServicesLoading
+  // Use SSR data (from hook includes fallbackData)
+  const displayCity = city ?? initialCity
+  const displayServices = services.length > 0 ? services : initialServices
 
-  if (isLoading) {
+  // Only show loading if no data at all
+  const showCityLoading = cityLoading && !displayCity
+  const showServicesLoading = servicesLoading && displayServices.length === 0
+  // Only show error if no data to display
+  const showCityError = cityError && !displayCity
+
+  // Show loading only if we don't have initial data
+  if (showCityLoading) {
     return (
-      <PageLayout className="flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <LoadingSpinner size="lg" />
-      </PageLayout>
+      </div>
     )
   }
 
-  if (cityError || !city) {
+  if (showCityError || !displayCity) {
     return (
-      <PageLayout className="flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию о городе"
-          error={cityErrorData}
         />
-      </PageLayout>
+      </div>
     )
   }
 
   // Extract city content
-  const cityContent = city.content as {
-    h1_title?: string
+  const cityContent = displayCity.content as {
     short_description?: string
     full_description?: string
-    partner_count?: number
-    avg_rating?: string
-    review_count?: number
   } | undefined
 
   return (
-    <PageLayout>
-      {/* Hero Section */}
-      <HeroSection
-        id="city-detail-hero-section"
-        title={cityContent?.h1_title || `Автопомощь в ${city.title}`}
-        subtitle={cityContent?.short_description || 
-          `Вызовите мастера для шиномонтажа, эвакуации или доставки топлива в ${city.title}. Работаем круглосуточно, приедем за 15-30 минут.`
-        }
-        breadcrumbs={[
-          { label: 'Все города', href: '/cities' },
-          { label: city.title }
-        ]}
-        containerSize="wide"
-      >
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-6">
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Clock className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Круглосуточно</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Phone className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Приедем за 15-30 мин</span>
-          </div>
-          {cityContent?.avg_rating && parseFloat(cityContent.avg_rating) > 0 && (
-            <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-              <Star className="w-5 h-5 text-[var(--color-warning)]" />
-              <span>{cityContent.avg_rating} ({cityContent?.review_count || 0} отзывов)</span>
-            </div>
-          )}
-        </div>
-      </HeroSection>
-
+    <>
       {/* Main Content */}
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-7xl">
           <TwoColumnLayout
             sidebar={
               <FormSidebar 
-                cityId={city.id} 
-                title={`Заказать в ${city.title}`}
+                cityId={displayCity.id} 
+                title={`Заказать в ${displayCity.title}`}
               />
             }
             sidebarPosition="right"
           >
             {/* Services */}
-            <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-8 md:pt-12">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6">
-                Услуги в {city.title}
-              </h2>
+            <div className="space-y-10 md:space-y-12 pb-12 md:pb-16 pt-4 md:pt-6">
+              <div className="mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold">
+                  Услуги в {displayCity.title}
+                </h2>
+                {/* Delivery zones info */}
+                {deliveryZones.length > 0 && (
+                  <div className="mt-3 text-sm text-[var(--foreground-secondary)]">
+                    <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && (
+                      <span>
+                        {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).map(z => capitalizeZoneName(z.zone_name)).join(', ')} — {formatDeliveryPrice('0')}
+                      </span>
+                    )}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) === 0).length > 0 && 
+                     deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).length > 0 && ', '}
+                    {deliveryZones.filter(z => parseFloat(z.delivery_price) > 0).map((zone, index, arr) => (
+                      <span key={zone.zone_name}>
+                        {capitalizeZoneName(zone.zone_name)} — {formatDeliveryPrice(zone.delivery_price)}
+                        {index < arr.length - 1 && ', '}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {showServicesLoading ? (
                 <div className="flex justify-center py-12">
                   <LoadingSpinner />
                 </div>
-              ) : servicesError ? (
+              ) : (servicesError && displayServices.length === 0) ? (
                 <ErrorMessage message="Не удалось загрузить услуги" />
-              ) : services.length > 0 ? (
-                <div className="flex flex-col gap-4 md:gap-5">
-                  {services.map((service, index) => (
-                    <ServiceRow
-                      key={service.slug}
-                      service={service}
-                      icon={getServiceIcon(service.slug, service.icon_url)}
-                      href={`/cities/${slug}/services/${service.slug}`}
-                      isLast={index === services.length - 1}
-                    />
-                  ))}
-                </div>
+              ) : displayServices.length > 0 ? (
+                <ServiceList
+                  services={displayServices}
+                  getHref={(service) => `/cities/${slug}/services/${service.slug}`}
+                />
               ) : (
                 <div className="text-center py-12 bg-[var(--background-secondary)] rounded-xl">
                   <p className="text-[var(--foreground-secondary)]">
@@ -162,7 +166,7 @@ export function CityDetailContent({
               {cityContent?.full_description && (
                 <div className="mt-20 md:mt-24 pt-16 md:pt-20 pb-8 md:pb-12">
                   <h2 className="text-2xl md:text-3xl font-bold mb-8">
-                    О сервисе в {city.title}
+                    О сервисе в {displayCity.title}
                   </h2>
                   <RichText 
                     content={cityContent.full_description}
@@ -177,13 +181,14 @@ export function CityDetailContent({
 
       {/* CTA Section */}
       <PageCTA
-        title={`Нужна помощь на дороге в ${city.title}?`}
+        title={`Нужна помощь на дороге в ${displayCity.title}?`}
         description="Наши специалисты готовы помочь вам 24/7. Позвоните или оставьте заявку — мы приедем в кратчайшие сроки."
         actions={[
           { label: 'Позвонить', showPhoneIcon: true },
           { label: 'Все города', href: '/cities', variant: 'outline' }
         ]}
+        initialContacts={initialContacts}
       />
-    </PageLayout>
+    </>
   )
 }

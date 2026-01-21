@@ -1,167 +1,184 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { 
   TwoColumnLayout,
   Button,
   PriceAccordion,
   PriceAccordionCategory,
-  PriceRow,
+  PriceRowExpandable,
   PriceSectionHeader,
   PriceEmptyState
 } from '@/components/ui'
-import { PageLayout } from '@/components/layout'
-import { 
-  MapPin, 
-  Phone, 
-  Clock, 
-  CheckCircle,
-  Truck
-} from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { useCityService } from '@/lib/api/hooks'
 import { LoadingSpinner, ErrorMessage } from '@/components/common'
-import { PageCTA, HeroSection, RichText, FormSidebar } from '@/components/patterns'
-import type { CityServiceOption, CityServiceResponse } from '@/lib/api/services'
+import { PageCTA, RichText, FormSidebar } from '@/components/patterns'
+import type { CityServiceOption, CityServiceResponse, DeliveryZone } from '@/lib/api/services'
+import type { Contact } from '@/lib/api/generated'
+import type { LeadFormRef } from '@/components/forms/LeadForm'
 
 interface CityServiceContentProps {
   citySlug: string
   serviceSlug: string
   initialData?: CityServiceResponse | null
+  initialContacts?: Contact[]
+  deliveryZones?: DeliveryZone[]
 }
 
-// Group options by category
+// Group options by category based on prices
 function groupOptionsByCategory(options: CityServiceOption[]) {
   const grouped: Record<string, CityServiceOption[]> = {}
   const uncategorized: CityServiceOption[] = []
+  const categorySet = new Set<string>()
 
   options.forEach(option => {
-    if (option.price?.technic_category) {
+    // Check if option has prices
+    if (option.prices && option.prices.length > 0) {
+      // Group by technic_category_title from prices
+      const categoriesInOption = new Set<string>()
+      
+      option.prices.forEach(price => {
+        // Check if price is OptionPrice type (has technic_category_title)
+        if ('technic_category_title' in price && price.technic_category_title) {
+          categoriesInOption.add(price.technic_category_title)
+          categorySet.add(price.technic_category_title)
+        } else if ('technic_category' in price && price.technic_category) {
+          // Legacy format with technic_category
+          categoriesInOption.add(price.technic_category)
+          categorySet.add(price.technic_category)
+        }
+      })
+      
+      // If option has prices with categories, add to those categories
+      if (categoriesInOption.size > 0) {
+        categoriesInOption.forEach(category => {
+          if (!grouped[category]) {
+            grouped[category] = []
+          }
+          // Only add option once per category (avoid duplicates)
+          if (!grouped[category].find(opt => opt.id === option.id)) {
+            grouped[category].push(option)
+          }
+        })
+      } else {
+        // Option has prices but no categories (or prices without categories)
+        uncategorized.push(option)
+      }
+    } else if (option.price?.technic_category) {
+      // Fallback to legacy single price structure
       const category = option.price.technic_category
       if (!grouped[category]) {
         grouped[category] = []
       }
       grouped[category].push(option)
+      categorySet.add(category)
     } else {
+      // No price information at all
       uncategorized.push(option)
     }
   })
 
-  return { grouped, uncategorized }
+  return {
+    grouped,
+    uncategorized,
+    categoryNames: Array.from(categorySet)
+  }
 }
 
-
+/**
+ * City Service Content - Client Component
+ * Hero is rendered in page.tsx (server) for optimal LCP
+ * This component handles interactive content (prices, forms)
+ */
 export function CityServiceContent({ 
   citySlug, 
   serviceSlug,
-  initialData 
+  initialData,
+  initialContacts = [],
+  deliveryZones = [],
 }: CityServiceContentProps) {
-  // Use SWR with server-provided initial data for hydration
+  // Ref for form to set message
+  const formRef = useRef<LeadFormRef>(null)
+
+  // SSR-only mode: uses server data, no client revalidation
   const { 
-    city, 
-    service, 
-    options, 
-    content, 
-    seo,
-    isLoading, 
-    isError, 
-    error 
+    city,
+    service,
+    options,
+    content,
+    isLoading,
+    isError,
   } = useCityService(citySlug, serviceSlug, {
     fallbackData: initialData ?? undefined
   })
 
+  // Use SSR data (from hook includes fallbackData)
+  const displayCity = city ?? initialData?.city
+  const displayService = service ?? initialData?.service
+  const displayOptions = options ?? initialData?.options ?? []
+  const displayContent = content ?? initialData?.content
+
   // Group options by category
-  const { grouped, uncategorized } = useMemo(() => {
-    return groupOptionsByCategory(options)
-  }, [options])
+  const { grouped, uncategorized, categoryNames } = useMemo(() => {
+    return groupOptionsByCategory(displayOptions)
+  }, [displayOptions])
 
-  const categoryNames = Object.keys(grouped).sort()
+  // Handler for option/parameter selection
+  const handleOptionSelect = (message: string) => {
+    formRef.current?.setMessage(message)
+  }
 
-  // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && !initialData
+  // Only show loading if no data at all
+  const showLoading = isLoading && !initialData && !displayCity
+  // Only show error if no data to display
+  const showError = isError && !displayCity && !displayService
 
   if (showLoading) {
     return (
-      <PageLayout className="flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <LoadingSpinner size="lg" />
-      </PageLayout>
+      </div>
     )
   }
 
-  if (isError || !city || !service) {
+  if (showError || !displayCity || !displayService) {
     return (
-      <PageLayout className="flex items-center justify-center px-4">
+      <div className="flex items-center justify-center px-4 py-20">
         <ErrorMessage 
           message="Не удалось загрузить информацию об услуге"
-          error={error}
         />
-      </PageLayout>
+      </div>
     )
   }
 
-  const pageTitle = seo?.h1_title || content?.h1_title || `${service.title} в ${city.title}`
-
   return (
-    <PageLayout>
-      {/* Hero Section */}
-      <HeroSection
-        id="city-service-hero-section"
-        title={pageTitle}
-        subtitle={content?.meta_description || 
-          `Закажите ${service.title.toLowerCase()} в ${city.title}. Быстрый выезд мастера, прозрачные цены, работаем 24/7.`
-        }
-        breadcrumbs={[
-          { label: 'Все города', href: '/cities' },
-          { label: city.title, href: `/cities/${citySlug}` },
-          { label: service.title }
-        ]}
-        containerSize="wide"
-      >
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-6">
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Clock className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Выезд за 20-30 мин</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <Phone className="w-5 h-5 text-[var(--color-primary)]" />
-            <span>Работаем 24/7</span>
-          </div>
-          <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-            <CheckCircle className="w-5 h-5 text-[var(--color-success)]" />
-            <span>{options.length} опций с ценами</span>
-          </div>
-          {categoryNames.length > 0 && (
-            <div className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-              <Truck className="w-5 h-5 text-[var(--color-primary)]" />
-              <span>{categoryNames.length} категорий техники</span>
-            </div>
-          )}
-        </div>
-      </HeroSection>
-
+    <>
       {/* Main Content */}
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-4 max-w-7xl">
           <TwoColumnLayout
             sidebar={
               <FormSidebar 
-                cityId={city.id} 
-                serviceId={service.id}
-                title={`Заказать ${service.title.toLowerCase()}`}
+                cityId={displayCity.id} 
+                serviceId={displayService.id}
+                title="Заказать услугу"
+                formRef={formRef}
               />
             }
             sidebarPosition="right"
           >
             {/* Options with prices */}
-            <div className="py-8 md:py-12">
+            <div className="pt-4 md:pt-6 pb-8 md:pb-12">
               {/* Заголовок секции */}
               <PriceSectionHeader 
-                title={`Цены на ${service.title}`}
-                totalCount={options.length}
+                title={`Цены на услугу ${displayService.title}`}
+                totalCount={displayOptions.length}
+                deliveryZones={deliveryZones}
               />
 
-              {options.length === 0 ? (
+              {displayOptions.length === 0 || (categoryNames.length === 0 && uncategorized.length === 0) ? (
                 <PriceEmptyState message="Цены для данной услуги в этом городе пока не указаны.">
                   <Button asChild>
                     <Link href="/contacts">Узнать цены</Link>
@@ -170,52 +187,117 @@ export function CityServiceContent({
               ) : (
                 <PriceAccordion 
                   type="multiple" 
-                  defaultValue={categoryNames.length > 0 ? [`category-0`] : ['uncategorized']}
+                  defaultValue={categoryNames.length > 0 && categoryNames[0] ? [categoryNames[0]] : ['uncategorized']}
                 >
-                  {/* Options grouped by category */}
-                  {categoryNames.map((category, index) => (
+                  {/* Render categories */}
+                  {categoryNames.map((category) => (
                     <PriceAccordionCategory
                       key={category}
-                      value={`category-${index}`}
+                      value={category}
                       title={category}
-                      count={grouped[category]?.length}
-                      icon={<Truck />}
+                      count={grouped[category]?.length ?? 0}
                     >
-                      {grouped[category]?.map(option => (
-                        <PriceRow 
-                          key={option.id} 
-                          title={option.title}
-                          price={option.price?.amount}
-                        />
-                      ))}
+                      {grouped[category]?.map((option) => {
+                        // Filter prices for this category
+                        const categoryPrices = option.prices?.filter(p => {
+                          if ('technic_category_title' in p) {
+                            return p.technic_category_title === category
+                          }
+                          if ('technic_category' in p) {
+                            return p.technic_category === category
+                          }
+                          return false
+                        }) ?? []
+
+                        // Get min price for display
+                        const minPrice = categoryPrices.length > 0 
+                          ? Math.min(...categoryPrices.map(p => Number(p.amount)))
+                          : Number(option.price?.amount ?? 0)
+
+                        return (
+                          <PriceRowExpandable
+                            key={option.id}
+                            title={option.title}
+                            basePrice={minPrice}
+                            hasParameters={option.has_parameters}
+                            parameterTypes={option.parameter_types}
+                            onSelect={handleOptionSelect}
+                          />
+                        )
+                      })}
                     </PriceAccordionCategory>
                   ))}
 
-                  {/* Uncategorized options */}
+                  {/* Render uncategorized options */}
                   {uncategorized.length > 0 && (
                     <PriceAccordionCategory
                       value="uncategorized"
-                      title="Прочие услуги"
+                      title="Другие опции"
                       count={uncategorized.length}
-                      icon={<Truck />}
                     >
-                      {uncategorized.map(option => (
-                        <PriceRow 
-                          key={option.id} 
-                          title={option.title}
-                          price={option.price?.amount}
-                        />
-                      ))}
+                      {uncategorized.map((option) => {
+                        // Get prices without category
+                        const pricesWithoutCategory = option.prices?.filter(p => {
+                          if ('technic_category_title' in p) {
+                            return !p.technic_category_title
+                          }
+                          if ('technic_category' in p) {
+                            return !p.technic_category
+                          }
+                          return true
+                        }) ?? []
+
+                        const minPrice = pricesWithoutCategory.length > 0
+                          ? Math.min(...pricesWithoutCategory.map(p => Number(p.amount)))
+                          : Number(option.price?.amount ?? 0)
+
+                        return (
+                          <PriceRowExpandable
+                            key={option.id}
+                            title={option.title}
+                            basePrice={minPrice}
+                            hasParameters={option.has_parameters}
+                            parameterTypes={option.parameter_types}
+                            onSelect={handleOptionSelect}
+                          />
+                        )
+                      })}
                     </PriceAccordionCategory>
                   )}
                 </PriceAccordion>
               )}
 
               {/* Service description */}
-              {content?.description && (
+              {displayContent?.description && (
                 <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
                   <RichText 
-                    content={content.description}
+                    content={displayContent.description}
+                    variant="service"
+                  />
+                </div>
+              )}
+
+              {/* Benefits (Преимущества) */}
+              {displayContent?.benefits_html && (
+                <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-8">
+                    Преимущества
+                  </h2>
+                  <RichText 
+                    content={displayContent.benefits_html}
+                    variant="service"
+                  />
+                </div>
+              )}
+
+              {/* How it works (Как это работает) */}
+              {displayContent?.how_it_works_html && (
+                <div className="mt-20 md:mt-24 pt-12 md:pt-16 pb-8 md:pb-12">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-8">
+                    Как это работает
+                  </h2>
+                  <RichText 
+                    content={displayContent.how_it_works_html}
                     variant="service"
                   />
                 </div>
@@ -232,13 +314,14 @@ export function CityServiceContent({
         actions={[
           { label: 'Позвонить', showPhoneIcon: true },
           { 
-            label: `Все услуги в ${city.title}`, 
+            label: `Все услуги в ${displayCity.title}`, 
             href: `/cities/${citySlug}`, 
             variant: 'outline',
             icon: <MapPin className="w-5 h-5 mr-2" />
           },
         ]}
+        initialContacts={initialContacts}
       />
-    </PageLayout>
+    </>
   )
 }

@@ -3,8 +3,17 @@
  */
 
 export { servicesService, type GetServicesParams } from './services.service'
-export { citiesService, type GetCitiesParams, type CityServiceResponse, type CityServiceOption } from './cities.service'
-export { leadsService, captureUtmParams, getCurrentPageUrl, type CreateLeadData } from './leads.service'
+export { 
+  citiesService, 
+  type GetCitiesParams, 
+  type CityServiceResponse, 
+  type CityServiceOption,
+  type ParameterValue,
+  type ParameterType,
+  type ParameterPriceItem,
+  type DeliveryZone,
+} from './cities.service'
+export { leadsService, captureUtmParams, getCurrentPageUrl, getFullPageUrl, type CreateLeadData, type LeadType } from './leads.service'
 export { seoService, type GetSeoMetaParams } from './seo.service'
 export { 
   contentService, 
@@ -14,4 +23,11 @@ export {
   type GetAppLinksParams,
   type GetOptionsParams,
 } from './content.service'
+export { 
+  documentsService, 
+  type DocumentListItem,
+  type DocumentDetail,
+  type DocumentListResponse,
+  type GetDocumentsParams,
+} from './documents.service'
 

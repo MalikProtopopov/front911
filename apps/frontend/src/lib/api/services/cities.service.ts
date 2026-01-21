@@ -3,8 +3,8 @@
  * Handles all city-related API calls
  */
 
-import { Service } from '../client'
-import type { CityList, CityDetail, PaginatedCityListList, ServiceList } from '../client'
+import { Service, OpenAPI } from '../client'
+import type { CityList, CityDetail, PaginatedCityListList, ServiceList, OptionPrice } from '../client'
 import { ApiError } from '@/lib/errors'
 
 export interface GetCitiesParams {
@@ -19,17 +19,62 @@ export interface CityDetailWithServices extends CityDetail {
   services?: ServiceList[]
 }
 
+// Parameter value with price modifier
+export interface ParameterValue {
+  id: number
+  value: string
+  display_name: string
+  price_modifier: string
+}
+
+// Parameter type (e.g., "radius", "fuel_type")
+export interface ParameterType {
+  code: string
+  title: string
+  is_required: boolean
+  values: ParameterValue[]
+}
+
+// Parameter price item
+export interface ParameterPriceItem {
+  value_id: number
+  display_name: string
+  price_modifier: string
+}
+
 export interface CityServiceOption {
   id: number
   title: string
+  description?: string
   service_id: number
   service_title: string
   service_slug: string
   is_active: boolean
+  // Legacy single price (from base endpoint - only one price per option)
   price: {
     amount: string
     technic_category: string | null
   } | null
+  // All prices for this option in the current city
+  // From new endpoint: /api/website/cities/{city_slug}/services/{service_slug}/options/
+  prices: Array<{
+    amount: string
+    technic_category: string | null
+  }> | OptionPrice[]
+  // NEW: Flag indicating if option has parameters
+  has_parameters?: boolean
+  // NEW: Parameter types with their values and price modifiers
+  parameter_types?: ParameterType[]
+  // NEW: Parameter prices grouped by parameter type code
+  parameter_prices?: Record<string, ParameterPriceItem[]>
+}
+
+// Delivery zone for a city
+export interface DeliveryZone {
+  id: number
+  zone_name: string
+  location_status: 'in_city' | 'out_city'
+  delivery_price: string
 }
 
 export interface CityServiceResponse {
@@ -51,6 +96,7 @@ export interface CityServiceResponse {
     meta_title?: string
     meta_description?: string
     h1_title?: string
+    short_description?: string
     description?: string
     how_it_works_html?: string
     benefits_html?: string
@@ -142,20 +188,194 @@ export const citiesService = {
   },
 
   /**
+   * Get options for service in city using new endpoint
+   * GET /api/website/cities/{city_slug}/services/{service_slug}/options/
+   */
+  getServiceOptionsByCity: async (
+    citySlug: string,
+    serviceSlug: string,
+    technicCategoryId?: number,
+    technicCategoryTitle?: string
+  ): Promise<CityServiceOption[]> => {
+    try {
+      const url = `${OpenAPI.BASE}/api/website/cities/${citySlug}/services/${serviceSlug}/options/`
+      const queryParams = new URLSearchParams()
+      
+      if (technicCategoryId) {
+        queryParams.append('technic_category', technicCategoryId.toString())
+      }
+      if (technicCategoryTitle) {
+        queryParams.append('technic_category__title', technicCategoryTitle)
+      }
+      
+      const fullUrl = queryParams.toString() ? `${url}?${queryParams.toString()}` : url
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch options: ${response.status} ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      
+      // Transform prices from new format to OptionPrice format
+      const transformedOptions: CityServiceOption[] = (Array.isArray(data) ? data : []).map((option: any) => {
+        // Transform prices array from new format to OptionPrice format
+        const transformedPrices: OptionPrice[] = (option.prices || []).map((price: any, index: number) => ({
+          id: index, // Temporary ID
+          city_slug: citySlug,
+          city_title: '', // Will be filled from city data
+          technic_category_id: null,
+          technic_category_title: price.technic_category || null,
+          amount: price.amount,
+        }))
+        
+        return {
+          ...option,
+          prices: transformedPrices,
+        } as CityServiceOption
+      })
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[getServiceOptionsByCity] Loaded ${transformedOptions.length} options for ${citySlug}/${serviceSlug}`)
+      }
+      
+      return transformedOptions
+    } catch (error) {
+      console.error('[getServiceOptionsByCity] Error:', error)
+      throw ApiError.fromUnknown(error)
+    }
+  },
+
+  /**
    * Get service detail in a specific city
+   * Uses new endpoint /api/website/cities/{city_slug}/services/{service_slug}/options/ for options
    */
   getServiceByCity: async (
     citySlug: string,
     serviceSlug: string
   ): Promise<CityServiceResponse> => {
     try {
+      // Step 1: Get base information (city, service, content, seo)
       const response = await Service.websiteCitiesServicesRetrieve(
         citySlug,
         serviceSlug
       )
-      return response as unknown as CityServiceResponse
+      
+      // Debug logging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getServiceByCity] Raw API response:', response)
+      }
+      
+      // Step 2: Load all options with prices using new endpoint
+      let optionsWithPrices: CityServiceOption[] = []
+      try {
+        const url = `${OpenAPI.BASE}/api/website/cities/${citySlug}/services/${serviceSlug}/options/`
+        
+        const fetchResponse = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!fetchResponse.ok) {
+          throw new Error(`Failed to fetch options: ${fetchResponse.status} ${fetchResponse.statusText}`)
+        }
+        
+        const data = await fetchResponse.json()
+        
+        // Transform prices from new format to OptionPrice format
+        const cityTitle = response.city?.title || ''
+        optionsWithPrices = (Array.isArray(data) ? data : []).map((option: any) => {
+          // Transform prices array from new format to OptionPrice format
+          const transformedPrices: OptionPrice[] = (option.prices || []).map((price: any, index: number) => ({
+            id: index, // Temporary ID
+            city_slug: citySlug,
+            city_title: cityTitle,
+            technic_category_id: null,
+            technic_category_title: price.technic_category || null,
+            amount: price.amount,
+          }))
+          
+          return {
+            ...option,
+            prices: transformedPrices,
+          } as CityServiceOption
+        })
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[getServiceByCity] Options loaded from new endpoint:', optionsWithPrices.length)
+          console.log('[getServiceByCity] Options with prices:', optionsWithPrices)
+        }
+      } catch (error) {
+        console.warn('[getServiceByCity] Failed to load options from new endpoint, falling back to base response:', error)
+        // Fallback: use options from base response if available
+        const baseOptions = Array.isArray(response?.options) ? response.options : []
+        optionsWithPrices = baseOptions.map((option: any) => ({
+          ...option,
+          prices: option.price ? [{
+            id: 0,
+            city_slug: citySlug,
+            city_title: response.city?.title || '',
+            technic_category_id: null,
+            technic_category_title: option.price.technic_category,
+            amount: option.price.amount,
+          }] : [],
+        })) as CityServiceOption[]
+      }
+      
+      const mappedResponse: CityServiceResponse = {
+        ...response,
+        options: optionsWithPrices,
+      } as CityServiceResponse
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getServiceByCity] Final response:', mappedResponse)
+        console.log('[getServiceByCity] Options count:', optionsWithPrices.length)
+        console.log('[getServiceByCity] Options with prices count:', optionsWithPrices.filter(opt => opt.prices && opt.prices.length > 0).length)
+        console.log('[getServiceByCity] Options without prices count:', optionsWithPrices.filter(opt => !opt.prices || opt.prices.length === 0).length)
+      }
+      
+      return mappedResponse
     } catch (error) {
       throw ApiError.fromUnknown(error)
+    }
+  },
+
+  /**
+   * Get delivery zones for a city
+   * @param cityId - City ID
+   * @returns Array of delivery zones with prices
+   */
+  getDeliveryZones: async (cityId: number): Promise<DeliveryZone[]> => {
+    try {
+      const baseUrl = OpenAPI.BASE || 'http://localhost:8001'
+      const fetchResponse = await fetch(`${baseUrl}/api/pricing/cities/${cityId}/delivery-zones/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        next: { revalidate: 3600 }, // Cache for 1 hour
+      })
+
+      if (!fetchResponse.ok) {
+        if (fetchResponse.status === 404) {
+          return [] // No delivery zones for this city
+        }
+        throw new Error(`Failed to fetch delivery zones: ${fetchResponse.status}`)
+      }
+
+      const data = await fetchResponse.json()
+      return data.results || data || []
+    } catch (error) {
+      console.warn('[citiesService.getDeliveryZones] Failed to fetch delivery zones:', error)
+      return []
     }
   },
 }

@@ -1,13 +1,13 @@
 'use client'
 
 /**
- * SWR hooks for Cities (Client-side only)
- * Support server-provided initial data for SSR hydration
+ * SWR hooks for Cities (SSR-first mode)
+ * Uses server-provided initial data, fetches client-side if SSR data is empty
  */
 
 import useSWR, { type SWRConfiguration } from 'swr'
 import { citiesService, type GetCitiesParams, type CityServiceResponse } from '../services'
-import { QUERY_KEYS, SWR_CONFIG } from '@/lib/config/constants'
+import { QUERY_KEYS, getSWRConfig } from '@/lib/config/constants'
 import type { CityList, CityDetail, ServiceList } from '../generated'
 
 interface HookOptions<T> {
@@ -23,13 +23,17 @@ export function useCities(
   params?: GetCitiesParams,
   options?: HookOptions<CityList[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const citiesKey = QUERY_KEYS?.CITIES?.ALL ?? 'cities'
+  
+  // Check if fallback data is empty (SSR failed or returned empty)
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
+  
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityList[]>(
-    [QUERY_KEYS.CITIES.ALL, params],
+    [citiesKey, params],
     () => citiesService.getAll(params),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<CityList[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<CityList[]>
   )
 
   return {
@@ -51,13 +55,20 @@ export function useCityDetail(
   slug: string | null | undefined,
   options?: HookOptions<CityDetail>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.CITIES?.DETAIL 
+        ? QUERY_KEYS.CITIES.DETAIL(slug)
+        : `cities/${slug}`)
+    : null
+
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityDetail>(
-    slug ? QUERY_KEYS.CITIES.DETAIL(slug) : null,
+    cacheKey,
     () => (slug ? citiesService.getBySlug(slug) : Promise.reject('No slug')),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData,
-    } as SWRConfiguration<CityDetail>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<CityDetail>
   )
 
   return {
@@ -79,13 +90,20 @@ export function useCityServices(
   slug: string | null | undefined,
   options?: HookOptions<ServiceList[]>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = slug
+    ? (QUERY_KEYS?.CITIES?.SERVICES 
+        ? QUERY_KEYS.CITIES.SERVICES(slug)
+        : `cities/${slug}/services`)
+    : null
+
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData || fallbackData.length === 0
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<ServiceList[]>(
-    slug ? QUERY_KEYS.CITIES.SERVICES(slug) : null,
+    cacheKey,
     () => (slug ? citiesService.getServices(slug) : Promise.reject('No slug')),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData ?? [],
-    } as SWRConfiguration<ServiceList[]>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<ServiceList[]>
   )
 
   return {
@@ -109,25 +127,37 @@ export function useCityService(
   serviceSlug: string | null | undefined,
   options?: HookOptions<CityServiceResponse>
 ) {
+  // Create cache key with fallback in case QUERY_KEYS is not available during SSR
+  const cacheKey = citySlug && serviceSlug
+    ? (QUERY_KEYS?.CITY_SERVICE?.DETAIL 
+        ? QUERY_KEYS.CITY_SERVICE.DETAIL(citySlug, serviceSlug)
+        : `cities/${citySlug}/services/${serviceSlug}`)
+    : null
+
+  const fallbackData = options?.fallbackData
+  const isEmpty = !fallbackData
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<CityServiceResponse>(
-    citySlug && serviceSlug
-      ? QUERY_KEYS.CITY_SERVICE.DETAIL(citySlug, serviceSlug)
-      : null,
+    cacheKey,
     () =>
       citySlug && serviceSlug
         ? citiesService.getServiceByCity(citySlug, serviceSlug)
         : Promise.reject('Missing slugs'),
-    {
-      ...SWR_CONFIG,
-      fallbackData: options?.fallbackData,
-    } as SWRConfiguration<CityServiceResponse>
+    getSWRConfig(fallbackData, isEmpty) as SWRConfiguration<CityServiceResponse>
   )
+
+  // Ensure options is always an array
+  const optionsArray = Array.isArray(data?.options) 
+    ? data.options 
+    : (Array.isArray(options?.fallbackData?.options) 
+        ? options.fallbackData.options 
+        : [])
 
   return {
     cityService: data,
     city: data?.city,
     service: data?.service,
-    options: data?.options ?? [],
+    options: optionsArray,
     content: data?.content,
     seo: data?.seo,
     isLoading,

@@ -17,33 +17,39 @@ import {
   VKIcon,
 } from "@/lib/utils/contacts"
 import type { ServiceList, Contact } from "@/lib/api/generated"
+import type { DocumentListItem } from "@/lib/api/services"
 
 interface FooterProps {
   initialServices?: ServiceList[]
   initialContacts?: Contact[]
+  initialDocuments?: DocumentListItem[]
 }
 
-export function Footer({ initialServices = [], initialContacts = [] }: FooterProps) {
+export function Footer({ initialServices = [], initialContacts = [], initialDocuments = [] }: FooterProps) {
   const currentYear = new Date().getFullYear()
   
-  // Use SWR with server-provided initial data for hydration
+  // SSR-only mode: uses server data, no client revalidation
   const { services } = useServices(
     undefined,
     { fallbackData: initialServices.length > 0 ? initialServices : undefined }
   )
 
   // Fetch contacts from API with server-provided initial data
-  const { contacts, isError: isContactsError } = useContacts(
+  const { contacts } = useContacts(
     undefined,
     { fallbackData: initialContacts.length > 0 ? initialContacts : undefined }
   )
 
+  // Use SSR data (from hook includes fallbackData)
+  const displayServices = services.length > 0 ? services : initialServices
+  const displayContacts = contacts.length > 0 ? contacts : initialContacts
+
   // Get contacts by type with fallbacks
-  const primaryPhone = getPrimaryPhone(contacts)
-  const primaryEmail = getPrimaryEmail(contacts)
-  const whatsappContacts = getContactsByType(contacts, 'whatsapp')
-  const telegramContacts = getContactsByType(contacts, 'telegram')
-  const vkContacts = getContactsByType(contacts, 'vk')
+  const primaryPhone = getPrimaryPhone(displayContacts)
+  const primaryEmail = getPrimaryEmail(displayContacts)
+  const whatsappContacts = getContactsByType(displayContacts, 'whatsapp')
+  const telegramContacts = getContactsByType(displayContacts, 'telegram')
+  const vkContacts = getContactsByType(displayContacts, 'vk')
 
   // Fallback values
   const fallbackSocial = getFallbackSocialLinks()
@@ -57,22 +63,14 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
   const telegramHref = telegramContacts[0] ? getContactLink(telegramContacts[0]) : fallbackSocial.telegram
   const vkHref = vkContacts[0] ? getContactLink(vkContacts[0]) : fallbackSocial.vk
 
-  // Log warning if using fallback
-  if (isContactsError && typeof window !== 'undefined') {
-    console.warn('[Footer] Contacts API unavailable, using fallback values')
-  }
-
   // Company links - only existing pages
   const companyLinks = [
     { label: "Для партнёров", href: "/partners" },
     { label: "Контакты", href: "/contacts" },
   ]
 
-  // Help links - only existing pages
-  const helpLinks = [
-    { label: "Политика конфиденциальности", href: "/privacy" },
-    { label: "Пользовательское соглашение", href: "/terms" },
-  ]
+  // Documents from API (first 5)
+  const documents = initialDocuments.slice(0, 5)
 
   return (
     <footer className="bg-[var(--background-dark)] text-[var(--foreground-inverse)] section-spacing">
@@ -80,7 +78,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
         {/* 4 Column Grid aligned to base grid system */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 section-gap-xl">
           {/* Company Info */}
-          <div>
+          <div className="text-left">
             <div className="flex items-center gap-3 mb-4">
               <div className="text-3xl font-bold leading-none text-[var(--color-primary)]">
                 911
@@ -119,14 +117,14 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Services from API */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">Услуги</h3>
             <ul className="space-y-3">
-              {services.slice(0, 5).map((service) => (
+              {displayServices.slice(0, 5).map((service) => (
                 <li key={service.slug}>
                   <Link
                     href={`/services/${service.slug}`}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
                     {service.title}
                   </Link>
@@ -144,7 +142,7 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Cities */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">География</h3>
             <ul className="space-y-3">
               <li>
@@ -159,39 +157,49 @@ export function Footer({ initialServices = [], initialContacts = [] }: FooterPro
           </div>
 
           {/* Company & Help */}
-          <div>
+          <div className="text-left">
             <h3 className="text-lg font-semibold mb-4 leading-tight">Компания</h3>
             <ul className="space-y-3 mb-6">
               {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
-            <h3 className="text-lg font-semibold mb-4 leading-tight">Помощь</h3>
+            <h3 className="text-lg font-semibold mb-4 leading-tight">Документы</h3>
             <ul className="space-y-3">
-              {helpLinks.map((link) => (
-                <li key={link.href}>
+              {documents.map((doc) => (
+                <li key={doc.slug}>
                   <Link
-                    href={link.href}
-                    className="text-sm text-gray-400 hover:text-[var(--color-primary)] transition-colors inline-block"
+                    href={`/documents/${doc.slug}`}
+                    className="text-sm text-gray-300 hover:text-[var(--color-primary)] hover:underline transition-colors inline-block"
                   >
-                    {link.label}
+                    {doc.title}
                   </Link>
                 </li>
               ))}
+              {documents.length > 0 && (
+                <li>
+                  <Link
+                    href="/documents"
+                    className="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors inline-block font-medium"
+                  >
+                    Все документы →
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-gray-700 mt-12">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="text-sm text-gray-400">
               © {currentYear} 911. Все права защищены.
             </div>

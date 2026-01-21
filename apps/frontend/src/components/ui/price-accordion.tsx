@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useState } from 'react'
 import {
   Accordion,
   AccordionItem,
@@ -8,6 +9,8 @@ import {
   AccordionContent
 } from './accordion'
 import { cn } from '@/lib/utils'
+import { ChevronDown } from 'lucide-react'
+import type { ParameterType } from '@/lib/api/services'
 
 // ============================================
 // Utility Functions
@@ -68,7 +71,7 @@ export function getOptionsLabel(count: number): string {
 interface PriceAccordionProps {
   children: React.ReactNode
   type?: 'single' | 'multiple'
-  defaultValue?: string[]
+  defaultValue?: string | string[]
   className?: string
 }
 
@@ -84,7 +87,7 @@ export function PriceAccordion({
       <Accordion
         type="single"
         collapsible
-        defaultValue={defaultValue?.[0]}
+        defaultValue={Array.isArray(defaultValue) ? defaultValue[0] : defaultValue}
         className={cn('space-y-3', className)}
       >
         {children}
@@ -95,7 +98,7 @@ export function PriceAccordion({
   return (
     <Accordion
       type="multiple"
-      defaultValue={defaultValue}
+      defaultValue={Array.isArray(defaultValue) ? defaultValue : (defaultValue ? [defaultValue] : undefined)}
       className={cn('space-y-3', className)}
     >
       {children}
@@ -128,8 +131,9 @@ export function PriceAccordionCategory({
     <AccordionItem 
       value={value} 
       className={cn(
-        'border border-[var(--border-primary)] rounded-xl overflow-hidden',
+        'rounded-xl overflow-hidden',
         'bg-[var(--background-primary)]',
+        'shadow-sm hover:shadow-md transition-shadow duration-200',
         className
       )}
     >
@@ -156,7 +160,7 @@ export function PriceAccordionCategory({
         </div>
       </AccordionTrigger>
       <AccordionContent className="px-0 pb-0">
-        <div className="divide-y divide-[var(--border-secondary)]">
+        <div>
           {children}
         </div>
       </AccordionContent>
@@ -173,19 +177,26 @@ interface PriceRowProps {
   price?: number | string | null
   description?: string
   className?: string
+  /** Callback when option is clicked */
+  onClick?: () => void
 }
 
 export function PriceRow({ 
   title, 
   price, 
   description,
-  className 
+  className,
+  onClick,
 }: PriceRowProps) {
   return (
     <div 
+      onClick={onClick}
       className={cn(
+        'price-row',
         'flex items-center justify-between py-4 px-5',
-        'hover:bg-[var(--background-secondary)] transition-colors duration-150',
+        'hover:bg-[var(--background-secondary)]',
+        'transition-colors duration-200',
+        'cursor-pointer',
         className
       )}
     >
@@ -200,7 +211,7 @@ export function PriceRow({
         )}
       </div>
       <div className="flex-shrink-0 text-right">
-        <span className="font-semibold text-[var(--color-primary)] whitespace-nowrap">
+        <span className="price-row__price font-semibold text-[var(--color-primary)] whitespace-nowrap">
           {formatPrice(price)}
         </span>
       </div>
@@ -209,20 +220,294 @@ export function PriceRow({
 }
 
 // ============================================
+// Utility: Format price without currency symbol
+// ============================================
+
+function formatPriceNumber(price: number | string | null | undefined): string {
+  if (price === null || price === undefined) return '—'
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price
+  if (isNaN(numPrice)) return '—'
+  return new Intl.NumberFormat('ru-RU').format(numPrice)
+}
+
+// ============================================
+// Utility: Normalize range display (R14 - R19 → R14–R19)
+// ============================================
+
+function normalizeRangeLabel(values: string[]): string {
+  if (values.length === 0) return ''
+  if (values.length === 1) return values[0] || ''
+  
+  // Sort values naturally (R14, R15, R16...)
+  const sorted = [...values].sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, '')) || 0
+    const numB = parseInt(b.replace(/\D/g, '')) || 0
+    return numA - numB
+  })
+  
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  
+  // Use en-dash for ranges
+  return `${first}–${last}`
+}
+
+// ============================================
+// PriceRowExpandable - Expandable price row with parameters
+// ============================================
+
+interface ParameterGroup {
+  modifier: number
+  values: string[]
+  id: string
+}
+
+interface PriceRowExpandableProps {
+  title: string
+  basePrice: number | string | null
+  hasParameters?: boolean
+  parameterTypes?: ParameterType[]
+  description?: string
+  className?: string
+  /** Callback when option or parameter is clicked */
+  onSelect?: (message: string) => void
+}
+
+export function PriceRowExpandable({
+  title,
+  basePrice,
+  hasParameters = false,
+  parameterTypes = [],
+  description,
+  className,
+  onSelect,
+}: PriceRowExpandableProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  
+  // If no parameters, render simple PriceRow
+  if (!hasParameters || !parameterTypes || parameterTypes.length === 0) {
+    return (
+      <PriceRow 
+        title={title} 
+        price={basePrice} 
+        description={description}
+        className={className}
+        onClick={() => onSelect?.(`Хочу оставить заявку на услугу "${title}"`)}
+      />
+    )
+  }
+  
+  // Parse base price
+  const basePriceNum = typeof basePrice === 'string' ? parseFloat(basePrice) : (basePrice ?? 0)
+  
+  // Group parameter values by price modifier for cleaner display
+  function groupValuesByModifier(values: ParameterType['values']): ParameterGroup[] {
+    const groups: ParameterGroup[] = []
+    
+    values.forEach(value => {
+      const modifier = parseFloat(value.price_modifier) || 0
+      const existingGroup = groups.find(g => g.modifier === modifier)
+      
+      if (existingGroup) {
+        existingGroup.values.push(value.display_name)
+      } else {
+        groups.push({ 
+          modifier, 
+          values: [value.display_name],
+          id: `group-${modifier}`
+        })
+      }
+    })
+    
+    // Sort by modifier ascending
+    return groups.sort((a, b) => a.modifier - b.modifier)
+  }
+  
+  // Get all groups for selection display
+  const allGroups = parameterTypes.flatMap(pt => groupValuesByModifier(pt.values))
+  const selectedGroup = allGroups.find(g => g.id === selectedGroupId) || allGroups[0]
+  const selectedLabel = selectedGroup ? normalizeRangeLabel(selectedGroup.values) : ''
+  
+  return (
+    <div 
+      className={cn(
+        'price-row-expandable group relative',
+        'hover:border-l-4 hover:border-[var(--color-primary)]',
+        'border-l-4 border-l-transparent',
+        'transition-all duration-200',
+        className
+      )}
+    >
+      {/* Header row - clickable */}
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          'flex items-center justify-between py-5 px-5',
+          'group-hover:bg-[var(--background-secondary)]/50',
+          'transition-all duration-200',
+          'cursor-pointer',
+          isExpanded && 'bg-[var(--background-secondary)]/30'
+        )}
+      >
+        <div className="flex-grow pr-6">
+          {/* Title - primary hierarchy */}
+          <p className="text-[var(--foreground-primary)] font-semibold text-base leading-tight">
+            {title}
+          </p>
+          {/* Collapsed state: show selected variant */}
+          {!isExpanded && selectedLabel && (
+            <p className="text-sm text-[var(--foreground-tertiary)] mt-1.5 flex items-center gap-1.5">
+              <span className="text-[var(--foreground-secondary)]">{parameterTypes[0]?.title}:</span>
+              <span>{selectedLabel}</span>
+            </p>
+          )}
+          {description && !selectedLabel && (
+            <p className="text-sm text-[var(--foreground-tertiary)] mt-1">
+              {description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Price - same style as regular options */}
+          <span className="font-semibold text-[var(--color-primary)] text-sm whitespace-nowrap tabular-nums">
+            от {formatPriceNumber(basePrice)} ₽
+          </span>
+          <ChevronDown 
+            className={cn(
+              'w-4 h-4 text-[var(--foreground-tertiary)]',
+              'transition-transform duration-200 ease-out',
+              isExpanded && 'rotate-180'
+            )}
+          />
+        </div>
+      </div>
+      
+      {/* Expanded content with parameters */}
+      {isExpanded && (
+        <div className="overflow-hidden group-hover:bg-[var(--background-secondary)]/30 transition-colors duration-200">
+          {parameterTypes.map((paramType) => {
+            const groups = groupValuesByModifier(paramType.values)
+            
+            return (
+              <div key={paramType.code} className="px-5 pt-4 pb-3">
+                {/* Parameter label - clean, no background */}
+                <p className="text-xs font-medium text-[var(--foreground-tertiary)] uppercase tracking-wide mb-3">
+                  {paramType.title}
+                </p>
+                
+                {/* Options as selectable rows */}
+                <div className="space-y-0.5">
+                  {groups.map((group, index) => {
+                    const totalPrice = basePriceNum + group.modifier
+                    const valuesLabel = normalizeRangeLabel(group.values)
+                    
+                    return (
+                      <div 
+                        key={group.id}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedGroupId(group.id)
+                          // Generate message with proper declension
+                          const paramTitle = paramType.title.toLowerCase()
+                          const paramValue = valuesLabel
+                          // Use proper Russian grammar: "с параметром" for singular, "с параметрами" for plural
+                          const message = `Хочу оставить запрос на опцию "${title}" с параметром ${paramTitle} ${paramValue}`
+                          onSelect?.(message)
+                        }}
+                        className={cn(
+                          'flex items-center gap-3 py-3 px-3 -mx-1 rounded-lg',
+                          'cursor-pointer transition-all duration-150',
+                          // Zebra pattern (very subtle)
+                          index % 2 === 1 && 'bg-[var(--background-secondary)]/30',
+                          // Hover state only
+                          'hover:bg-[var(--color-primary)]/5'
+                        )}
+                      >
+                        {/* Radio indicator - always unselected style */}
+                        <div className={cn(
+                          'w-4 h-4 rounded-full border-2 flex-shrink-0',
+                          'flex items-center justify-center transition-colors',
+                          'border-[var(--foreground-tertiary)]/40'
+                        )}>
+                        </div>
+                        
+                        {/* Value label */}
+                        <span className={cn(
+                          'flex-grow text-sm',
+                          'text-[var(--foreground-secondary)]'
+                        )}>
+                          {valuesLabel}
+                        </span>
+                        
+                        {/* Price - aligned right with tabular nums */}
+                        <div className="flex items-baseline gap-2 flex-shrink-0 text-right min-w-[100px] justify-end">
+                          <span className={cn(
+                            'tabular-nums text-sm',
+                            'text-[var(--foreground-secondary)]'
+                          )}>
+                            {formatPriceNumber(totalPrice)} ₽
+                          </span>
+                          {group.modifier > 0 && (
+                            <span className="text-xs text-[var(--foreground-tertiary)] tabular-nums">
+                              +{formatPriceNumber(group.modifier)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================
 // PriceSectionHeader - Section title with count
 // ============================================
+
+interface DeliveryZoneDisplay {
+  zone_name: string
+  delivery_price: string
+}
 
 interface PriceSectionHeaderProps {
   title: string
   totalCount?: number
+  deliveryZones?: DeliveryZoneDisplay[]
   className?: string
 }
 
 export function PriceSectionHeader({ 
   title, 
   totalCount,
+  deliveryZones,
   className 
 }: PriceSectionHeaderProps) {
+  // Format delivery zone price for display
+  const formatDeliveryPrice = (price: string): string => {
+    const numPrice = parseFloat(price)
+    if (isNaN(numPrice) || numPrice === 0) {
+      return 'бесплатно'
+    }
+    return `${new Intl.NumberFormat('ru-RU').format(numPrice)} ₽`
+  }
+
+  // Capitalize first letter of zone name
+  const capitalizeZoneName = (name: string): string => {
+    if (!name) return name
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+  }
+
+  // Filter out zones with zero price for cleaner display (only show paid ones)
+  const paidZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) > 0) || []
+  const freeZones = deliveryZones?.filter(z => parseFloat(z.delivery_price) === 0) || []
+
   return (
     <div className={cn('mb-6', className)}>
       <h2 className="text-2xl md:text-3xl font-bold text-[var(--foreground-primary)]">
@@ -232,6 +517,25 @@ export function PriceSectionHeader({
         <p className="text-[var(--foreground-secondary)] mt-2">
           Доступно {getOptionsLabel(totalCount)} с указанными ценами
         </p>
+      )}
+      
+      {/* Delivery zones info */}
+      {deliveryZones && deliveryZones.length > 0 && (
+        <div className="mt-3 text-sm text-[var(--foreground-secondary)]">
+          <span className="font-medium text-[var(--foreground-primary)]">Стоимость выезда мастера:</span>{' '}
+          {freeZones.length > 0 && (
+            <span>
+              {freeZones.map(z => capitalizeZoneName(z.zone_name)).join(', ')} — {formatDeliveryPrice('0')}
+            </span>
+          )}
+          {freeZones.length > 0 && paidZones.length > 0 && ', '}
+          {paidZones.map((zone, index) => (
+            <span key={zone.zone_name}>
+              {capitalizeZoneName(zone.zone_name)} — {formatDeliveryPrice(zone.delivery_price)}
+              {index < paidZones.length - 1 && ', '}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -257,7 +561,7 @@ export function PriceEmptyState({
       className={cn(
         'text-center py-12 px-6',
         'bg-[var(--background-secondary)] rounded-xl',
-        'border border-[var(--border-primary)]',
+        'shadow-sm',
         className
       )}
     >

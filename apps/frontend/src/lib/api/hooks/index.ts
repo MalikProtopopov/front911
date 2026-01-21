@@ -23,7 +23,11 @@ export {
   // SEO
   prefetchSeoMeta,
   generatePageMetadata,
+  generatePageSeo,
 } from './prefetch'
+
+// SEO types
+export type { SeoResult, SeoFallback } from './prefetch'
 
 // Re-export client hooks (these will only work in 'use client' components)
 // Note: Components importing these must have 'use client' directive

@@ -1,3 +1,4 @@
+import { Metadata } from 'next'
 import { 
   Accordion, 
   AccordionItemCard, 
@@ -8,6 +9,21 @@ import { Badge } from '@/components/ui'
 import { PageLayout } from '@/components/layout'
 import { HeroSection } from '@/components/patterns'
 import { HelpCircle } from 'lucide-react'
+import { generatePageSeo, prefetchSeoMeta } from '@/lib/api/hooks'
+import { logServerError } from '@/lib/utils/serverLogger'
+
+// ISR: revalidate every hour
+export const revalidate = 3600
+
+// Generate metadata from SEO API
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await generatePageSeo('/faq/', {
+    title: 'Частые вопросы — 911 Автопомощь',
+    description: 'Ответы на популярные вопросы о сервисе 911. Как заказать услугу, способы оплаты, время приезда мастера.',
+    h1Title: 'Частые вопросы',
+  })
+  return seo.metadata
+}
 
 const faqs = [
   {
@@ -40,49 +56,71 @@ const faqs = [
   },
 ]
 
-export default function FAQPage() {
+export default async function FAQPage() {
+  // Fetch SEO data for h1_title and schema_json
+  let seoData = null
+  try {
+    seoData = await prefetchSeoMeta('/faq/')
+  } catch (error) {
+    logServerError(error, 'Failed to fetch SEO for FAQ page SSR', { page: '/faq' })
+  }
+
+  // Get h1_title from SEO API or use default
+  const pageTitle = seoData?.h1_title || 'Частые вопросы'
+  const pageSubtitle = 'Ответы на популярные вопросы о нашем сервисе'
+
   return (
-    <PageLayout>
-      {/* Hero */}
-      <HeroSection
-        id="faq-hero-section"
-        title="Частые вопросы"
-        subtitle="Ответы на популярные вопросы о нашем сервисе"
-        breadcrumbs={[{ label: 'Частые вопросы' }]}
-        centered
-      />
+    <>
+      {/* JSON-LD Schema from SEO API */}
+      {seoData?.schema_json && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(seoData.schema_json) }}
+        />
+      )}
 
-      <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4 max-w-3xl">
-          {/* Заголовок с badge */}
-          <div className="flex items-baseline gap-3 mb-8">
-            <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)]">
-              Популярные вопросы
-            </h2>
-            <Badge 
-              variant="secondary" 
-              size="sm" 
-              className="bg-slate-100 text-slate-600"
-            >
-              {faqs.length} вопросов
-            </Badge>
+      <PageLayout>
+        {/* Hero */}
+        <HeroSection
+          id="faq-hero-section"
+          title={pageTitle}
+          subtitle={pageSubtitle}
+          breadcrumbs={[{ label: 'Частые вопросы' }]}
+          centered
+        />
+
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            {/* Заголовок с badge */}
+            <div className="flex items-baseline gap-3 mb-8">
+              <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)]">
+                Популярные вопросы
+              </h2>
+              <Badge 
+                variant="secondary" 
+                size="sm" 
+                className="bg-slate-100 text-slate-600"
+              >
+                {faqs.length} вопросов
+              </Badge>
+            </div>
+
+            {/* Аккордеон-карточки */}
+            <Accordion type="single" collapsible className="space-y-3">
+              {faqs.map((faq, index) => (
+                <AccordionItemCard key={index} value={`item-${index}`}>
+                  <AccordionTriggerCard icon={<HelpCircle className="w-5 h-5" />}>
+                    {faq.question}
+                  </AccordionTriggerCard>
+                  <AccordionContentCard>
+                    {faq.answer}
+                  </AccordionContentCard>
+                </AccordionItemCard>
+              ))}
+            </Accordion>
           </div>
-
-          {/* Аккордеон-карточки */}
-          <Accordion type="single" collapsible className="space-y-3">
-            {faqs.map((faq, index) => (
-              <AccordionItemCard key={index} value={`item-${index}`}>
-                <AccordionTriggerCard icon={<HelpCircle className="w-5 h-5" />}>
-                  {faq.question}
-                </AccordionTriggerCard>
-                <AccordionContentCard>
-                  {faq.answer}
-                </AccordionContentCard>
-              </AccordionItemCard>
-            ))}
-          </Accordion>
-        </div>
-      </section>
-    </PageLayout>
+        </section>
+      </PageLayout>
+    </>
   )
 }
