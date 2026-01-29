@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
+import * as React from "react";
+import Image from "next/image";
 
 /**
  * Interactive 3D Phone Mockup - Client Component
@@ -9,45 +9,48 @@ import Image from "next/image"
  * Optimized to reduce forced reflow by caching bounding rect
  */
 export function HeroPhoneMockup() {
-  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 })
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const rafRef = React.useRef<number | null>(null)
-  const rectRef = React.useRef<DOMRect | null>(null)
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number | null>(null);
+  const rectRef = React.useRef<DOMRect | null>(null);
 
   // Cache bounding rect on mount and resize to avoid forced reflow
   React.useEffect(() => {
     const updateRect = () => {
       if (containerRef.current) {
-        rectRef.current = containerRef.current.getBoundingClientRect()
+        rectRef.current = containerRef.current.getBoundingClientRect();
       }
-    }
-    
-    updateRect()
-    window.addEventListener('resize', updateRect, { passive: true })
-    
-    return () => {
-      window.removeEventListener('resize', updateRect)
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
-      }
-    }
-  }, [])
+    };
 
-  const handleMouseMove = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Use cached rect to avoid forced reflow
-    const rect = rectRef.current
-    if (!rect) return
-    
-    // Throttle with requestAnimationFrame
-    if (rafRef.current) return
-    
-    rafRef.current = requestAnimationFrame(() => {
-      const x = (e.clientX - rect.left) / rect.width - 0.5
-      const y = (e.clientY - rect.top) / rect.height - 0.5
-      setMousePosition({ x: x * 20, y: y * 20 })
-      rafRef.current = null
-    })
-  }, [])
+    updateRect();
+    window.addEventListener("resize", updateRect, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseMove = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      // Use cached rect to avoid forced reflow
+      const rect = rectRef.current;
+      if (!rect) return;
+
+      // Throttle with requestAnimationFrame
+      if (rafRef.current) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        setMousePosition({ x: x * 20, y: y * 20 });
+        rafRef.current = null;
+      });
+    },
+    [],
+  );
 
   return (
     <div
@@ -87,5 +90,5 @@ export function HeroPhoneMockup() {
         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[var(--color-accent)]/20 rounded-full animate-pulse delay-150"></div>
       </div>
     </div>
-  )
+  );
 }
