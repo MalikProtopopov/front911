@@ -248,7 +248,6 @@ export function DownloadButtons({
   showQr = false,
   className,
   qrClassName,
-  iosVariant = "default",
   androidVariant = "outline",
   size = "lg",
   direction = "row",
