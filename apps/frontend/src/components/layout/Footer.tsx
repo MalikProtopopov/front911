@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import Link from "next/link"
-import { Phone, Mail, MessageCircle } from "lucide-react"
-import { useServices, useContacts } from "@/lib/api/hooks"
-import { 
-  getContactLink, 
-  getPrimaryPhone, 
-  getPrimaryEmail, 
+import Link from "next/link";
+import { Phone, Mail, MessageCircle } from "lucide-react";
+import { useServices, useContacts } from "@/lib/api/hooks";
+import {
+  getContactLink,
+  getPrimaryPhone,
+  getPrimaryEmail,
   getContactsByType,
   getFallbackPhoneLink,
   getFallbackPhoneDisplay,
@@ -15,62 +15,76 @@ import {
   getFallbackSocialLinks,
   TelegramIcon,
   VKIcon,
-} from "@/lib/utils/contacts"
-import type { ServiceList, Contact } from "@/lib/api/generated"
-import type { DocumentListItem } from "@/lib/api/services"
+} from "@/lib/utils/contacts";
+import type { ServiceList, Contact } from "@/lib/api/generated";
+import type { DocumentListItem } from "@/lib/api/services";
 
 interface FooterProps {
-  initialServices?: ServiceList[]
-  initialContacts?: Contact[]
-  initialDocuments?: DocumentListItem[]
+  initialServices?: ServiceList[];
+  initialContacts?: Contact[];
+  initialDocuments?: DocumentListItem[];
+  count?: number | string;
 }
 
-export function Footer({ initialServices = [], initialContacts = [], initialDocuments = [] }: FooterProps) {
-  const currentYear = new Date().getFullYear()
-  
+export function Footer({
+  count,
+  initialServices = [],
+  initialContacts = [],
+  initialDocuments = [],
+}: FooterProps) {
+  const currentYear = new Date().getFullYear();
+
   // SSR-only mode: uses server data, no client revalidation
-  const { services } = useServices(
-    undefined,
-    { fallbackData: initialServices.length > 0 ? initialServices : undefined }
-  )
+  const { services } = useServices(undefined, {
+    fallbackData: initialServices.length > 0 ? initialServices : undefined,
+  });
 
   // Fetch contacts from API with server-provided initial data
-  const { contacts } = useContacts(
-    undefined,
-    { fallbackData: initialContacts.length > 0 ? initialContacts : undefined }
-  )
+  const { contacts } = useContacts(undefined, {
+    fallbackData: initialContacts.length > 0 ? initialContacts : undefined,
+  });
 
   // Use SSR data (from hook includes fallbackData)
-  const displayServices = services.length > 0 ? services : initialServices
-  const displayContacts = contacts.length > 0 ? contacts : initialContacts
+  const displayServices = services.length > 0 ? services : initialServices;
+  const displayContacts = contacts.length > 0 ? contacts : initialContacts;
 
   // Get contacts by type with fallbacks
-  const primaryPhone = getPrimaryPhone(displayContacts)
-  const primaryEmail = getPrimaryEmail(displayContacts)
-  const whatsappContacts = getContactsByType(displayContacts, 'whatsapp')
-  const telegramContacts = getContactsByType(displayContacts, 'telegram')
-  const vkContacts = getContactsByType(displayContacts, 'vk')
+  const primaryPhone = getPrimaryPhone(displayContacts);
+  const primaryEmail = getPrimaryEmail(displayContacts);
+  const whatsappContacts = getContactsByType(displayContacts, "whatsapp");
+  const telegramContacts = getContactsByType(displayContacts, "telegram");
+  const vkContacts = getContactsByType(displayContacts, "vk");
 
   // Fallback values
-  const fallbackSocial = getFallbackSocialLinks()
-  
+  const fallbackSocial = getFallbackSocialLinks();
+
   // Build contact data with fallbacks
-  const phoneHref = primaryPhone ? getContactLink(primaryPhone) : getFallbackPhoneLink()
-  const phoneDisplay = primaryPhone?.value || getFallbackPhoneDisplay()
-  const emailHref = primaryEmail ? getContactLink(primaryEmail) : `mailto:${getFallbackEmail()}`
-  const emailDisplay = primaryEmail?.value || getFallbackEmail()
-  const whatsappHref = whatsappContacts[0] ? getContactLink(whatsappContacts[0]) : getFallbackWhatsAppLink()
-  const telegramHref = telegramContacts[0] ? getContactLink(telegramContacts[0]) : fallbackSocial.telegram
-  const vkHref = vkContacts[0] ? getContactLink(vkContacts[0]) : fallbackSocial.vk
+  const phoneHref = primaryPhone
+    ? getContactLink(primaryPhone)
+    : getFallbackPhoneLink();
+  const phoneDisplay = primaryPhone?.value || getFallbackPhoneDisplay();
+  const emailHref = primaryEmail
+    ? getContactLink(primaryEmail)
+    : `mailto:${getFallbackEmail()}`;
+  const emailDisplay = primaryEmail?.value || getFallbackEmail();
+  const whatsappHref = whatsappContacts[0]
+    ? getContactLink(whatsappContacts[0])
+    : getFallbackWhatsAppLink();
+  const telegramHref = telegramContacts[0]
+    ? getContactLink(telegramContacts[0])
+    : fallbackSocial.telegram;
+  const vkHref = vkContacts[0]
+    ? getContactLink(vkContacts[0])
+    : fallbackSocial.vk;
 
   // Company links - only existing pages
   const companyLinks = [
     { label: "Для партнёров", href: "/partners" },
     { label: "Контакты", href: "/contacts" },
-  ]
+  ];
 
   // Documents from API (first 5)
-  const documents = initialDocuments.slice(0, 5)
+  const documents = initialDocuments.slice(0, 5);
 
   return (
     <footer className="bg-[var(--background-dark)] text-[var(--foreground-inverse)] section-spacing">
@@ -86,7 +100,8 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
               <span className="text-lg leading-none">Автопомощь</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
-              Экстренная автопомощь за 15 минут. Проверенные мастера в 82 городах России.
+              Экстренная автопомощь за 15 минут. Проверенные мастера в {count}{" "}
+              городах России.
             </p>
             {/* Contacts from API with fallbacks */}
             <div className="space-y-3">
@@ -111,7 +126,7 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
                 className="flex items-center gap-2 text-sm hover:text-[var(--color-primary)] transition-colors"
               >
                 <MessageCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{whatsappContacts[0]?.label || 'WhatsApp'}</span>
+                <span>{whatsappContacts[0]?.label || "WhatsApp"}</span>
               </a>
             </div>
           </div>
@@ -143,7 +158,9 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
 
           {/* Cities */}
           <div className="text-left">
-            <h3 className="text-lg font-semibold mb-4 leading-tight">География</h3>
+            <h3 className="text-lg font-semibold mb-4 leading-tight">
+              География
+            </h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -158,7 +175,9 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
 
           {/* Company & Help */}
           <div className="text-left">
-            <h3 className="text-lg font-semibold mb-4 leading-tight">Компания</h3>
+            <h3 className="text-lg font-semibold mb-4 leading-tight">
+              Компания
+            </h3>
             <ul className="space-y-3 mb-6">
               {companyLinks.map((link) => (
                 <li key={link.href}>
@@ -171,7 +190,9 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
                 </li>
               ))}
             </ul>
-            <h3 className="text-lg font-semibold mb-4 leading-tight">Документы</h3>
+            <h3 className="text-lg font-semibold mb-4 leading-tight">
+              Документы
+            </h3>
             <ul className="space-y-3">
               {documents.map((doc) => (
                 <li key={doc.slug}>
@@ -228,5 +249,5 @@ export function Footer({ initialServices = [], initialContacts = [], initialDocu
         </div>
       </div>
     </footer>
-  )
+  );
 }

@@ -86,7 +86,6 @@ export default async function Home() {
       return null;
     }) as Promise<SeoMetaPublic | null>,
   ]);
-  console.log(initialCities.length);
   // Get h1_title from SEO API or use default
   const heroTitle = seoData?.h1_title || "Экстренная автопомощь за 15 минут";
   return (

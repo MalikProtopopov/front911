@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import Image from 'next/image'
-import useSWR from 'swr'
+import * as React from "react";
+import Image from "next/image";
+import useSWR from "swr";
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/common/Skeleton'
-import { contentService } from '@/lib/api/services'
-import { QUERY_KEYS, SWR_CONFIG } from '@/lib/config/constants'
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/common/Skeleton";
+import { contentService } from "@/lib/api/services";
+import { QUERY_KEYS, SWR_CONFIG } from "@/lib/config/constants";
 import {
   getAppLinksByType,
   getPreferredQrLink,
   hasAnyLink,
   type AppLinksByPlatform,
-} from '@/lib/utils/appLinks'
-import type { AppLink } from '@/lib/api/generated'
-import { cn } from '@/lib/utils'
+} from "@/lib/utils/appLinks";
+import type { AppLink } from "@/lib/api/generated";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Types
@@ -23,23 +23,23 @@ import { cn } from '@/lib/utils'
 
 export interface DownloadButtonsProps {
   /** Тип приложения: 'client' или 'partner' */
-  appType: 'client' | 'partner'
+  appType: "client" | "partner";
   /** Показывать QR-код */
-  showQr?: boolean
+  showQr?: boolean;
   /** Дополнительные классы для контейнера кнопок */
-  className?: string
+  className?: string;
   /** Дополнительные классы для контейнера QR-кода */
-  qrClassName?: string
+  qrClassName?: string;
   /** Вариант кнопки iOS */
-  iosVariant?: 'default' | 'outline'
+  iosVariant?: "default" | "outline";
   /** Вариант кнопки Android */
-  androidVariant?: 'default' | 'outline'
+  androidVariant?: "default" | "outline";
   /** Размер кнопок */
-  size?: 'default' | 'sm' | 'lg'
+  size?: "default" | "sm" | "lg";
   /** Направление расположения кнопок */
-  direction?: 'row' | 'column'
+  direction?: "row" | "column";
   /** Начальные данные для SSR */
-  initialAppLinks?: AppLink[]
+  initialAppLinks?: AppLink[];
 }
 
 // ============================================================================
@@ -51,14 +51,14 @@ export interface DownloadButtonsProps {
  */
 function DownloadButtonsSkeleton({
   showQr = false,
-  direction = 'row',
-}: Pick<DownloadButtonsProps, 'showQr' | 'direction'>) {
+  direction = "row",
+}: Pick<DownloadButtonsProps, "showQr" | "direction">) {
   return (
     <div className="space-y-4">
       <div
         className={cn(
-          'flex gap-4',
-          direction === 'column' ? 'flex-col' : 'flex-col sm:flex-row'
+          "flex gap-4",
+          direction === "column" ? "flex-col" : "flex-col sm:flex-row",
         )}
       >
         <Skeleton className="h-14 w-40 rounded-2xl" />
@@ -74,7 +74,7 @@ function DownloadButtonsSkeleton({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -85,7 +85,7 @@ function DownloadButtonsError() {
     <p className="text-sm text-[var(--foreground-secondary)] italic">
       Ссылки временно недоступны
     </p>
-  )
+  );
 }
 
 /**
@@ -93,14 +93,14 @@ function DownloadButtonsError() {
  */
 function AppStoreButton({
   link,
-  variant = 'default',
-  size = 'lg',
+  variant = "default",
+  size = "lg",
 }: {
-  link?: AppLink
-  variant?: 'default' | 'outline'
-  size?: 'default' | 'sm' | 'lg'
+  link?: AppLink;
+  variant?: "default" | "outline";
+  size?: "default" | "sm" | "lg";
 }) {
-  if (!link) return null
+  if (!link) return null;
 
   return (
     <Button
@@ -126,7 +126,7 @@ function AppStoreButton({
         <span className="leading-none">App Store</span>
       </a>
     </Button>
-  )
+  );
 }
 
 /**
@@ -134,14 +134,14 @@ function AppStoreButton({
  */
 function GooglePlayButton({
   link,
-  variant = 'outline',
-  size = 'lg',
+  variant = "outline",
+  size = "lg",
 }: {
-  link?: AppLink
-  variant?: 'default' | 'outline'
-  size?: 'default' | 'sm' | 'lg'
+  link?: AppLink;
+  variant?: "default" | "outline";
+  size?: "default" | "sm" | "lg";
 }) {
-  if (!link) return null
+  if (!link) return null;
 
   return (
     <Button
@@ -167,7 +167,7 @@ function GooglePlayButton({
         <span className="leading-none">Google Play</span>
       </a>
     </Button>
-  )
+  );
 }
 
 /**
@@ -177,15 +177,15 @@ function QrCodeBlock({
   link,
   className,
 }: {
-  link?: AppLink
-  className?: string
+  link?: AppLink;
+  className?: string;
 }) {
-  if (!link?.qr_code_url) return null
+  if (!link?.qr_code_url) return null;
 
-  const platformLabel = link.platform === 'ios' ? 'iOS' : 'Android'
+  const platformLabel = link.platform === "ios" ? "iOS" : "Android";
 
   return (
-    <div className={cn('flex items-center gap-4', className)}>
+    <div className={cn("flex items-center gap-4", className)}>
       <div className="relative w-24 h-24 bg-white rounded-xl shadow-sm border border-[var(--border)] p-2">
         <Image
           src={link.qr_code_url}
@@ -204,7 +204,7 @@ function QrCodeBlock({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -213,29 +213,29 @@ function QrCodeBlock({
 
 /**
  * Компонент кнопок скачивания приложения
- * 
+ *
  * Автоматически загружает данные о ссылках с API и отображает:
  * - Кнопку App Store (если есть iOS ссылка)
  * - Кнопку Google Play (если есть Android ссылка)
  * - QR-код (опционально, приоритет iOS > Android)
- * 
+ *
  * Обрабатывает состояния:
  * - loading: показывает скелетоны
  * - error: показывает fallback текст "Ссылки временно недоступны"
  * - success: показывает кнопки и QR-код
- * 
+ *
  * @example
  * ```tsx
  * // Базовое использование для клиентского приложения
  * <DownloadButtons appType="client" />
- * 
+ *
  * // С QR-кодом
  * <DownloadButtons appType="client" showQr />
- * 
+ *
  * // Кастомные стили
- * <DownloadButtons 
- *   appType="partner" 
- *   showQr 
+ * <DownloadButtons
+ *   appType="partner"
+ *   showQr
  *   iosVariant="outline"
  *   androidVariant="default"
  *   size="default"
@@ -248,10 +248,10 @@ export function DownloadButtons({
   showQr = false,
   className,
   qrClassName,
-  iosVariant = 'default',
-  androidVariant = 'outline',
-  size = 'lg',
-  direction = 'row',
+  iosVariant = "default",
+  androidVariant = "outline",
+  size = "lg",
+  direction = "row",
   initialAppLinks = [],
 }: DownloadButtonsProps) {
   // Загружаем данные с API через SWR с поддержкой SSR
@@ -261,37 +261,37 @@ export function DownloadButtons({
     {
       ...SWR_CONFIG,
       fallbackData: initialAppLinks.length > 0 ? initialAppLinks : [],
-    }
-  )
+    },
+  );
 
   // If we have initial data, don't show loading state on first render
-  const showLoading = isLoading && initialAppLinks.length === 0
+  const showLoading = isLoading && initialAppLinks.length === 0;
 
   // Нормализуем данные
   const links: AppLinksByPlatform = React.useMemo(() => {
-    if (!data || data.length === 0) return {}
-    return getAppLinksByType(data, appType)
-  }, [data, appType])
+    if (!data || data.length === 0) return {};
+    return getAppLinksByType(data, appType);
+  }, [data, appType]);
 
   // QR-код с приоритетом iOS
   const qrLink = React.useMemo(() => {
-    if (!showQr) return undefined
-    return getPreferredQrLink(links)
-  }, [links, showQr])
+    if (!showQr) return undefined;
+    return getPreferredQrLink(links);
+  }, [links, showQr]);
 
   // Состояние загрузки
   if (showLoading) {
-    return <DownloadButtonsSkeleton showQr={showQr} direction={direction} />
+    return <DownloadButtonsSkeleton showQr={showQr} direction={direction} />;
   }
 
   // Состояние ошибки
   if (error) {
-    return <DownloadButtonsError />
+    return <DownloadButtonsError />;
   }
 
   // Нет ссылок — ничего не показываем
   if (!hasAnyLink(links)) {
-    return null
+    return null;
   }
 
   return (
@@ -299,16 +299,12 @@ export function DownloadButtons({
       {/* Кнопки */}
       <div
         className={cn(
-          'flex gap-4',
-          direction === 'column' ? 'flex-col' : 'flex-col sm:flex-row',
-          className
+          "flex gap-4",
+          direction === "column" ? "flex-col" : "flex-col sm:flex-row",
+          className,
         )}
       >
-        <AppStoreButton
-          link={links.ios}
-          variant={iosVariant}
-          size={size}
-        />
+        <AppStoreButton link={links.ios} variant={androidVariant} size={size} />
         <GooglePlayButton
           link={links.android}
           variant={androidVariant}
@@ -321,7 +317,7 @@ export function DownloadButtons({
         <QrCodeBlock link={qrLink} className={qrClassName} />
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -334,5 +330,4 @@ export {
   AppStoreButton,
   GooglePlayButton,
   QrCodeBlock,
-}
-
+};

@@ -116,6 +116,49 @@ export class ApiError extends Error {
       return error
     }
 
+    // Handle generated API client errors (they expose status/statusText/body fields)
+    if (error && typeof error === 'object') {
+      const status = (error as { status?: unknown }).status
+      if (typeof status === 'number') {
+        const statusText =
+          typeof (error as { statusText?: unknown }).statusText === 'string'
+            ? ((error as { statusText: string }).statusText || '')
+            : ''
+        const url =
+          typeof (error as { url?: unknown }).url === 'string'
+            ? (error as { url: string }).url
+            : undefined
+        const body = (error as { body?: unknown }).body
+
+        let details: ApiErrorDetails[] | undefined
+        if (body && typeof body === 'object') {
+          const detail = (body as { detail?: unknown }).detail
+          const errors = (body as { errors?: unknown }).errors
+          const message = (body as { message?: unknown }).message
+          if (typeof detail === 'string') {
+            details = [{ message: detail }]
+          } else if (Array.isArray(errors)) {
+            details = errors as ApiErrorDetails[]
+          } else if (typeof message === 'string') {
+            details = [{ message }]
+          }
+        } else if (typeof body === 'string') {
+          details = [{ message: body }]
+        }
+
+        const message =
+          details?.[0]?.message ||
+          (error instanceof Error ? error.message : undefined) ||
+          `HTTP Error ${status}`
+
+        return new ApiError(message, status, {
+          statusText,
+          url,
+          details,
+        })
+      }
+    }
+
     if (error instanceof Error) {
       // Check for network errors (fetch failures, connection errors, etc.)
       const isNetworkError = 
@@ -163,4 +206,3 @@ export class ApiError extends Error {
     }
   }
 }
-
