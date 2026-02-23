@@ -69,13 +69,13 @@ docker compose -f docker-compose.prod.yml up -d --build frontend nginx
 
 Проверить: http://sluzhba911.com должен открываться (по HTTP).
 
-**Шаг 2.** Один раз получить сертификат Certbot:
+**Шаг 2.** Один раз получить сертификат Certbot (обязательно `--entrypoint "certbot"`, иначе выполнится цикл продления вместо запроса нового серта):
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+docker compose -f docker-compose.prod.yml run --rm --entrypoint "certbot" certbot certonly \
   --webroot \
   --webroot-path=/var/www/certbot \
-  --email YOUR_EMAIL@example.com \
+  --email nazimmed@gmail.com \
   --agree-tos \
   --no-eff-email \
   -d sluzhba911.com \
