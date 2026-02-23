@@ -58,23 +58,18 @@ docker compose -f docker-compose.prod.simple.yml up -d --build
 
 ### 4.2 Первый запуск (получение SSL)
 
-**Шаг 1.** Включить временный nginx без HTTPS (иначе nginx не стартует без сертификатов):
+По умолчанию **nginx.conf** уже без SSL (только HTTP), поэтому nginx стартует без сертификатов.
+
+**Шаг 1.** Запустить frontend и nginx:
 
 ```bash
 cd apps/frontend/docker
-cp nginx.conf nginx.conf.backup
-cp nginx.initial.conf nginx.conf
-```
-
-**Шаг 2.** Запустить только frontend и nginx (certbot пока не трогаем):
-
-```bash
 docker compose -f docker-compose.prod.yml up -d --build frontend nginx
 ```
 
 Проверить: http://sluzhba911.com должен открываться (по HTTP).
 
-**Шаг 3.** Создать volume для certbot (если ещё не созданы) и один раз получить сертификат:
+**Шаг 2.** Один раз получить сертификат Certbot:
 
 ```bash
 docker compose -f docker-compose.prod.yml run --rm certbot certonly \
@@ -87,16 +82,16 @@ docker compose -f docker-compose.prod.yml run --rm certbot certonly \
   -d www.sluzhba911.com
 ```
 
-Подставьте свой `YOUR_EMAIL@example.com`. При успехе в логе будет что-то вроде: `Successfully received certificate`.
+Подставьте свой email. При успехе в логе: `Successfully received certificate`.
 
-**Шаг 4.** Вернуть полный nginx с HTTPS и перезапустить nginx:
+**Шаг 3.** Включить HTTPS: подменить конфиг на полный с SSL и перезапустить nginx:
 
 ```bash
-mv nginx.conf.backup nginx.conf
+cp nginx.ssl.conf nginx.conf
 docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
 ```
 
-**Шаг 5.** Запустить certbot для автоматического продления:
+**Шаг 4.** Запустить certbot для автоматического продления:
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d certbot
@@ -106,15 +101,11 @@ docker compose -f docker-compose.prod.yml up -d certbot
 
 ### 4.3 Если сертификаты уже есть (не первый запуск)
 
-Убедитесь, что в `nginx.conf` указаны пути к сертам (как сейчас):
-
-- `ssl_certificate /etc/letsencrypt/live/sluzhba911.com/fullchain.pem;`
-- `ssl_certificate_key /etc/letsencrypt/live/sluzhba911.com/privkey.pem;`
-
-И что nginx смонтировал volume с сертификатами (в compose уже есть `certbot-etc:/etc/letsencrypt:ro`). Затем:
+Используйте конфиг с SSL и поднимите всё:
 
 ```bash
 cd apps/frontend/docker
+cp nginx.ssl.conf nginx.conf
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
@@ -146,7 +137,7 @@ docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
 
 ## 6. Свой домен / несколько доменов
 
-1. В **nginx.conf** и **nginx.initial.conf** замените `sluzhba911.com` и `www.sluzhba911.com` на свои имена.
+1. В **nginx.conf** и **nginx.ssl.conf** замените `sluzhba911.com` и `www.sluzhba911.com` на свои имена.
 2. В **docker-compose.prod.yml** в `args` frontend при необходимости поменяйте `NEXT_PUBLIC_API_URL` и убедитесь, что в `.env.production` задан нужный `NEXT_PUBLIC_APP_DOMAIN` (например `https://yourdomain.com`).
 3. При первом получении серта в команде certbot укажите свои `-d yourdomain.com -d www.yourdomain.com`.
 4. В nginx.conf пути к сертификатам будут вида `/etc/letsencrypt/live/YOURDOMAIN.com/...` — при смене домена поменяйте их.
