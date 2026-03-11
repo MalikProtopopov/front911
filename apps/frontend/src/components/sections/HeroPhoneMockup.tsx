@@ -71,7 +71,7 @@ export function HeroPhoneMockup() {
             {/* App Screenshot */}
             <div className="absolute inset-0">
               <Image
-                src="/images/screenshots/new_image.jpg"
+                src="/images/screenshots/new_bg.jpg"
                 alt="Мобильное приложение 911"
                 fill
                 className="object-cover"

@@ -95,9 +95,9 @@ export function Footer({
           <div className="text-left">
             <div className="flex items-center gap-3 mb-4">
               <div className="text-3xl font-bold leading-none text-[var(--color-primary)]">
-                911
+                Сервис 911
               </div>
-              <span className="text-lg leading-none">Автопомощь</span>
+              {/* <span className="text-lg leading-none">Автопомощь</span> */}
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
               Экстренная автопомощь за 15 минут. Проверенные мастера в {count}{" "}
